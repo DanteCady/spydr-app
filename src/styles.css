@@ -322,6 +322,7 @@ table.grid tr.selected td { background: var(--sel); }
   position: relative;
   background-color: var(--bg-0);
 }
+.web-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .web-wrap.has-grid {
   background-image: radial-gradient(circle, rgba(141, 149, 163, 0.16) 1px, transparent 1px);
   background-size: 28px 28px;
@@ -385,6 +386,7 @@ table.grid tr.selected td { background: var(--sel); }
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 .legend-row { display: flex; align-items: center; gap: 6px; }
+.legend-keys { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border); font-size: 10px; }
 .legend-dot { width: 10px; height: 10px; border-radius: 999px; border: 1.5px solid var(--border); flex-shrink: 0; }
 .legend-dot.user { background: #3d6484; border-color: var(--user); }
 .legend-dot.group { background: #8a7038; border-color: var(--group); }

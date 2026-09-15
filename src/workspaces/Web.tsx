@@ -238,6 +238,14 @@ function runOrganize(cy: cytoscape.Core, density: Density): void {
   } as cytoscape.LayoutOptions).run()
 }
 
+function orderedNodeIds(cy: cytoscape.Core): string[] {
+  return cy
+    .nodes()
+    .map((n) => ({ id: n.id(), p: n.position() }))
+    .sort((a, b) => a.p.y - b.p.y || a.p.x - b.p.x)
+    .map((n) => n.id)
+}
+
 function zoomBy(cy: cytoscape.Core, factor: number): void {
   const container = cy.container()
   if (!container) return
@@ -465,6 +473,52 @@ export function Web() {
     if (cy) runOrganize(cy, next ?? densityRef.current)
   }
 
+  const onCanvasKeys = (ev: React.KeyboardEvent): void => {
+    const cy = cyRef.current
+    if (!cy) return
+    const step = (dir: 1 | -1): void => {
+      const ids = orderedNodeIds(cy)
+      if (ids.length === 0) return
+      const idx = selectedId ? ids.indexOf(selectedId) : -1
+      const next = idx === -1 ? (dir === 1 ? ids[0] : ids[ids.length - 1]) : ids[(idx + dir + ids.length) % ids.length]
+      select(next)
+    }
+    switch (ev.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        step(1)
+        break
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        step(-1)
+        break
+      case 'Enter':
+        if (selectedId && cy.$id(selectedId).nonempty()) {
+          cy.animate({ center: { eles: cy.$id(selectedId) }, duration: 180 })
+        }
+        break
+      case 'Escape':
+        select(null)
+        break
+      case '+':
+      case '=':
+        zoomBy(cy, ZOOM_STEP)
+        break
+      case '-':
+      case '_':
+        zoomBy(cy, 1 / ZOOM_STEP)
+        break
+      case 'f':
+      case 'F':
+      case '0':
+        cy.fit(undefined, 36)
+        break
+      default:
+        return
+    }
+    ev.preventDefault()
+  }
+
   const resetView = (): void => {
     pendingOrganize.current = true
     setScope('forest')
@@ -532,7 +586,14 @@ export function Web() {
           </button>
         </div>
       </div>
-      <div className={grid ? 'web-wrap has-grid' : 'web-wrap'} ref={wrap}>
+      <div
+        className={grid ? 'web-wrap has-grid' : 'web-wrap'}
+        ref={wrap}
+        tabIndex={0}
+        role="application"
+        aria-label="Membership web canvas. Arrow keys move between nodes, Enter centers the selection, plus and minus zoom, F fits the view, Escape clears the selection."
+        onKeyDown={onCanvasKeys}
+      >
         <div className="web-canvas" ref={host} />
         <div className="web-status" aria-live="polite">
           <span>{hint}</span>
@@ -579,6 +640,7 @@ export function Web() {
           <span className="legend-row">
             <span className="legend-dot cycle" /> In a cycle
           </span>
+          <span className="legend-keys">←→ move · ⏎ center · esc clear</span>
         </div>
         <div className="web-controls">
           <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => cyRef.current && zoomBy(cyRef.current, ZOOM_STEP)}>
