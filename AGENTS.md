@@ -38,6 +38,12 @@ Use project subagents instead of improvising parallel patterns:
 
 Skills: `connect-onprem-ad`, `ad-hygiene-findings`.
 
+## Git flow
+
+- `main` is integration. Work on `feature/<short-slug>` — one product-scope item per branch.
+- Commit on the feature branch. Merge with `git merge --no-ff` back to `main`.
+- Do not push or open a PR unless asked.
+
 ## Entra
 
 Not implemented. Keep `DirectoryProvider` so a Graph provider can plug in later. Do not add Microsoft Graph until asked.

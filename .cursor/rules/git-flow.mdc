@@ -1,0 +1,14 @@
+---
+description: Git-flow for Spydr — one feature branch per scoped item, merge to main
+alwaysApply: true
+---
+
+# Git flow
+
+- `main` is the integration branch. Do not commit feature work directly on `main`.
+- One branch per product-scope item: `feature/<short-slug>` (example: `feature/connect-ldap`).
+- Branch from current `main`. Do not stack unrelated work on one branch.
+- Commit on the feature branch (why, not what). No `--no-verify`, no `git config` changes, no force-push to `main`.
+- When the item is done: `git checkout main` then `git merge --no-ff feature/<slug>`.
+- Do not open a PR or push unless asked.
+- Never mix LDAP writes, Entra, or a fifth workspace onto a UI-polish branch.
