@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { FindingSeverity, FindingType } from '@shared/types'
-import { severityLabel } from '../lib/format'
+import { SeverityBadge } from '../components/SeverityBadge'
 import { useApp } from '../state'
 
 const TYPES: { id: FindingType | 'all'; label: string }[] = [
@@ -78,7 +78,7 @@ export function Hygiene() {
                 onClick={() => goToFinding(f)}
               >
                 <td>
-                  <span className={`badge ${f.severity}`}>{severityLabel(f.severity)}</span>
+                  <SeverityBadge severity={f.severity} />
                 </td>
                 <td>{f.title}</td>
                 <td className="muted">{f.detail}</td>

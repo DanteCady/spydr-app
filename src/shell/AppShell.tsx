@@ -1,4 +1,5 @@
 import type { WorkspaceId } from '@shared/types'
+import { NavGlyph } from '../components/NavGlyph'
 import { WidowMark } from '../components/WidowMark'
 import { ObjectInspector } from '../inspector/ObjectInspector'
 import { useApp } from '../state'
@@ -38,6 +39,7 @@ export function AppShell() {
               className={workspace === item.id ? 'active' : ''}
               onClick={() => setWorkspace(item.id)}
             >
+              <NavGlyph id={item.id} />
               {item.label}
               <span className="hint">{item.hint}</span>
             </button>

@@ -1,4 +1,5 @@
 import { ObjectPicker } from '../components/ObjectPicker'
+import { SeverityBadge } from '../components/SeverityBadge'
 import { useApp } from '../state'
 
 export function Pathfinder() {
@@ -32,7 +33,7 @@ export function Pathfinder() {
       <div className="scroll">
         {activeFinding ? (
           <div className="path-card">
-            <span className={`badge ${activeFinding.severity}`}>{activeFinding.severity}</span> {activeFinding.title}
+            <SeverityBadge severity={activeFinding.severity} /> {activeFinding.title}
             <p>{activeFinding.detail}</p>
             <p className="suggested">{activeFinding.suggestedFix}</p>
           </div>
