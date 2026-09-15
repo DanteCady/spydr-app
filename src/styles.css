@@ -251,6 +251,28 @@ table.grid tr.selected td { background: var(--sel); }
   padding: 6px 8px;
   flex: 0 1 240px;
 }
+.web-toolbar { flex-wrap: wrap; }
+.web-toolbar > .muted:last-child {
+  flex: 1 0 100%;
+  font-size: 11px;
+}
+.web-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: auto;
+}
+.web-tools button {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 5px 10px;
+  color: var(--text);
+}
+.web-tools button:hover { background: var(--hover); }
+.web-tools button.active {
+  background: var(--sel);
+  border-color: var(--accent);
+}
 .web-wrap { flex: 1; min-width: 0; position: relative; }
 .web-canvas { position: absolute; inset: 0; }
 
