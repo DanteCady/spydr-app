@@ -2,7 +2,7 @@ import { ObjectPicker } from '../components/ObjectPicker'
 import { useApp } from '../state'
 
 export function Pathfinder() {
-  const { snapshot, pathSource, pathTarget, setPathSource, setPathTarget, paths, select, goTo } = useApp()
+  const { snapshot, pathSource, pathTarget, setPathSource, setPathTarget, paths, select, goTo, activeFinding } = useApp()
   if (!snapshot) return null
 
   const people = snapshot.nodes.filter((n) => n.type === 'user' || n.type === 'group')
@@ -30,6 +30,13 @@ export function Pathfinder() {
         ))}
       </div>
       <div className="scroll">
+        {activeFinding ? (
+          <div className="path-card">
+            <span className={`badge ${activeFinding.severity}`}>{activeFinding.severity}</span> {activeFinding.title}
+            <p>{activeFinding.detail}</p>
+            <p className="suggested">{activeFinding.suggestedFix}</p>
+          </div>
+        ) : null}
         {!pathSource || !pathTarget ? (
           <p className="empty">Pick a source and a target to see nested membership paths. Sample: Alice Chen → Domain Admins.</p>
         ) : paths.length === 0 ? (

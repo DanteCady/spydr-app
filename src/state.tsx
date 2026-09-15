@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 import { loadContosoFixture } from '../fixtures/contoso-lab'
 import { buildMembershipGraph, enumeratePaths } from '@shared/graph'
-import type { ConnectionInput, DirectorySnapshot, PathResult, WorkspaceId } from '@shared/types'
+import type { ConnectionInput, DirectorySnapshot, Finding, PathResult, WorkspaceId } from '@shared/types'
 
 interface AppState {
   snapshot: DirectorySnapshot | null
@@ -21,6 +21,8 @@ interface AppState {
   setPathSource: (id: string) => void
   setPathTarget: (id: string) => void
   goTo: (workspace: WorkspaceId, objectId?: string) => void
+  goToFinding: (finding: Finding) => void
+  activeFinding: Finding | null
   paths: PathResult[]
 }
 
@@ -34,6 +36,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [search, setSearch] = useState('')
   const [pathSource, setPathSource] = useState('')
   const [pathTarget, setPathTarget] = useState('')
+  const [activeFinding, setActiveFinding] = useState<Finding | null>(null)
 
   const graph = useMemo(
     () => (snapshot ? buildMembershipGraph(snapshot.nodes, snapshot.edges) : null),
@@ -51,6 +54,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setContainerDn(s.baseDn)
     setSelectedId(null)
     setSearch('')
+    setActiveFinding(null)
     const user = s.nodes.find((n) => n.type === 'user')
     const da = s.nodes.find((n) => n.sAMAccountName.toLowerCase() === 'domain admins')
     setPathSource(s.nodes.find((n) => n.id === 'user-alice')?.id ?? user?.id ?? '')
@@ -76,6 +80,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSnapshot(null)
     setSelectedId(null)
     setSearch('')
+    setActiveFinding(null)
   }, [])
 
   const goTo = useCallback((w: WorkspaceId, objectId?: string) => {
@@ -88,6 +93,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
       })
     }
     setWorkspace(w)
+  }, [])
+
+  const goToFinding = useCallback((finding: Finding) => {
+    setActiveFinding(finding)
+    setSnapshot((current) => {
+      if (!current) return current
+      const byId = new Map(current.nodes.map((n) => [n.id, n]))
+      const objects = finding.objectIds.map((id) => byId.get(id)).filter(Boolean)
+      const user = objects.find((n) => n?.type === 'user')
+      const priv = objects.find((n) => n?.type === 'group' && n.privileged)
+      const groups = objects.filter((n) => n?.type === 'group')
+
+      if (finding.type === 'privileged-nested-path' || finding.type === 'redundant-membership') {
+        if (user) setPathSource(user.id)
+        const target = priv ?? groups[groups.length - 1]
+        if (target) setPathTarget(target.id)
+        if (user?.parentDn) setContainerDn(user.parentDn)
+        if (user) setSelectedId(user.id)
+        setWorkspace('pathfinder')
+        return current
+      }
+
+      if (
+        finding.type === 'circular-nesting' ||
+        finding.type === 'deep-nesting' ||
+        finding.type === 'distribution-in-security'
+      ) {
+        const focus = objects[0]
+        if (focus) {
+          setSelectedId(focus.id)
+          if (focus.parentDn) setContainerDn(focus.parentDn)
+        }
+        setWorkspace('web')
+        return current
+      }
+
+      const focus = objects[0]
+      if (focus) {
+        setSelectedId(focus.id)
+        if (focus.parentDn) setContainerDn(focus.parentDn)
+      }
+      setWorkspace('directory')
+      return current
+    })
   }, [])
 
   const value: AppState = {
@@ -108,6 +157,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPathSource,
     setPathTarget,
     goTo,
+    goToFinding,
+    activeFinding,
     paths
   }
 
