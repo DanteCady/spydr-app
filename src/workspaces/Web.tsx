@@ -37,67 +37,108 @@ const WEB_STYLE: cytoscape.StylesheetJson = [
     selector: 'node',
     style: {
       label: 'data(label)',
-      color: '#e7ebf1',
-      'font-size': 10,
+      color: '#c9d2de',
+      'font-size': 9.5,
       'font-family': 'Segoe UI, system-ui, sans-serif',
       'text-valign': 'bottom',
-      'text-margin-y': 5,
+      'text-margin-y': 6,
+      'text-wrap': 'ellipsis',
+      'text-max-width': '110px',
+      'text-background-color': '#0c0e12',
+      'text-background-opacity': 0.8,
+      'text-background-padding': '2px',
+      'text-background-shape': 'roundrectangle',
+      'min-zoomed-font-size': 8,
       'background-image': 'data(icon)',
       'background-fit': 'contain',
       'background-clip': 'node',
-      'background-width': '70%',
-      'background-height': '70%',
+      'background-width': '62%',
+      'background-height': '62%',
       'border-width': 1.5,
       'border-color': '#8d95a3',
-      width: 34,
-      height: 34
+      'transition-property': 'opacity',
+      'transition-duration': 120,
+      width: 30,
+      height: 30
     }
   },
   {
     selector: 'node[kind = "group"]',
     style: {
-      'background-color': '#8a7038',
+      'background-color': '#7d6633',
       'border-color': '#c9a35a',
       width: 38,
       height: 38
     }
   },
   {
+    selector: 'node[kind = "user"]',
+    style: { 'background-color': '#38597a', 'border-color': '#8eb4d4' }
+  },
+  {
     selector: 'node[privileged = 1]',
-    style: { 'border-color': '#d36b6b', 'border-width': 2.5, 'background-color': '#6a3a3a' }
+    style: {
+      'border-color': '#d36b6b',
+      'border-width': 2,
+      'background-color': '#63393c',
+      'underlay-color': '#d36b6b',
+      'underlay-opacity': 0.14,
+      'underlay-padding': 6,
+      'underlay-shape': 'ellipse'
+    }
   },
   {
     selector: 'node[cycle = 1]',
     style: { 'border-style': 'dashed', 'border-color': '#d36b6b' }
   },
   {
-    selector: 'node[kind = "user"]',
-    style: { 'background-color': '#3d6484', 'border-color': '#8eb4d4' }
-  },
-  {
     selector: 'node:selected',
-    style: { 'border-color': '#7aa2d4', 'border-width': 2.5 }
+    style: {
+      'border-color': '#7aa2d4',
+      'border-width': 2.5,
+      'underlay-color': '#7aa2d4',
+      'underlay-opacity': 0.18,
+      'underlay-padding': 8,
+      'underlay-shape': 'ellipse'
+    }
   },
   {
     selector: 'edge',
     style: {
-      width: 1,
-      'line-color': '#3a4250',
-      'target-arrow-color': '#3a4250',
+      width: 1.2,
+      'line-color': '#414b5c',
+      'target-arrow-color': '#414b5c',
       'target-arrow-shape': 'triangle',
-      'arrow-scale': 0.7,
-      'curve-style': 'bezier'
+      'arrow-scale': 0.75,
+      'curve-style': 'bezier',
+      'transition-property': 'opacity',
+      'transition-duration': 120
     }
   },
   {
     selector: 'edge.hover, edge.sel',
     style: {
-      width: 1.8,
+      width: 2,
       'line-color': '#7aa2d4',
       'target-arrow-color': '#7aa2d4'
     }
+  },
+  {
+    selector: 'node.faded',
+    style: { opacity: 0.18, 'text-opacity': 0 }
+  },
+  {
+    selector: 'edge.faded',
+    style: { opacity: 0.1 }
   }
 ]
+
+function applyFocus(cy: cytoscape.Core, selectedId: string | null): void {
+  cy.elements().removeClass('faded')
+  if (!selectedId || cy.$id(selectedId).empty()) return
+  const hood = cy.$id(selectedId).closedNeighborhood()
+  cy.elements().difference(hood).addClass('faded')
+}
 
 function visibleNodeIds(
   snapshot: DirectorySnapshot,
@@ -245,6 +286,7 @@ export function Web() {
   const laidOut = useRef(false)
   const pendingOrganize = useRef(false)
   const [userQuery, setUserQuery] = useState('')
+  const [shown, setShown] = useState({ nodes: 0, edges: 0 })
   const [density, setDensity] = useState<Density>('spread')
   const [grid, setGrid] = useState(true)
   const [scope, setScope] = useState<WebScope>('forest')
@@ -335,6 +377,8 @@ export function Web() {
     if (selectedId && cy.$id(selectedId).nonempty()) {
       cy.$id(selectedId).connectedEdges().addClass('sel')
     }
+    applyFocus(cy, selectedId)
+    setShown({ nodes: cy.nodes().length, edges: cy.edges().length })
 
     if (added.length && laidOut.current && scope === 'forest') {
       placeAround(cy, added, selectedId)
@@ -358,6 +402,7 @@ export function Web() {
       node.connectedEdges().addClass('sel')
       cy.animate({ center: { eles: node }, duration: 180 })
     }
+    applyFocus(cy, selectedId)
   }, [selectedId])
 
   useEffect(() => {
@@ -412,14 +457,7 @@ export function Web() {
   return (
     <div className="split-list">
       <div className="toolbar web-toolbar">
-        <span className="muted">{hint}</span>
-        <input
-          type="search"
-          placeholder="Search users onto the web…"
-          value={userQuery}
-          onChange={(e) => setUserQuery(e.target.value)}
-        />
-        <div className="web-tools" role="toolbar" aria-label="Membership scope">
+        <div className="seg" role="toolbar" aria-label="Membership scope">
           <button type="button" className={scope === 'forest' ? 'active' : ''} aria-pressed={scope === 'forest'} onClick={() => setScope('forest')}>
             Forest
           </button>
@@ -429,14 +467,18 @@ export function Web() {
           <button type="button" className={scope === 'nested' ? 'active' : ''} aria-pressed={scope === 'nested'} onClick={() => setScope('nested')}>
             Nested
           </button>
-          <button type="button" className={groupsOnly ? 'active' : ''} aria-pressed={groupsOnly} onClick={() => setGroupsOnly((on) => !on)}>
-            Groups only
-          </button>
         </div>
-        <div className="web-tools" role="toolbar" aria-label="Canvas layout">
-          <button type="button" onClick={() => organizeNow()}>
-            Organize
-          </button>
+        <button type="button" className={groupsOnly ? 'chip active' : 'chip'} aria-pressed={groupsOnly} onClick={() => setGroupsOnly((on) => !on)}>
+          Groups only
+        </button>
+        <input
+          type="search"
+          placeholder="Search users onto the web…"
+          value={userQuery}
+          onChange={(e) => setUserQuery(e.target.value)}
+        />
+        <span className="spacer" />
+        <div className="seg" role="toolbar" aria-label="Layout density">
           <button
             type="button"
             className={density === 'compact' ? 'active' : ''}
@@ -453,7 +495,11 @@ export function Web() {
           >
             Spread
           </button>
-          <span className="web-tools-sep" aria-hidden />
+        </div>
+        <div className="seg" role="toolbar" aria-label="Canvas">
+          <button type="button" onClick={() => organizeNow()}>
+            Organize
+          </button>
           <button type="button" className={grid ? 'active' : ''} aria-pressed={grid} onClick={() => setGrid((on) => !on)}>
             Grid
           </button>
@@ -462,11 +508,19 @@ export function Web() {
           </button>
         </div>
       </div>
-      {activeFinding && (activeFinding.type === 'circular-nesting' || activeFinding.type === 'deep-nesting' || activeFinding.type === 'distribution-in-security') ? (
-        <FindingCard finding={activeFinding} onDismiss={clearFinding} />
-      ) : null}
       <div className={grid ? 'web-wrap has-grid' : 'web-wrap'} ref={wrap}>
         <div className="web-canvas" ref={host} />
+        <div className="web-status" aria-live="polite">
+          <span>{hint}</span>
+          <span className="web-status-counts">
+            {shown.nodes} node{shown.nodes === 1 ? '' : 's'} · {shown.edges} edge{shown.edges === 1 ? '' : 's'}
+          </span>
+        </div>
+        {activeFinding && (activeFinding.type === 'circular-nesting' || activeFinding.type === 'deep-nesting' || activeFinding.type === 'distribution-in-security') ? (
+          <div className="web-finding">
+            <FindingCard finding={activeFinding} onDismiss={clearFinding} />
+          </div>
+        ) : null}
         <div className="web-legend" aria-hidden>
           <span className="legend-row">
             <span className="legend-dot user" /> User
