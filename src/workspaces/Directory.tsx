@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react'
-import { isDisabled, isStale } from '@shared/adFlags'
 import { TypeGlyph } from '../components/TypeGlyph'
+import { StatusBadges } from '../components/StatusBadges'
 import { typeLabel } from '../lib/format'
 import { buildOuTree, objectsInContainer } from '../lib/tree'
 import { useApp } from '../state'
-import type { DirectoryNode } from '@shared/types'
 
 function TreeRows({
   nodes,
@@ -50,18 +49,6 @@ function TreeRows({
           </div>
         )
       })}
-    </>
-  )
-}
-
-function Badges({ node }: { node: DirectoryNode }) {
-  return (
-    <>
-      {node.privileged ? <span className="badge privileged">Privileged</span> : null}
-      {isDisabled(node.userAccountControl) ? <span className="badge disabled">Disabled</span> : null}
-      {node.type === 'user' && isStale(node.lastLogonTimestamp) && !isDisabled(node.userAccountControl) ? (
-        <span className="badge stale">Stale</span>
-      ) : null}
     </>
   )
 }
@@ -130,7 +117,7 @@ export function Directory() {
                   <td className="muted">{typeLabel(n.type)}</td>
                   <td className="muted">{n.description || '—'}</td>
                   <td>
-                    <Badges node={n} />
+                    <StatusBadges node={n} />
                   </td>
                 </tr>
               ))}
