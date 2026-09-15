@@ -1,4 +1,5 @@
 import type { WorkspaceId } from '@shared/types'
+import { WidowMark } from '../components/WidowMark'
 import { ObjectInspector } from '../inspector/ObjectInspector'
 import { useApp } from '../state'
 import { Directory } from '../workspaces/Directory'
@@ -13,17 +14,6 @@ const NAV: { id: WorkspaceId; label: string; hint: string }[] = [
   { id: 'hygiene', label: 'Hygiene', hint: 'Cleanup' }
 ]
 
-function BrandMark() {
-  return (
-    <span className="brand-mark" aria-hidden>
-      <svg viewBox="0 0 16 16">
-        <circle cx="8" cy="8" r="1.6" />
-        <path d="M8 2.2v3.2M8 10.6v3.2M2.2 8h3.2M10.6 8h3.2M4 4l2.2 2.2M9.8 9.8 12 12M12 4 9.8 6.2M6.2 9.8 4 12" />
-      </svg>
-    </span>
-  )
-}
-
 export function AppShell() {
   const { snapshot, workspace, setWorkspace, search, setSearch, disconnect } = useApp()
   if (!snapshot) return null
@@ -32,7 +22,9 @@ export function AppShell() {
     <div className="app">
       <nav className="rail">
         <div className="brand">
-          <BrandMark />
+          <span className="brand-mark" aria-hidden>
+            <WidowMark />
+          </span>
           <div>
             <h1>Spydr</h1>
             <p>Read-only directory</p>

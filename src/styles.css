@@ -55,12 +55,11 @@ code { font-family: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, monospace; 
 .brand-mark {
   width: 28px;
   height: 28px;
-  border: 1px solid var(--border);
-  background: var(--panel);
   display: grid;
   place-items: center;
+  color: #fff;
 }
-.brand-mark svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 1.4; }
+.brand-mark svg { width: 22px; height: 22px; }
 .brand h1 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.04em; }
 .brand p { margin: 0; color: var(--muted); font-size: 11px; }
 
@@ -326,6 +325,14 @@ table.grid tr.selected td { background: var(--sel); }
   padding: 28px 28px 24px;
 }
 .connect-card h1 { margin: 0 0 6px; font-size: 22px; font-weight: 600; letter-spacing: 0.04em; }
+.connect-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.connect-brand h1 { margin: 0; }
 .connect-card .lede { color: var(--muted); margin: 0 0 22px; }
 .primary {
   background: var(--accent-2);
