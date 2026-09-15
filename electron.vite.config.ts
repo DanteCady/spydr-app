@@ -5,6 +5,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
+    resolve: {
+      alias: {
+        '@shared': resolve(__dirname, 'shared')
+      }
+    },
     build: {
       rollupOptions: {
         input: resolve(__dirname, 'electron/main.ts')

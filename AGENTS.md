@@ -15,7 +15,7 @@ npm run dev
 
 - **LDAP, DC discovery, snapshots, findings, paths** live in `electron/`. Never bind or search from the renderer.
 - **UI** lives in `src/`. Four workspaces after connect: Directory, Web, Pathfinder, Hygiene. Shared selection + inspector.
-- **Sample forest** lives in `fixtures/contoso-lab.ts`. Use **Open sample directory** until LDAP connect is built.
+- **Sample forest** lives in `fixtures/contoso-lab.ts`. **Open sample directory** always works; Connect can also bind a live DC.
 - **Types** live in `shared/`.
 - v1 is **read-only**. No LDAP add/modify/delete. Suggested fixes are text only.
 - Passwords: memory for the session; optional remember via Electron `safeStorage`. Never write them into snapshots, logs, or error strings.
