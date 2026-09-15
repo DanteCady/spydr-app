@@ -310,6 +310,10 @@ table.grid tr.selected td { background: var(--sel); }
   padding: 10px 14px;
 }
 .ghost:disabled { opacity: 0.55; cursor: not-allowed; }
+.connect .error { color: var(--crit); margin: 10px 0 0; font-size: 12px; }
+.connect .ok { color: var(--low); margin: 10px 0 0; font-size: 12px; }
+.connect .check { flex-direction: row; align-items: center; margin-top: 10px; color: var(--muted); font-size: 12px; }
+.connect .check input { margin: 0; }
 .connect fieldset {
   margin: 18px 0 0;
   border: 1px solid var(--border);

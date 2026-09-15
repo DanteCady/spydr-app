@@ -58,13 +58,13 @@ export function AppShell() {
             {snapshot.stats.users} users · {snapshot.stats.groups} groups
           </div>
           <button type="button" onClick={disconnect}>
-            Close sample
+            {snapshot.source === 'fixture' ? 'Close sample' : 'Disconnect'}
           </button>
         </div>
       </nav>
       <div className="main">
         <header className="topbar">
-          <span className="pill">Sample directory</span>
+          <span className="pill">{snapshot.source === 'fixture' ? 'Sample directory' : snapshot.protocol?.toUpperCase() ?? 'LDAP'}</span>
           <span className="muted">{snapshot.dcHost}</span>
           <input
             type="search"

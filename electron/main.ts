@@ -1,5 +1,15 @@
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { discoverDcs, windowsPrefill } from './directory/discoverDc'
+import { ingestDirectory, testConnection } from './directory/ldapProvider'
+import type { ConnectionInput } from '../shared/types'
+
+function preloadPath(): string {
+  const mjs = join(__dirname, '../preload/preload.mjs')
+  const js = join(__dirname, '../preload/preload.js')
+  return existsSync(mjs) ? mjs : js
+}
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -11,7 +21,7 @@ function createWindow(): void {
     title: 'Spydr',
     show: false,
     webPreferences: {
-      preload: join(__dirname, '../preload/preload.js'),
+      preload: preloadPath(),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true
@@ -31,7 +41,15 @@ function createWindow(): void {
   }
 }
 
+function registerIpc(): void {
+  ipcMain.handle('spydr:prefill', () => windowsPrefill())
+  ipcMain.handle('spydr:discover', async (_evt, domain: string) => discoverDcs(domain))
+  ipcMain.handle('spydr:test', async (_evt, input: ConnectionInput) => testConnection(input))
+  ipcMain.handle('spydr:ingest', async (_evt, input: ConnectionInput) => ingestDirectory(input))
+}
+
 void app.whenReady().then(() => {
+  registerIpc()
   createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

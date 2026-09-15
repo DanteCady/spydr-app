@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 import { loadContosoFixture } from '../fixtures/contoso-lab'
 import { buildMembershipGraph, enumeratePaths } from '@shared/graph'
-import type { DirectorySnapshot, PathResult, WorkspaceId } from '@shared/types'
+import type { ConnectionInput, DirectorySnapshot, PathResult, WorkspaceId } from '@shared/types'
 
 interface AppState {
   snapshot: DirectorySnapshot | null
@@ -13,6 +13,7 @@ interface AppState {
   pathSource: string
   pathTarget: string
   openSample: () => void
+  ingestLdap: (input: ConnectionInput) => Promise<void>
   disconnect: () => void
   setWorkspace: (w: WorkspaceId) => void
   select: (id: string | null) => void
@@ -47,17 +48,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return enumeratePaths(graph, pathSource, pathTarget)
   }, [graph, pathSource, pathTarget])
 
-  const openSample = useCallback(() => {
-    const s = loadContosoFixture()
+  const applySnapshot = useCallback((s: DirectorySnapshot) => {
     setSnapshot(s)
     setWorkspace('directory')
     setContainerDn(s.baseDn)
     setSelectedId(null)
     setSearch('')
     setWebShowUsers(false)
-    setPathSource(s.nodes.find((n) => n.id === 'user-alice')?.id ?? '')
-    setPathTarget(s.nodes.find((n) => n.id === 'g-da')?.id ?? '')
+    const user = s.nodes.find((n) => n.type === 'user')
+    const da = s.nodes.find((n) => n.sAMAccountName.toLowerCase() === 'domain admins')
+    setPathSource(s.nodes.find((n) => n.id === 'user-alice')?.id ?? user?.id ?? '')
+    setPathTarget(da?.id ?? '')
   }, [])
+
+  const openSample = useCallback(() => {
+    applySnapshot(loadContosoFixture())
+  }, [applySnapshot])
+
+  const ingestLdap = useCallback(
+    async (input: ConnectionInput) => {
+      if (!window.spydr?.ingest) {
+        throw new Error('Run Spydr as the desktop app to bind to Active Directory.')
+      }
+      const s = await window.spydr.ingest(input)
+      applySnapshot(s)
+    },
+    [applySnapshot]
+  )
 
   const disconnect = useCallback(() => {
     setSnapshot(null)
@@ -87,6 +104,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     pathSource,
     pathTarget,
     openSample,
+    ingestLdap,
     disconnect,
     setWorkspace,
     select: setSelectedId,
