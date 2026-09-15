@@ -40,8 +40,9 @@ Skills: `connect-onprem-ad`, `ad-hygiene-findings`.
 
 ## Git flow
 
-- `main` is integration. Work on `feature/<short-slug>` — one product-scope item per branch.
-- Commit on the feature branch. Merge with `git merge --no-ff` back to `main`.
+- `develop` is integration and stays ahead of `main`. Branch `feature/<short-slug>` from `develop` — one product-scope item per branch.
+- Commit on the feature branch. Merge with `git merge --no-ff` into `develop`.
+- `main` is stable/release only. Promote with `git merge --no-ff develop` onto `main` when you intend a release.
 - Do not push or open a PR unless asked.
 
 ## Entra
