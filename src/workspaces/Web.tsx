@@ -1,10 +1,11 @@
 import cytoscape from 'cytoscape'
 import fcose from 'cytoscape-fcose'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DirectorySnapshot } from '@shared/types'
 import { buildMembershipGraph, findGroupCycles, groupIdSet, hopNeighborhood, nestedMembership } from '@shared/graph'
 import { FindingCard } from '../components/FindingCard'
-import { webNodeIcon } from '../components/TypeGlyph'
+import { StatusBadges } from '../components/StatusBadges'
+import { TypeGlyph, webNodeIcon } from '../components/TypeGlyph'
 import { useApp } from '../state'
 
 cytoscape.use(fcose as Parameters<typeof cytoscape.use>[0])
@@ -287,6 +288,7 @@ export function Web() {
   const pendingOrganize = useRef(false)
   const [userQuery, setUserQuery] = useState('')
   const [shown, setShown] = useState({ nodes: 0, edges: 0 })
+  const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(null)
   const [density, setDensity] = useState<Density>('spread')
   const [grid, setGrid] = useState(true)
   const [scope, setScope] = useState<WebScope>('forest')
@@ -323,9 +325,20 @@ export function Web() {
     cy.on('tap', (ev) => {
       if (ev.target === cy) selectRef.current(null)
     })
-    cy.on('mouseover', 'node', (ev) => ev.target.connectedEdges().addClass('hover'))
-    cy.on('mouseout', 'node', (ev) => ev.target.connectedEdges().removeClass('hover'))
-    const onViewport = (): void => syncGrid(cy, wrap.current)
+    cy.on('mouseover', 'node', (ev) => {
+      ev.target.connectedEdges().addClass('hover')
+      const p = ev.target.renderedPosition()
+      setTip({ id: ev.target.id(), x: p.x, y: p.y })
+    })
+    cy.on('mouseout', 'node', (ev) => {
+      ev.target.connectedEdges().removeClass('hover')
+      setTip(null)
+    })
+    cy.on('grab', 'node', () => setTip(null))
+    const onViewport = (): void => {
+      syncGrid(cy, wrap.current)
+      setTip(null)
+    }
     cy.on('viewport', onViewport)
     cyRef.current = cy
     laidOut.current = false
@@ -410,8 +423,19 @@ export function Web() {
     if (cy) syncGrid(cy, wrap.current)
   }, [grid])
 
+  const memberCounts = useMemo(() => {
+    const members = new Map<string, number>()
+    const memberOf = new Map<string, number>()
+    for (const e of snapshot?.edges ?? []) {
+      members.set(e.to, (members.get(e.to) ?? 0) + 1)
+      memberOf.set(e.from, (memberOf.get(e.from) ?? 0) + 1)
+    }
+    return { members, memberOf }
+  }, [snapshot])
+
   if (!snapshot) return null
 
+  const tipNode = tip ? snapshot.nodes.find((n) => n.id === tip.id) : null
   const selected = snapshot.nodes.find((n) => n.id === selectedId)
   const focused = scope !== 'forest' && selected && (selected.type === 'user' || selected.type === 'group')
   const hint = !focused
@@ -519,6 +543,27 @@ export function Web() {
         {activeFinding && (activeFinding.type === 'circular-nesting' || activeFinding.type === 'deep-nesting' || activeFinding.type === 'distribution-in-security') ? (
           <div className="web-finding">
             <FindingCard finding={activeFinding} onDismiss={clearFinding} />
+          </div>
+        ) : null}
+        {tip && tipNode ? (
+          <div
+            className={tip.y < 150 ? 'web-tip below' : 'web-tip'}
+            style={{ left: tip.x, top: tip.y }}
+            role="tooltip"
+          >
+            <div className="web-tip-head">
+              <TypeGlyph type={tipNode.type} />
+              <strong>{tipNode.displayName}</strong>
+            </div>
+            <div className="web-tip-sub">
+              {tipNode.sAMAccountName}
+              {tipNode.type === 'group'
+                ? ` · ${memberCounts.members.get(tipNode.id) ?? 0} member${(memberCounts.members.get(tipNode.id) ?? 0) === 1 ? '' : 's'}`
+                : ''}
+              {` · in ${memberCounts.memberOf.get(tipNode.id) ?? 0} group${(memberCounts.memberOf.get(tipNode.id) ?? 0) === 1 ? '' : 's'}`}
+            </div>
+            {tipNode.description ? <div className="web-tip-desc">{tipNode.description}</div> : null}
+            <StatusBadges node={tipNode} />
           </div>
         ) : null}
         <div className="web-legend" aria-hidden>
