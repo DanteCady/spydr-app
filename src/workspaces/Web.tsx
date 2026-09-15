@@ -88,6 +88,14 @@ const WEB_STYLE: cytoscape.StylesheetJson = [
       'arrow-scale': 0.7,
       'curve-style': 'bezier'
     }
+  },
+  {
+    selector: 'edge.hover, edge.sel',
+    style: {
+      width: 1.8,
+      'line-color': '#7aa2d4',
+      'target-arrow-color': '#7aa2d4'
+    }
   }
 ]
 
@@ -273,6 +281,8 @@ export function Web() {
     cy.on('tap', (ev) => {
       if (ev.target === cy) selectRef.current(null)
     })
+    cy.on('mouseover', 'node', (ev) => ev.target.connectedEdges().addClass('hover'))
+    cy.on('mouseout', 'node', (ev) => ev.target.connectedEdges().removeClass('hover'))
     const onViewport = (): void => syncGrid(cy, wrap.current)
     cy.on('viewport', onViewport)
     cyRef.current = cy
@@ -321,6 +331,11 @@ export function Web() {
       cy.add({ data: { id: eid, source: e.from, target: e.to } })
     }
 
+    cy.edges().removeClass('sel')
+    if (selectedId && cy.$id(selectedId).nonempty()) {
+      cy.$id(selectedId).connectedEdges().addClass('sel')
+    }
+
     if (added.length && laidOut.current && scope === 'forest') {
       placeAround(cy, added, selectedId)
     }
@@ -336,9 +351,11 @@ export function Web() {
     const cy = cyRef.current
     if (!cy) return
     cy.nodes().unselect()
+    cy.edges().removeClass('sel')
     if (selectedId && cy.$id(selectedId).nonempty()) {
       const node = cy.$id(selectedId)
       node.select()
+      node.connectedEdges().addClass('sel')
       cy.animate({ center: { eles: node }, duration: 180 })
     }
   }, [selectedId])
@@ -437,16 +454,6 @@ export function Web() {
             Spread
           </button>
           <span className="web-tools-sep" aria-hidden />
-          <button type="button" aria-label="Zoom out" title="Zoom out" onClick={() => cyRef.current && zoomBy(cyRef.current, 1 / ZOOM_STEP)}>
-            −
-          </button>
-          <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => cyRef.current && zoomBy(cyRef.current, ZOOM_STEP)}>
-            +
-          </button>
-          <button type="button" onClick={() => cyRef.current?.fit(undefined, 36)}>
-            Fit
-          </button>
-          <span className="web-tools-sep" aria-hidden />
           <button type="button" className={grid ? 'active' : ''} aria-pressed={grid} onClick={() => setGrid((on) => !on)}>
             Grid
           </button>
@@ -454,13 +461,37 @@ export function Web() {
             Reset
           </button>
         </div>
-        <span className="muted">Gold = group · blue = user · red = privileged · dashed = cycle · layout stays put until Organize</span>
       </div>
       {activeFinding && (activeFinding.type === 'circular-nesting' || activeFinding.type === 'deep-nesting' || activeFinding.type === 'distribution-in-security') ? (
         <FindingCard finding={activeFinding} onDismiss={clearFinding} />
       ) : null}
       <div className={grid ? 'web-wrap has-grid' : 'web-wrap'} ref={wrap}>
         <div className="web-canvas" ref={host} />
+        <div className="web-legend" aria-hidden>
+          <span className="legend-row">
+            <span className="legend-dot user" /> User
+          </span>
+          <span className="legend-row">
+            <span className="legend-dot group" /> Group
+          </span>
+          <span className="legend-row">
+            <span className="legend-dot privileged" /> Privileged
+          </span>
+          <span className="legend-row">
+            <span className="legend-dot cycle" /> In a cycle
+          </span>
+        </div>
+        <div className="web-controls">
+          <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => cyRef.current && zoomBy(cyRef.current, ZOOM_STEP)}>
+            +
+          </button>
+          <button type="button" aria-label="Zoom out" title="Zoom out" onClick={() => cyRef.current && zoomBy(cyRef.current, 1 / ZOOM_STEP)}>
+            −
+          </button>
+          <button type="button" aria-label="Fit to view" title="Fit to view" onClick={() => cyRef.current?.fit(undefined, 36)}>
+            Fit
+          </button>
+        </div>
       </div>
     </div>
   )
