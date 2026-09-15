@@ -10,8 +10,8 @@ const BODY: Record<DirectoryObjectType, string> = {
   container: '<path d="M6 8.2h9.4l2.4 2.6H26v13.2H6z"/>'
 }
 
-export function webNodeIcon(type: DirectoryObjectType): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 32 32"><g fill="#f4f7fb">${BODY[type]}</g></svg>`
+export function webNodeIcon(type: DirectoryObjectType, fill = '#f4f7fb'): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 32 32"><g fill="${fill}">${BODY[type]}</g></svg>`
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
 

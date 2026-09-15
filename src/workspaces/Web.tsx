@@ -1,7 +1,7 @@
 import cytoscape from 'cytoscape'
 import fcose from 'cytoscape-fcose'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { DirectorySnapshot } from '@shared/types'
+import type { DirectoryObjectType, DirectorySnapshot } from '@shared/types'
 import { buildMembershipGraph, findGroupCycles, groupIdSet, hopNeighborhood, nestedMembership } from '@shared/graph'
 import { FindingCard } from '../components/FindingCard'
 import { StatusBadges } from '../components/StatusBadges'
@@ -35,126 +35,137 @@ const ZOOM_MAX = 4
 const ZOOM_STEP = 1.28
 const LOD_THRESHOLD = 250
 
-const WEB_STYLE: cytoscape.StylesheetJson = [
-  {
-    selector: 'node',
-    style: {
-      label: 'data(label)',
-      color: '#c9d2de',
-      'font-size': 9.5,
-      'font-family': 'Segoe UI, system-ui, sans-serif',
-      'text-valign': 'bottom',
-      'text-margin-y': 6,
-      'text-wrap': 'ellipsis',
-      'text-max-width': '110px',
-      'text-background-color': '#0c0e12',
-      'text-background-opacity': 0.8,
-      'text-background-padding': '2px',
-      'text-background-shape': 'roundrectangle',
-      'min-zoomed-font-size': 8,
-      'background-image': 'data(icon)',
-      'background-fit': 'contain',
-      'background-clip': 'node',
-      'background-width': '62%',
-      'background-height': '62%',
-      'border-width': 1.5,
-      'border-color': '#8d95a3',
-      'transition-property': 'opacity',
-      'transition-duration': 120,
-      width: 30,
-      height: 30
+function cssVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+}
+
+function buildWebStyle(): cytoscape.StylesheetJson {
+  const text = cssVar('--foreground')
+  const canvas = cssVar('--canvas')
+  const brand = cssVar('--brand')
+  const crit = cssVar('--crit')
+  const edge = cssVar('--web-edge')
+  return [
+    {
+      selector: 'node',
+      style: {
+        label: 'data(label)',
+        color: text,
+        'font-size': 9.5,
+        'font-family': 'IBM Plex Sans, system-ui, sans-serif',
+        'text-valign': 'bottom',
+        'text-margin-y': 6,
+        'text-wrap': 'ellipsis',
+        'text-max-width': '110px',
+        'text-background-color': canvas,
+        'text-background-opacity': 0.8,
+        'text-background-padding': '2px',
+        'text-background-shape': 'roundrectangle',
+        'min-zoomed-font-size': 8,
+        'background-image': 'data(icon)',
+        'background-fit': 'contain',
+        'background-clip': 'node',
+        'background-width': '62%',
+        'background-height': '62%',
+        'border-width': 1.5,
+        'border-color': cssVar('--computer'),
+        'transition-property': 'opacity',
+        'transition-duration': 120,
+        width: 30,
+        height: 30
+      }
+    },
+    {
+      selector: 'node[kind = "group"]',
+      style: {
+        'background-color': cssVar('--web-group-bg'),
+        'border-color': cssVar('--group'),
+        width: 38,
+        height: 38
+      }
+    },
+    {
+      selector: 'node[kind = "user"]',
+      style: { 'background-color': cssVar('--web-user-bg'), 'border-color': cssVar('--user') }
+    },
+    {
+      selector: 'node[privileged = 1]',
+      style: {
+        'border-color': crit,
+        'border-width': 2,
+        'background-color': cssVar('--web-priv-bg'),
+        'underlay-color': crit,
+        'underlay-opacity': 0.14,
+        'underlay-padding': 6,
+        'underlay-shape': 'ellipse'
+      }
+    },
+    {
+      selector: 'node[cycle = 1]',
+      style: { 'border-style': 'dashed', 'border-color': crit }
+    },
+    {
+      selector: 'node[kind = "cluster"]',
+      style: {
+        shape: 'round-rectangle',
+        'background-color': cssVar('--web-cluster-bg'),
+        'border-color': cssVar('--ou'),
+        'border-width': 1.5,
+        'background-image': 'none',
+        label: 'data(label)',
+        color: text,
+        'font-size': 10,
+        'text-valign': 'center',
+        'text-margin-y': 0,
+        'text-background-opacity': 0,
+        'text-max-width': '150px',
+        width: 'label',
+        height: 26,
+        padding: '8px'
+      }
+    },
+    {
+      selector: 'node:selected',
+      style: {
+        'border-color': brand,
+        'border-width': 2.5,
+        'underlay-color': brand,
+        'underlay-opacity': 0.18,
+        'underlay-padding': 8,
+        'underlay-shape': 'ellipse'
+      }
+    },
+    {
+      selector: 'edge',
+      style: {
+        width: 'mapData(w, 1, 10, 1.2, 4)',
+        'line-color': edge,
+        'target-arrow-color': edge,
+        'target-arrow-shape': 'triangle',
+        'arrow-scale': 0.75,
+        'curve-style': 'bezier',
+        'transition-property': 'opacity',
+        'transition-duration': 120
+      }
+    },
+    {
+      selector: 'edge.hover, edge.sel',
+      style: {
+        width: 2,
+        'line-color': brand,
+        'target-arrow-color': brand
+      }
+    },
+    {
+      selector: 'node.faded',
+      style: { opacity: 0.18, 'text-opacity': 0 }
+    },
+    {
+      selector: 'edge.faded',
+      style: { opacity: 0.1 }
     }
-  },
-  {
-    selector: 'node[kind = "group"]',
-    style: {
-      'background-color': '#7d6633',
-      'border-color': '#c9a35a',
-      width: 38,
-      height: 38
-    }
-  },
-  {
-    selector: 'node[kind = "user"]',
-    style: { 'background-color': '#38597a', 'border-color': '#8eb4d4' }
-  },
-  {
-    selector: 'node[privileged = 1]',
-    style: {
-      'border-color': '#d36b6b',
-      'border-width': 2,
-      'background-color': '#63393c',
-      'underlay-color': '#d36b6b',
-      'underlay-opacity': 0.14,
-      'underlay-padding': 6,
-      'underlay-shape': 'ellipse'
-    }
-  },
-  {
-    selector: 'node[cycle = 1]',
-    style: { 'border-style': 'dashed', 'border-color': '#d36b6b' }
-  },
-  {
-    selector: 'node[kind = "cluster"]',
-    style: {
-      shape: 'round-rectangle',
-      'background-color': '#26331f',
-      'border-color': '#7ea57c',
-      'border-width': 1.5,
-      'background-image': 'none',
-      label: 'data(label)',
-      color: '#d7e2d2',
-      'font-size': 10,
-      'text-valign': 'center',
-      'text-margin-y': 0,
-      'text-background-opacity': 0,
-      'text-max-width': '150px',
-      width: 'label',
-      height: 26,
-      padding: '8px'
-    }
-  },
-  {
-    selector: 'node:selected',
-    style: {
-      'border-color': '#7aa2d4',
-      'border-width': 2.5,
-      'underlay-color': '#7aa2d4',
-      'underlay-opacity': 0.18,
-      'underlay-padding': 8,
-      'underlay-shape': 'ellipse'
-    }
-  },
-  {
-    selector: 'edge',
-    style: {
-      width: 'mapData(w, 1, 10, 1.2, 4)',
-      'line-color': '#414b5c',
-      'target-arrow-color': '#414b5c',
-      'target-arrow-shape': 'triangle',
-      'arrow-scale': 0.75,
-      'curve-style': 'bezier',
-      'transition-property': 'opacity',
-      'transition-duration': 120
-    }
-  },
-  {
-    selector: 'edge.hover, edge.sel',
-    style: {
-      width: 2,
-      'line-color': '#7aa2d4',
-      'target-arrow-color': '#7aa2d4'
-    }
-  },
-  {
-    selector: 'node.faded',
-    style: { opacity: 0.18, 'text-opacity': 0 }
-  },
-  {
-    selector: 'edge.faded',
-    style: { opacity: 0.1 }
-  }
-]
+  ]
+}
 
 function applyFocus(cy: cytoscape.Core, selectedId: string | null): void {
   cy.elements().removeClass('faded')
@@ -281,7 +292,7 @@ function buildWebElements(
         kind: n.type,
         privileged: n.privileged ? 1 : 0,
         cycle: cycles.has(n.id) ? 1 : 0,
-        icon: webNodeIcon(n.type)
+        icon: webNodeIcon(n.type, cssVar('--foreground'))
       })
     }
   }
@@ -399,7 +410,7 @@ function placeAround(cy: cytoscape.Core, ids: string[], anchorId: string | null,
 }
 
 export function Web() {
-  const { snapshot, selectedId, select, activeFinding, clearFinding } = useApp()
+  const { snapshot, selectedId, select, activeFinding, clearFinding, theme } = useApp()
   const host = useRef<HTMLDivElement>(null)
   const wrap = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
@@ -415,7 +426,7 @@ export function Web() {
   const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(null)
   const [cyInstance, setCyInstance] = useState<cytoscape.Core | null>(null)
   const [density, setDensity] = useState<Density>('spread')
-  const [grid, setGrid] = useState(true)
+  const [grid, setGrid] = useState(false)
   const [scope, setScope] = useState<WebScope>('forest')
   const [groupsOnly, setGroupsOnly] = useState(false)
 
@@ -443,7 +454,7 @@ export function Web() {
       minZoom: ZOOM_MIN,
       maxZoom: ZOOM_MAX,
       pixelRatio: 2,
-      style: WEB_STYLE,
+      style: buildWebStyle(),
       layout: { name: 'preset' }
     })
     cy.on('tap', 'node', (ev) => {
@@ -566,6 +577,22 @@ export function Web() {
     if (cy) syncGrid(cy, wrap.current)
   }, [grid])
 
+  useEffect(() => {
+    // Defer a frame: the provider's effect that flips data-theme on <html>
+    // runs after this child effect, and the palette must be read after it.
+    const id = requestAnimationFrame(() => {
+      const cy = cyRef.current
+      if (!cy || cy.destroyed()) return
+      cy.style(buildWebStyle())
+      const fill = cssVar('--foreground')
+      cy.nodes().forEach((n) => {
+        if (n.data('kind') !== 'cluster') n.data('icon', webNodeIcon(n.data('kind') as DirectoryObjectType, fill))
+      })
+      cy.emit('viewport') // repaint the minimap with the new palette
+    })
+    return () => cancelAnimationFrame(id)
+  }, [theme])
+
   const memberCounts = useMemo(() => {
     const members = new Map<string, number>()
     const memberOf = new Map<string, number>()
@@ -658,7 +685,7 @@ export function Web() {
     const cy = cyRef.current
     if (!cy || !snapshot) return
     const a = document.createElement('a')
-    a.href = cy.png({ full: true, scale: 2, bg: '#0c0e12' })
+    a.href = cy.png({ full: true, scale: 2, bg: cssVar('--canvas') })
     a.download = `spydr-web-${snapshot.domain}-${new Date().toISOString().slice(0, 10)}.png`
     a.click()
   }

@@ -1,9 +1,13 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { loadContosoFixture } from '../fixtures/contoso-lab'
 import { buildMembershipGraph, enumeratePaths } from '@shared/graph'
 import type { ConnectionInput, DirectorySnapshot, Finding, PathResult, WorkspaceId } from '@shared/types'
 
+export type Theme = 'dark' | 'light'
+
 interface AppState {
+  theme: Theme
+  toggleTheme: () => void
   snapshot: DirectorySnapshot | null
   workspace: WorkspaceId
   selectedId: string | null
@@ -38,6 +42,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pathSource, setPathSource] = useState('')
   const [pathTarget, setPathTarget] = useState('')
   const [activeFinding, setActiveFinding] = useState<Finding | null>(null)
+  const [theme, setTheme] = useState<Theme>(() =>
+    window.localStorage.getItem('spydr-theme') === 'light' ? 'light' : 'dark'
+  )
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    window.localStorage.setItem('spydr-theme', theme)
+  }, [theme])
 
   const graph = useMemo(
     () => (snapshot ? buildMembershipGraph(snapshot.nodes, snapshot.edges) : null),
@@ -141,6 +153,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value: AppState = {
+    theme,
+    toggleTheme: useCallback(() => setTheme((t) => (t === 'dark' ? 'light' : 'dark')), []),
     snapshot,
     workspace,
     selectedId,
