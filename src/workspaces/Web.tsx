@@ -27,7 +27,8 @@ function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 }
 
-function typeIconColor(type: DirectoryObjectType): string {
+function iconColor(type: DirectoryObjectType, privileged: boolean): string {
+  if (privileged) return cssVar('--crit')
   return cssVar(type === 'user' ? '--user' : type === 'group' ? '--group' : type === 'computer' ? '--computer' : '--ou')
 }
 
@@ -39,26 +40,26 @@ function buildWebStyle(): cytoscape.StylesheetJson {
   const member = cssVar('--edge-member')
   const primary = cssVar('--edge-primary')
   return [
-    // Modern tile nodes: soft type-tinted rounded square, crisp type-colored glyph, name beneath.
+    // Bare glyph nodes: only the icon is drawn, colored by type (red when privileged); no tile, no border.
     {
       selector: 'node',
       style: {
-        shape: 'round-rectangle',
-        'corner-radius': '11px',
-        'background-color': cssVar('--node-user-bg'),
+        shape: 'ellipse',
+        'background-opacity': 0,
         'border-width': 0,
         'background-image': 'data(icon)',
         'background-fit': 'contain',
-        'background-clip': 'node',
-        'background-width': '58%',
-        'background-height': '58%',
+        'background-clip': 'none',
+        'background-width': '100%',
+        'background-height': '100%',
+        'background-image-opacity': 1,
         label: 'data(label)',
         color: text,
         'font-size': 10.5,
         'font-weight': 500,
         'font-family': 'IBM Plex Sans, system-ui, sans-serif',
         'text-valign': 'bottom',
-        'text-margin-y': 6,
+        'text-margin-y': 4,
         'text-wrap': 'ellipsis',
         'text-max-width': '124px',
         'text-background-color': canvas,
@@ -68,27 +69,21 @@ function buildWebStyle(): cytoscape.StylesheetJson {
         'min-zoomed-font-size': 7,
         'transition-property': 'opacity',
         'transition-duration': 120,
-        width: 40,
-        height: 40
+        width: 34,
+        height: 34
       }
     },
     {
       selector: 'node[kind = "group"]',
-      style: {
-        'background-color': cssVar('--node-group-bg'),
-        'font-weight': 600,
-        width: 44,
-        height: 44
-      }
+      style: { 'font-weight': 600, width: 38, height: 38 }
     },
     {
       selector: 'node[privileged = 1]',
       style: {
-        'background-color': cssVar('--node-priv-bg'),
         'underlay-color': crit,
-        'underlay-opacity': 0.2,
-        'underlay-padding': 5,
-        'underlay-shape': 'round-rectangle'
+        'underlay-opacity': 0.14,
+        'underlay-padding': 8,
+        'underlay-shape': 'ellipse'
       }
     },
     {
@@ -99,11 +94,10 @@ function buildWebStyle(): cytoscape.StylesheetJson {
     {
       selector: 'node:selected',
       style: {
-        'background-color': cssVar('--node-focus-bg'),
         'underlay-color': brand,
-        'underlay-opacity': 0.3,
-        'underlay-padding': 6,
-        'underlay-shape': 'round-rectangle'
+        'underlay-opacity': 0.26,
+        'underlay-padding': 9,
+        'underlay-shape': 'ellipse'
       }
     },
     {
@@ -369,7 +363,7 @@ export function Web() {
             kind: n.type,
             privileged: n.privileged ? 1 : 0,
             cycle: cycles.has(n.id) ? 1 : 0,
-            icon: webNodeIcon(n.type, typeIconColor(n.type))
+            icon: webNodeIcon(n.type, iconColor(n.type, Boolean(n.privileged)))
           }
         })
       }
@@ -404,7 +398,7 @@ export function Web() {
       cy.style(buildWebStyle())
       cy.nodes().forEach((n) => {
         const kind = n.data('kind') as DirectoryObjectType
-        n.data('icon', webNodeIcon(kind, typeIconColor(kind)))
+        n.data('icon', webNodeIcon(kind, iconColor(kind, n.data('privileged') === 1)))
       })
       cy.emit('viewport')
     })
@@ -570,6 +564,9 @@ export function Web() {
             </span>
             <span className="legend-row">
               <span className="legend-dot privileged" /> Privileged
+            </span>
+            <span className="legend-row">
+              <span className="legend-dot cycle" /> In a cycle
             </span>
             <span className="legend-row">
               <span className="legend-line line-member" /> Member of
