@@ -33,6 +33,7 @@ const GRID_STEP = 28
 const ZOOM_MIN = 0.2
 const ZOOM_MAX = 4
 const ZOOM_STEP = 1.28
+const LOD_THRESHOLD = 250
 
 const WEB_STYLE: cytoscape.StylesheetJson = [
   {
@@ -94,6 +95,26 @@ const WEB_STYLE: cytoscape.StylesheetJson = [
     style: { 'border-style': 'dashed', 'border-color': '#d36b6b' }
   },
   {
+    selector: 'node[kind = "cluster"]',
+    style: {
+      shape: 'round-rectangle',
+      'background-color': '#26331f',
+      'border-color': '#7ea57c',
+      'border-width': 1.5,
+      'background-image': 'none',
+      label: 'data(label)',
+      color: '#d7e2d2',
+      'font-size': 10,
+      'text-valign': 'center',
+      'text-margin-y': 0,
+      'text-background-opacity': 0,
+      'text-max-width': '150px',
+      width: 'label',
+      height: 26,
+      padding: '8px'
+    }
+  },
+  {
     selector: 'node:selected',
     style: {
       'border-color': '#7aa2d4',
@@ -107,7 +128,7 @@ const WEB_STYLE: cytoscape.StylesheetJson = [
   {
     selector: 'edge',
     style: {
-      width: 1.2,
+      width: 'mapData(w, 1, 10, 1.2, 4)',
       'line-color': '#414b5c',
       'target-arrow-color': '#414b5c',
       'target-arrow-shape': 'triangle',
@@ -202,6 +223,93 @@ function visibleNodeIds(
   return visible
 }
 
+interface WebNodeDef {
+  id: string
+  label: string
+  kind: string
+  privileged: number
+  cycle: number
+  icon?: string
+  dn?: string
+}
+
+interface WebEdgeDef {
+  id: string
+  source: string
+  target: string
+  w: number
+}
+
+function buildWebElements(
+  snapshot: DirectorySnapshot,
+  visible: Set<string>,
+  cycles: Set<string>,
+  expanded: Set<string>,
+  selectedId: string | null
+): { nodes: WebNodeDef[]; edges: WebEdgeDef[]; clusters: number; collapsed: number } {
+  const byId = new Map(snapshot.nodes.map((n) => [n.id, n]))
+  const byDn = new Map(snapshot.nodes.map((n) => [n.dn, n]))
+  const clustered = visible.size > LOD_THRESHOLD
+  const effExpanded = new Set(expanded)
+  const sel = selectedId ? byId.get(selectedId) : null
+  if (sel?.type === 'group' && sel.parentDn) effExpanded.add(sel.parentDn)
+
+  const mapId = (id: string): string => {
+    if (!clustered) return id
+    const n = byId.get(id)
+    if (n?.type === 'group' && n.parentDn && !effExpanded.has(n.parentDn)) return `ou:${n.parentDn}`
+    return id
+  }
+
+  const nodes = new Map<string, WebNodeDef>()
+  const counts = new Map<string, number>()
+  for (const id of visible) {
+    const n = byId.get(id)
+    if (!n) continue
+    const mapped = mapId(id)
+    if (mapped !== id) {
+      counts.set(mapped, (counts.get(mapped) ?? 0) + 1)
+      if (!nodes.has(mapped)) {
+        const parent = n.parentDn ? byDn.get(n.parentDn) : undefined
+        const name = parent?.displayName ?? n.parentDn?.split(',')[0]?.replace(/^(OU|CN)=/i, '') ?? 'OU'
+        nodes.set(mapped, { id: mapped, label: name, kind: 'cluster', privileged: 0, cycle: 0, dn: n.parentDn ?? '' })
+      }
+    } else if (!nodes.has(id)) {
+      nodes.set(id, {
+        id: n.id,
+        label: n.displayName,
+        kind: n.type,
+        privileged: n.privileged ? 1 : 0,
+        cycle: cycles.has(n.id) ? 1 : 0,
+        icon: webNodeIcon(n.type)
+      })
+    }
+  }
+  for (const [cid, c] of counts) {
+    const def = nodes.get(cid)
+    if (def) def.label = `${def.label} · ${c}`
+  }
+
+  const edges = new Map<string, WebEdgeDef>()
+  for (const e of snapshot.edges) {
+    if (!visible.has(e.from) || !visible.has(e.to)) continue
+    const s = mapId(e.from)
+    const t = mapId(e.to)
+    if (s === t) continue
+    const eid = `${s}->${t}`
+    const cur = edges.get(eid)
+    if (cur) cur.w = Math.min(10, cur.w + 1)
+    else edges.set(eid, { id: eid, source: s, target: t, w: 1 })
+  }
+
+  return {
+    nodes: [...nodes.values()],
+    edges: [...edges.values()],
+    clusters: counts.size,
+    collapsed: [...counts.values()].reduce((a, b) => a + b, 0)
+  }
+}
+
 function nestingConstraints(cy: cytoscape.Core, gap: number): { top: string; bottom: string; gap: number }[] {
   const constraints: { top: string; bottom: string; gap: number }[] = []
   cy.edges().forEach((edge) => {
@@ -242,6 +350,8 @@ function runOrganize(cy: cytoscape.Core, density: Density): void {
 function orderedNodeIds(cy: cytoscape.Core): string[] {
   return cy
     .nodes()
+    .toArray()
+    .filter((n) => n.data('kind') !== 'cluster')
     .map((n) => ({ id: n.id(), p: n.position() }))
     .sort((a, b) => a.p.y - b.p.y || a.p.x - b.p.x)
     .map((n) => n.id)
@@ -265,14 +375,16 @@ function syncGrid(cy: cytoscape.Core, el: HTMLElement | null): void {
   el.style.backgroundPosition = `${pan.x}px ${pan.y}px`
 }
 
-function placeAround(cy: cytoscape.Core, ids: string[], anchorId: string | null): void {
+function placeAround(cy: cytoscape.Core, ids: string[], anchorId: string | null, at?: { x: number; y: number }): void {
   const anchorNode = anchorId ? cy.$id(anchorId) : cy.collection()
-  const origin = anchorNode.nonempty()
-    ? anchorNode.position()
-    : (() => {
-        const ext = cy.extent()
-        return { x: (ext.x1 + ext.x2) / 2, y: (ext.y1 + ext.y2) / 2 }
-      })()
+  const origin =
+    at ??
+    (anchorNode.nonempty()
+      ? anchorNode.position()
+      : (() => {
+          const ext = cy.extent()
+          return { x: (ext.x1 + ext.x2) / 2, y: (ext.y1 + ext.y2) / 2 }
+        })())
   ids.forEach((id, i) => {
     const ring = Math.floor(i / 8)
     const slot = i % 8
@@ -296,7 +408,10 @@ export function Web() {
   const laidOut = useRef(false)
   const pendingOrganize = useRef(false)
   const [userQuery, setUserQuery] = useState('')
-  const [shown, setShown] = useState({ nodes: 0, edges: 0 })
+  const [shown, setShown] = useState({ nodes: 0, edges: 0, clusters: 0, collapsed: 0 })
+  const [expandedOus, setExpandedOus] = useState<Set<string>>(new Set())
+  const expandOuRef = useRef<(dn: string) => void>(() => {})
+  expandOuRef.current = (dn) => setExpandedOus((s) => new Set(s).add(dn))
   const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(null)
   const [cyInstance, setCyInstance] = useState<cytoscape.Core | null>(null)
   const [density, setDensity] = useState<Density>('spread')
@@ -331,7 +446,10 @@ export function Web() {
       style: WEB_STYLE,
       layout: { name: 'preset' }
     })
-    cy.on('tap', 'node', (ev) => selectRef.current(ev.target.id()))
+    cy.on('tap', 'node', (ev) => {
+      if (ev.target.data('kind') === 'cluster') expandOuRef.current(ev.target.data('dn') as string)
+      else selectRef.current(ev.target.id())
+    })
     cy.on('tap', (ev) => {
       if (ev.target === cy) selectRef.current(null)
     })
@@ -352,6 +470,7 @@ export function Web() {
     cy.on('viewport', onViewport)
     cyRef.current = cy
     setCyInstance(cy)
+    ;(window as { __spydrCy?: cytoscape.Core }).__spydrCy = cy
     laidOut.current = false
     syncGrid(cy, wrap.current)
     return () => {
@@ -371,31 +490,31 @@ export function Web() {
     const cycles = new Set(findGroupCycles(graph, groups).flat())
     const visible = visibleNodeIds(snapshot, graph, selectedId, userQuery, scope, groupsOnly)
     const byId = new Map(snapshot.nodes.map((n) => [n.id, n]))
+    const built = buildWebElements(snapshot, visible, cycles, expandedOus, selectedId)
+    const nodeIds = new Set(built.nodes.map((n) => n.id))
+    const edgeIds = new Set(built.edges.map((e) => e.id))
 
-    cy.nodes().filter((node) => !visible.has(node.id())).remove()
-    cy.edges().filter((edge) => !visible.has(edge.source().id()) || !visible.has(edge.target().id())).remove()
+    const prevPos = new Map<string, { x: number; y: number }>()
+    cy.nodes().forEach((n) => {
+      prevPos.set(n.id(), { ...n.position() })
+    })
+
+    cy.nodes().filter((node) => !nodeIds.has(node.id())).remove()
+    cy.edges().filter((edge) => !edgeIds.has(edge.id())).remove()
 
     const added: string[] = []
-    for (const id of visible) {
-      const n = byId.get(id)
-      if (!n || cy.$id(id).nonempty()) continue
-      cy.add({
-        data: {
-          id: n.id,
-          label: n.displayName,
-          kind: n.type,
-          privileged: n.privileged ? 1 : 0,
-          cycle: cycles.has(n.id) ? 1 : 0,
-          icon: webNodeIcon(n.type)
-        }
-      })
-      added.push(id)
+    for (const def of built.nodes) {
+      const existing = cy.$id(def.id)
+      if (existing.nonempty()) {
+        if (existing.data('label') !== def.label) existing.data('label', def.label)
+        continue
+      }
+      cy.add({ data: { ...def } })
+      added.push(def.id)
     }
-    for (const e of snapshot.edges) {
-      if (!visible.has(e.from) || !visible.has(e.to)) continue
-      const eid = `${e.from}->${e.to}`
-      if (cy.$id(eid).nonempty()) continue
-      cy.add({ data: { id: eid, source: e.from, target: e.to } })
+    for (const def of built.edges) {
+      if (cy.$id(def.id).nonempty()) continue
+      cy.add({ data: { ...def } })
     }
 
     cy.edges().removeClass('sel')
@@ -403,10 +522,22 @@ export function Web() {
       cy.$id(selectedId).connectedEdges().addClass('sel')
     }
     applyFocus(cy, selectedId)
-    setShown({ nodes: cy.nodes().length, edges: cy.edges().length })
+    setShown({ nodes: cy.nodes().length, edges: cy.edges().length, clusters: built.clusters, collapsed: built.collapsed })
 
     if (added.length && laidOut.current && scope === 'forest') {
-      placeAround(cy, added, selectedId)
+      const byOrigin = new Map<string, string[]>()
+      const rest: string[] = []
+      for (const id of added) {
+        const n = byId.get(id)
+        const cid = n?.type === 'group' && n.parentDn ? `ou:${n.parentDn}` : null
+        if (cid && prevPos.has(cid)) {
+          byOrigin.set(cid, [...(byOrigin.get(cid) ?? []), id])
+        } else {
+          rest.push(id)
+        }
+      }
+      for (const [cid, ids] of byOrigin) placeAround(cy, ids, null, prevPos.get(cid))
+      if (rest.length) placeAround(cy, rest, selectedId)
     }
 
     if (!laidOut.current || pendingOrganize.current || scope !== 'forest') {
@@ -414,7 +545,7 @@ export function Web() {
       laidOut.current = true
       runOrganize(cy, densityRef.current)
     }
-  }, [snapshot, selectedId, userQuery, scope, groupsOnly])
+  }, [snapshot, selectedId, userQuery, scope, groupsOnly, expandedOus])
 
   useEffect(() => {
     const cy = cyRef.current
@@ -528,6 +659,7 @@ export function Web() {
     setScope('forest')
     setGroupsOnly(false)
     setUserQuery('')
+    setExpandedOus(new Set())
     select(null)
     if (!userQuery && !selectedId && scope === 'forest' && !groupsOnly) {
       pendingOrganize.current = false
@@ -588,6 +720,11 @@ export function Web() {
           <button type="button" onClick={resetView}>
             Reset
           </button>
+          {expandedOus.size > 0 ? (
+            <button type="button" onClick={() => setExpandedOus(new Set())}>
+              Fold OUs
+            </button>
+          ) : null}
         </div>
       </div>
       <div
@@ -603,6 +740,9 @@ export function Web() {
           <span>{hint}</span>
           <span className="web-status-counts">
             {shown.nodes} node{shown.nodes === 1 ? '' : 's'} · {shown.edges} edge{shown.edges === 1 ? '' : 's'}
+            {shown.collapsed > 0
+              ? ` · ${shown.collapsed} groups folded into ${shown.clusters} OU${shown.clusters === 1 ? '' : 's'} — click a cluster to expand`
+              : ''}
           </span>
         </div>
         {activeFinding && (activeFinding.type === 'circular-nesting' || activeFinding.type === 'deep-nesting' || activeFinding.type === 'distribution-in-security') ? (
