@@ -39,65 +39,64 @@ function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 }
 
+function typeIconColor(type: string): string {
+  return cssVar(type === 'user' ? '--user' : type === 'group' ? '--group' : '--computer')
+}
+
 function buildWebStyle(): cytoscape.StylesheetJson {
   const text = cssVar('--foreground')
   const canvas = cssVar('--canvas')
   const brand = cssVar('--brand')
   const crit = cssVar('--crit')
-  const edge = cssVar('--web-edge')
+  const border = cssVar('--border')
+  const member = cssVar('--edge-member')
+  const primary = cssVar('--edge-primary')
   return [
+    // arcelyt card nodes: neutral rounded-rect, name inside, colored type glyph at left
     {
       selector: 'node',
       style: {
+        shape: 'round-rectangle',
+        'corner-radius': '8px',
+        'background-color': cssVar('--graph-node-bg'),
+        'border-width': 1,
+        'border-color': border,
         label: 'data(label)',
         color: text,
-        'font-size': 9.5,
+        'font-size': 11,
+        'font-weight': 500,
         'font-family': 'IBM Plex Sans, system-ui, sans-serif',
-        'text-valign': 'bottom',
-        'text-margin-y': 6,
+        'text-valign': 'center',
+        'text-halign': 'center',
         'text-wrap': 'ellipsis',
-        'text-max-width': '110px',
-        'text-background-color': canvas,
-        'text-background-opacity': 0.8,
-        'text-background-padding': '2px',
-        'text-background-shape': 'roundrectangle',
-        'min-zoomed-font-size': 8,
+        'text-max-width': '140px',
+        'text-margin-x': 10,
+        'min-zoomed-font-size': 7,
         'background-image': 'data(icon)',
-        'background-fit': 'contain',
-        'background-clip': 'node',
-        'background-width': '62%',
-        'background-height': '62%',
-        'border-width': 1.5,
-        'border-color': cssVar('--computer'),
+        'background-fit': 'none',
+        'background-width': '13px',
+        'background-height': '13px',
+        'background-position-x': '7px',
+        'background-position-y': '50%',
         'transition-property': 'opacity',
         'transition-duration': 120,
-        width: 30,
-        height: 30
+        width: 'label',
+        height: 30,
+        padding: '9px'
       }
     },
     {
       selector: 'node[kind = "group"]',
-      style: {
-        'background-color': cssVar('--web-group-bg'),
-        'border-color': cssVar('--group'),
-        width: 38,
-        height: 38
-      }
-    },
-    {
-      selector: 'node[kind = "user"]',
-      style: { 'background-color': cssVar('--web-user-bg'), 'border-color': cssVar('--user') }
+      style: { 'font-weight': 600 }
     },
     {
       selector: 'node[privileged = 1]',
       style: {
         'border-color': crit,
-        'border-width': 2,
-        'background-color': cssVar('--web-priv-bg'),
+        'border-width': 1.5,
         'underlay-color': crit,
-        'underlay-opacity': 0.14,
-        'underlay-padding': 6,
-        'underlay-shape': 'ellipse'
+        'underlay-opacity': 0.12,
+        'underlay-padding': 4
       }
     },
     {
@@ -107,53 +106,81 @@ function buildWebStyle(): cytoscape.StylesheetJson {
     {
       selector: 'node[kind = "cluster"]',
       style: {
-        shape: 'round-rectangle',
         'background-color': cssVar('--web-cluster-bg'),
         'border-color': cssVar('--ou'),
         'border-width': 1.5,
         'background-image': 'none',
-        label: 'data(label)',
-        color: text,
-        'font-size': 10,
-        'text-valign': 'center',
-        'text-margin-y': 0,
-        'text-background-opacity': 0,
-        'text-max-width': '150px',
-        width: 'label',
-        height: 26,
-        padding: '8px'
+        'text-margin-x': 0,
+        'font-size': 10.5,
+        height: 28
       }
     },
+    // focus treatment: brand border + soft brand ring, focus surface
     {
       selector: 'node:selected',
       style: {
+        'background-color': cssVar('--graph-focus-bg'),
         'border-color': brand,
-        'border-width': 2.5,
+        'border-width': 2,
         'underlay-color': brand,
-        'underlay-opacity': 0.18,
-        'underlay-padding': 8,
-        'underlay-shape': 'ellipse'
+        'underlay-opacity': 0.22,
+        'underlay-padding': 5
       }
     },
+    // arcelyt relationship edges: colored solid lines, labels revealed on hover/select
     {
       selector: 'edge',
       style: {
-        width: 'mapData(w, 1, 10, 1.2, 4)',
-        'line-color': edge,
-        'target-arrow-color': edge,
-        'target-arrow-shape': 'triangle',
-        'arrow-scale': 0.75,
+        width: 'mapData(w, 1, 10, 1.6, 4)',
         'curve-style': 'bezier',
+        'line-color': member,
+        'target-arrow-color': member,
+        'target-arrow-shape': 'triangle',
+        'arrow-scale': 1,
+        opacity: 0.92,
+        label: 'data(rel)',
+        'font-size': 8,
+        'font-family': 'IBM Plex Mono, ui-monospace, monospace',
+        color: member,
+        'text-opacity': 0,
+        'text-rotation': 'autorotate',
+        'text-background-color': canvas,
+        'text-background-opacity': 0.9,
+        'text-background-padding': '2px',
         'transition-property': 'opacity',
         'transition-duration': 120
+      }
+    },
+    // primary-group membership is implicit — dashed amber, arcelyt's "inferred" signal
+    {
+      selector: 'edge[via = "primaryGroup"]',
+      style: {
+        'line-style': 'dashed',
+        'line-dash-pattern': [6, 4],
+        'line-color': primary,
+        'target-arrow-color': primary,
+        color: primary
+      }
+    },
+    {
+      selector: 'edge.cyc',
+      style: {
+        'line-style': 'dashed',
+        'line-dash-pattern': [5, 4],
+        'line-color': crit,
+        'target-arrow-color': crit,
+        color: crit
       }
     },
     {
       selector: 'edge.hover, edge.sel',
       style: {
-        width: 2,
+        width: 3.2,
         'line-color': brand,
-        'target-arrow-color': brand
+        'target-arrow-color': brand,
+        color: brand,
+        'text-opacity': 1,
+        opacity: 1
       }
     },
     {
@@ -249,6 +276,8 @@ interface WebEdgeDef {
   source: string
   target: string
   w: number
+  via: string
+  rel: string
 }
 
 function buildWebElements(
@@ -292,7 +321,7 @@ function buildWebElements(
         kind: n.type,
         privileged: n.privileged ? 1 : 0,
         cycle: cycles.has(n.id) ? 1 : 0,
-        icon: webNodeIcon(n.type, cssVar('--foreground'))
+        icon: webNodeIcon(n.type, typeIconColor(n.type))
       })
     }
   }
@@ -309,8 +338,19 @@ function buildWebElements(
     if (s === t) continue
     const eid = `${s}->${t}`
     const cur = edges.get(eid)
-    if (cur) cur.w = Math.min(10, cur.w + 1)
-    else edges.set(eid, { id: eid, source: s, target: t, w: 1 })
+    if (cur) {
+      cur.w = Math.min(10, cur.w + 1)
+      cur.rel = `${cur.w} memberships`
+    } else {
+      edges.set(eid, {
+        id: eid,
+        source: s,
+        target: t,
+        w: 1,
+        via: e.via,
+        rel: e.via === 'primaryGroup' ? 'primary group' : 'member of'
+      })
+    }
   }
 
   return {
@@ -524,9 +564,16 @@ export function Web() {
       added.push(def.id)
     }
     for (const def of built.edges) {
-      if (cy.$id(def.id).nonempty()) continue
+      const existing = cy.$id(def.id)
+      if (existing.nonempty()) {
+        if (existing.data('rel') !== def.rel) existing.data('rel', def.rel)
+        continue
+      }
       cy.add({ data: { ...def } })
     }
+    cy.edges().forEach((ed) => {
+      ed.toggleClass('cyc', ed.source().data('cycle') === 1 && ed.target().data('cycle') === 1)
+    })
 
     cy.edges().removeClass('sel')
     if (selectedId && cy.$id(selectedId).nonempty()) {
@@ -584,9 +631,9 @@ export function Web() {
       const cy = cyRef.current
       if (!cy || cy.destroyed()) return
       cy.style(buildWebStyle())
-      const fill = cssVar('--foreground')
       cy.nodes().forEach((n) => {
-        if (n.data('kind') !== 'cluster') n.data('icon', webNodeIcon(n.data('kind') as DirectoryObjectType, fill))
+        const kind = n.data('kind') as DirectoryObjectType | 'cluster'
+        if (kind !== 'cluster') n.data('icon', webNodeIcon(kind, typeIconColor(kind)))
       })
       cy.emit('viewport') // repaint the minimap with the new palette
     })
@@ -822,6 +869,12 @@ export function Web() {
           </span>
           <span className="legend-row">
             <span className="legend-dot cycle" /> In a cycle
+          </span>
+          <span className="legend-row">
+            <span className="legend-line line-member" /> Member of
+          </span>
+          <span className="legend-row">
+            <span className="legend-line line-primary" /> Primary group
           </span>
           <span className="legend-keys">←→ move · ⏎ center · esc clear</span>
         </div>
