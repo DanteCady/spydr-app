@@ -35,6 +35,10 @@
   --web-priv-bg: #63393c;
   --web-cluster-bg: #26331f;
   --web-edge: #414b5c;
+  --edge-member: #0d9488;
+  --edge-primary: #fbbf24;
+  --graph-node-bg: #0f1623;
+  --graph-focus-bg: #15252f;
   --minimap-mask: rgba(7, 11, 18, 0.55);
   /* aliases kept for shared code */
   --bg: var(--background);
@@ -90,6 +94,10 @@
   --web-priv-bg: #efc3c3;
   --web-cluster-bg: #d9e7d4;
   --web-edge: #9fb0c6;
+  --edge-member: #0f766e;
+  --edge-primary: #b45309;
+  --graph-node-bg: #ffffff;
+  --graph-focus-bg: #dbeafe;
   --minimap-mask: rgba(237, 241, 248, 0.6);
   --shadow-pop: 0 8px 24px rgba(15, 23, 42, 0.18);
 }
@@ -618,10 +626,13 @@ table.grid tr.selected td { background: var(--sel); }
   font-size: 9.5px;
 }
 .legend-dot { width: 10px; height: 10px; border-radius: 999px; border: 1.5px solid var(--border); flex-shrink: 0; }
-.legend-dot.user { background: var(--web-user-bg); border-color: var(--user); }
-.legend-dot.group { background: var(--web-group-bg); border-color: var(--group); }
-.legend-dot.privileged { background: var(--web-priv-bg); border-color: var(--crit); }
+.legend-dot.user { background: var(--user); border-color: var(--user); }
+.legend-dot.group { background: var(--group); border-color: var(--group); }
+.legend-dot.privileged { background: transparent; border-color: var(--crit); }
 .legend-dot.cycle { background: transparent; border: 1.5px dashed var(--crit); }
+.legend-line { width: 14px; height: 0; flex-shrink: 0; }
+.legend-line.line-member { border-top: 2px solid var(--edge-member); }
+.legend-line.line-primary { border-top: 2px dashed var(--edge-primary); }
 
 .web-corner {
   position: absolute;
