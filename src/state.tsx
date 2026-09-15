@@ -22,6 +22,7 @@ interface AppState {
   setPathTarget: (id: string) => void
   goTo: (workspace: WorkspaceId, objectId?: string) => void
   goToFinding: (finding: Finding) => void
+  clearFinding: () => void
   activeFinding: Finding | null
   paths: PathResult[]
 }
@@ -158,6 +159,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPathTarget,
     goTo,
     goToFinding,
+    clearFinding: useCallback(() => setActiveFinding(null), []),
     activeFinding,
     paths
   }

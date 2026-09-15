@@ -3,7 +3,7 @@ import fcose from 'cytoscape-fcose'
 import { useEffect, useRef, useState } from 'react'
 import type { DirectorySnapshot } from '@shared/types'
 import { buildMembershipGraph, findGroupCycles, groupIdSet, hopNeighborhood, nestedMembership } from '@shared/graph'
-import { SeverityBadge } from '../components/SeverityBadge'
+import { FindingCard } from '../components/FindingCard'
 import { webNodeIcon } from '../components/TypeGlyph'
 import { useApp } from '../state'
 
@@ -228,7 +228,7 @@ function placeAround(cy: cytoscape.Core, ids: string[], anchorId: string | null)
 }
 
 export function Web() {
-  const { snapshot, selectedId, select, activeFinding } = useApp()
+  const { snapshot, selectedId, select, activeFinding, clearFinding } = useApp()
   const host = useRef<HTMLDivElement>(null)
   const wrap = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
@@ -457,11 +457,7 @@ export function Web() {
         <span className="muted">Gold = group · blue = user · red = privileged · dashed = cycle · layout stays put until Organize</span>
       </div>
       {activeFinding && (activeFinding.type === 'circular-nesting' || activeFinding.type === 'deep-nesting' || activeFinding.type === 'distribution-in-security') ? (
-        <div className="path-card" style={{ margin: '8px 12px 0' }}>
-          <SeverityBadge severity={activeFinding.severity} /> {activeFinding.title}
-          <p>{activeFinding.detail}</p>
-          <p className="suggested">{activeFinding.suggestedFix}</p>
-        </div>
+        <FindingCard finding={activeFinding} onDismiss={clearFinding} />
       ) : null}
       <div className={grid ? 'web-wrap has-grid' : 'web-wrap'} ref={wrap}>
         <div className="web-canvas" ref={host} />

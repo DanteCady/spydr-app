@@ -49,18 +49,22 @@ export function Hygiene() {
           <div className="l">Privileged nested paths</div>
         </div>
       </div>
-      <div className="toolbar">
-        {TYPES.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className={type === t.id ? 'linkish' : 'linkish muted'}
-            onClick={() => setType(t.id)}
-            style={{ fontWeight: type === t.id ? 600 : 400, color: type === t.id ? 'var(--text)' : undefined }}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="toolbar chips">
+        {TYPES.map((t) => {
+          const n = t.id === 'all' ? findings.length : findings.filter((f) => f.type === t.id).length
+          return (
+            <button
+              key={t.id}
+              type="button"
+              className={type === t.id ? 'chip active' : 'chip'}
+              aria-pressed={type === t.id}
+              onClick={() => setType(t.id)}
+            >
+              {t.label}
+              <span className="chip-n">{n}</span>
+            </button>
+          )
+        })}
       </div>
       <div className="scroll">
         <table className="grid">

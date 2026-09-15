@@ -70,9 +70,10 @@ export function AppShell() {
             }}
           />
           <span className="spacer" />
-          <span className="muted">
-            {snapshot.findings.length} findings · ingested {new Date(snapshot.ingestedAt).toLocaleString()}
-          </span>
+          <button type="button" className="linkish" onClick={() => setWorkspace('hygiene')}>
+            {snapshot.findings.length} finding{snapshot.findings.length === 1 ? '' : 's'}
+          </button>
+          <span className="muted">ingested {new Date(snapshot.ingestedAt).toLocaleString()}</span>
         </header>
         <div className="workspace">
           {workspace === 'directory' ? <Directory /> : null}
