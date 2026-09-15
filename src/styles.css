@@ -281,10 +281,6 @@ table.grid tr.selected td { background: var(--sel); }
   flex: 0 1 240px;
 }
 .web-toolbar { flex-wrap: wrap; }
-.web-toolbar > .muted:last-child {
-  flex: 1 0 100%;
-  font-size: 11px;
-}
 .web-tools {
   display: flex;
   flex-wrap: wrap;
@@ -322,6 +318,46 @@ table.grid tr.selected td { background: var(--sel); }
 }
 .web-canvas { position: absolute; inset: 0; background: transparent; }
 .web-canvas canvas { background: transparent; }
+.web-legend {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: rgba(22, 26, 33, 0.92);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 11px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.legend-row { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 999px; border: 1.5px solid var(--border); flex-shrink: 0; }
+.legend-dot.user { background: #3d6484; border-color: var(--user); }
+.legend-dot.group { background: #8a7038; border-color: var(--group); }
+.legend-dot.privileged { background: #6a3a3a; border-color: var(--crit); }
+.legend-dot.cycle { background: transparent; border: 1.5px dashed var(--crit); }
+.web-controls {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.web-controls button {
+  width: 32px;
+  height: 30px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+  display: grid;
+  place-items: center;
+}
+.web-controls button:hover { background: var(--hover); }
 
 .path-form { display: flex; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--panel); flex-wrap: wrap; }
 .path-form label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 11px; min-width: 220px; flex: 1; }
