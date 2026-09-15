@@ -22,6 +22,8 @@
   --rail: 212px;
   --inspector: 340px;
   --top: 44px;
+  --radius: 6px;
+  --radius-sm: 4px;
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   font-size: 13px;
   line-height: 1.4;
@@ -32,7 +34,22 @@
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
 button, input, select { font: inherit; color: inherit; }
-button { cursor: pointer; }
+button { cursor: pointer; border-radius: var(--radius-sm); }
+input, select { border-radius: var(--radius-sm); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+input:focus-visible, select:focus-visible { outline: none; border-color: var(--accent); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--muted); border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-corner { background: transparent; }
 code { font-family: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, monospace; font-size: 11.5px; }
 
 .app { display: flex; height: 100%; background: var(--bg); }
@@ -115,6 +132,7 @@ code { font-family: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, monospace; 
   border: 1px solid var(--border);
   padding: 3px 8px;
   background: var(--bg);
+  border-radius: 999px;
 }
 .topbar input[type='search'] {
   flex: 1;
@@ -198,6 +216,7 @@ table.grid tr.selected td { background: var(--sel); }
   color: var(--muted);
   white-space: nowrap;
   vertical-align: middle;
+  border-radius: 999px;
 }
 .badge svg { width: 9px; height: 9px; flex-shrink: 0; }
 .badge.severity svg { fill: currentColor; stroke: none; }
@@ -326,6 +345,7 @@ table.grid tr.selected td { background: var(--sel); }
   list-style: none;
   background: var(--panel);
   border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
 }
 .picker-list button {
   display: flex;
@@ -344,7 +364,61 @@ table.grid tr.selected td { background: var(--sel); }
   margin: 8px 12px;
   padding: 10px 12px;
   background: var(--panel-2);
+  border-radius: var(--radius);
 }
+.finding-head { display: flex; align-items: center; gap: 6px; }
+.finding-title { font-weight: 600; }
+.finding-head .dismiss {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 6px;
+}
+.finding-head .dismiss:hover { color: var(--text); background: var(--hover); }
+.finding-card p { margin: 6px 0 0; }
+
+.chips { flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.chip:hover { background: var(--hover); color: var(--text); }
+.chip.active { background: var(--sel); border-color: var(--accent); color: var(--text); }
+.chip-n {
+  font-size: 10.5px;
+  color: var(--muted);
+  background: var(--panel-2);
+  border-radius: 999px;
+  padding: 0 6px;
+}
+.chip.active .chip-n { color: var(--text); }
+
+.copy-btn {
+  margin-left: 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+.copy-btn:hover { color: var(--text); background: var(--hover); }
+.copy-btn.copied { color: var(--low); border-color: #2e4a38; }
+
+.empty-state { padding: 32px 24px; text-align: center; }
+.empty-state .empty-title { margin: 0 0 6px; font-weight: 600; }
+.empty-state .empty-hint { margin: 0 auto; color: var(--muted); font-size: 12px; max-width: 320px; }
 .path-card ol { margin: 6px 0 0; padding-left: 18px; }
 .path-card li button { background: none; border: none; color: var(--accent); }
 
@@ -373,6 +447,7 @@ table.grid tr.selected td { background: var(--sel); }
   background: var(--panel);
   border: 1px solid var(--border);
   padding: 28px 28px 24px;
+  border-radius: var(--radius);
 }
 .connect-card h1 { margin: 0 0 6px; font-size: 22px; font-weight: 600; letter-spacing: 0.04em; }
 .connect-brand {
@@ -409,6 +484,7 @@ table.grid tr.selected td { background: var(--sel); }
   margin: 18px 0 0;
   border: 1px solid var(--border);
   padding: 12px;
+  border-radius: var(--radius);
 }
 .connect legend { color: var(--muted); padding: 0 6px; }
 .connect .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }

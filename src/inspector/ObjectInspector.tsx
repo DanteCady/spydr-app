@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import { isSecurityGroup } from '@shared/adFlags'
 import { memberOf, membersOf } from '@shared/graph'
 import type { DirectoryNode } from '@shared/types'
-import { SeverityBadge } from '../components/SeverityBadge'
+import { CopyButton } from '../components/CopyButton'
+import { EmptyState } from '../components/EmptyState'
+import { FindingCard } from '../components/FindingCard'
 import { TypeGlyph } from '../components/TypeGlyph'
 import { StatusBadges } from '../components/StatusBadges'
 import { formatLogon, formatWhen, groupScope, typeLabel, uacSummary } from '../lib/format'
@@ -29,7 +31,7 @@ export function ObjectInspector() {
   if (!node) {
     return (
       <aside className="split-inspector">
-        <div className="empty">Select an object to inspect properties.</div>
+        <EmptyState title="Nothing selected" hint="Select an object in any workspace to inspect its properties, memberships, and findings." />
       </aside>
     )
   }
@@ -100,9 +102,15 @@ export function ObjectInspector() {
         {tab === 'account' ? (
           <dl className="kv">
             <dt>UPN</dt>
-            <dd>{node.userPrincipalName || '—'}</dd>
+            <dd>
+              {node.userPrincipalName || '—'}
+              {node.userPrincipalName ? <CopyButton text={node.userPrincipalName} label="UPN" /> : null}
+            </dd>
             <dt>SAM</dt>
-            <dd>{node.sAMAccountName}</dd>
+            <dd>
+              {node.sAMAccountName}
+              <CopyButton text={node.sAMAccountName} label="SAM account name" />
+            </dd>
             <dt>Logon</dt>
             <dd>{formatLogon(node.lastLogonTimestamp)}</dd>
             <dt>Flags</dt>
@@ -157,10 +165,12 @@ export function ObjectInspector() {
             <dt>DN</dt>
             <dd>
               <code>{node.dn}</code>
+              <CopyButton text={node.dn} label="distinguished name" />
             </dd>
             <dt>GUID</dt>
             <dd>
               <code>{node.id}</code>
+              <CopyButton text={node.id} label="object GUID" />
             </dd>
             <dt>Created</dt>
             <dd>{formatWhen(node.whenCreated)}</dd>
@@ -192,14 +202,11 @@ export function ObjectInspector() {
               </button>
             </p>
             {findings.map((f) => (
-              <div key={f.id} className="path-card">
-                <SeverityBadge severity={f.severity} /> {f.title}
-                <p>{f.detail}</p>
-                <p className="suggested">{f.suggestedFix}</p>
+              <FindingCard key={f.id} finding={f}>
                 <button type="button" className="linkish" onClick={() => goTo('hygiene', f.objectIds[0])}>
                   Open in Hygiene
                 </button>
-              </div>
+              </FindingCard>
             ))}
             {findings.length === 0 ? <p className="muted">No findings attached to this object.</p> : null}
           </div>

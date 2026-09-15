@@ -1,9 +1,10 @@
+import { EmptyState } from '../components/EmptyState'
+import { FindingCard } from '../components/FindingCard'
 import { ObjectPicker } from '../components/ObjectPicker'
-import { SeverityBadge } from '../components/SeverityBadge'
 import { useApp } from '../state'
 
 export function Pathfinder() {
-  const { snapshot, pathSource, pathTarget, setPathSource, setPathTarget, paths, select, goTo, activeFinding } = useApp()
+  const { snapshot, pathSource, pathTarget, setPathSource, setPathTarget, paths, select, goTo, activeFinding, clearFinding } = useApp()
   if (!snapshot) return null
 
   const people = snapshot.nodes.filter((n) => n.type === 'user' || n.type === 'group')
@@ -31,17 +32,14 @@ export function Pathfinder() {
         ))}
       </div>
       <div className="scroll">
-        {activeFinding ? (
-          <div className="path-card">
-            <SeverityBadge severity={activeFinding.severity} /> {activeFinding.title}
-            <p>{activeFinding.detail}</p>
-            <p className="suggested">{activeFinding.suggestedFix}</p>
-          </div>
-        ) : null}
+        {activeFinding ? <FindingCard finding={activeFinding} onDismiss={clearFinding} /> : null}
         {!pathSource || !pathTarget ? (
-          <p className="empty">Pick a source and a target to see nested membership paths. Sample: Alice Chen → Domain Admins.</p>
+          <EmptyState
+            title="Pick a source and a target"
+            hint="Spydr walks nested membership to show every path in. Sample: Alice Chen → Domain Admins."
+          />
         ) : paths.length === 0 ? (
-          <p className="empty">No nested path from the source into that group.</p>
+          <EmptyState title="No nested path" hint="The source never reaches that group through any membership chain." />
         ) : (
           paths.map((p, i) => (
             <div className="path-card" key={p.nodeIds.join('>')}>
