@@ -1,0 +1,22 @@
+node_modules/
+dist/
+out/
+release/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+coverage/
+.vite/
+*.local
+userData/
+.idea/
+.vscode/
+*.sqlite
+*.sqlite-journal
+# Never commit AD snapshots or encrypted bind secrets
+snapshots/
+.spydr/

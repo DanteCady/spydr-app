@@ -1,0 +1,14 @@
+---
+description: Spydr product invariants — read-only AD, process split, no secrets in artifacts
+alwaysApply: true
+---
+
+# Spydr core
+
+- On-prem AD is **read-only**. Do not add LDAP modify/add/delete, enable/disable, or group membership writes.
+- Bind with a normal domain user or dedicated read-only account. Never instruct the admin to use Domain Admin.
+- Passwords stay in memory or Electron `safeStorage`. Never persist them in JSON snapshots, logs, git, or IPC error messages.
+- LDAP, discovery, and graph/findings run in the Electron **main** process. The renderer talks over the typed `window.spydr` bridge only.
+- Default Web view is **groups only**. Users appear on expand/search so the canvas does not hairball.
+- Selection is shared across Directory, Web, Pathfinder, Hygiene, and the inspector.
+- Entra/Graph is out of scope until explicitly requested; keep the provider interface intact.

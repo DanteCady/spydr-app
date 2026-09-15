@@ -1,0 +1,13 @@
+---
+description: Electron main-process conventions for LDAP, IPC, and snapshots
+globs: electron/**/*.ts
+alwaysApply: false
+---
+
+# Electron main
+
+- Use `ldapts` for binds and paged search. Implement `member` range retrieval (`member;range=0-1499` … until `*`).
+- After bind, read rootDSE for `defaultNamingContext` unless the admin scoped an OU.
+- Map socket/TLS/bind failures to admin language (VPN, port, credentials, certificate). Redact any password substring before sending errors to the renderer.
+- Snapshots contain nodes, edges, findings — never bind passwords or `safeStorage` payloads.
+- Keep graph build and finding detectors pure (no `BrowserWindow`, no `safeStorage`) so `npm run verify:fixture` can run them.

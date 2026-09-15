@@ -1,0 +1,146 @@
+import cytoscape from 'cytoscape'
+import fcose from 'cytoscape-fcose'
+import { useEffect, useRef } from 'react'
+import { buildMembershipGraph, findGroupCycles, groupIdSet } from '@shared/graph'
+import { useApp } from '../state'
+
+cytoscape.use(fcose as Parameters<typeof cytoscape.use>[0])
+
+export function Web() {
+  const { snapshot, selectedId, select, webShowUsers, setWebShowUsers } = useApp()
+  const host = useRef<HTMLDivElement>(null)
+  const cyRef = useRef<cytoscape.Core | null>(null)
+
+  useEffect(() => {
+    if (!host.current || !snapshot) return
+
+    const groups = groupIdSet(snapshot.nodes)
+    const graph = buildMembershipGraph(snapshot.nodes, snapshot.edges)
+    const cycles = new Set(findGroupCycles(graph, groups).flat())
+    const visible = new Set(
+      snapshot.nodes
+        .filter((n) => n.type === 'group' || (webShowUsers && n.type === 'user'))
+        .map((n) => n.id)
+    )
+
+    const elements: cytoscape.ElementDefinition[] = []
+    for (const n of snapshot.nodes) {
+      if (!visible.has(n.id)) continue
+      elements.push({
+        data: {
+          id: n.id,
+          label: n.displayName,
+          kind: n.type,
+          privileged: n.privileged ? 1 : 0,
+          cycle: cycles.has(n.id) ? 1 : 0
+        }
+      })
+    }
+    for (const e of snapshot.edges) {
+      if (!visible.has(e.from) || !visible.has(e.to)) continue
+      elements.push({ data: { id: `${e.from}->${e.to}`, source: e.from, target: e.to } })
+    }
+
+    cyRef.current?.destroy()
+    const cy = cytoscape({
+      container: host.current,
+      elements,
+      wheelSensitivity: 0.3,
+      style: [
+        {
+          selector: 'node',
+          style: {
+            label: 'data(label)',
+            color: '#e7ebf1',
+            'font-size': 10,
+            'font-family': 'Segoe UI, system-ui, sans-serif',
+            'text-valign': 'bottom',
+            'text-margin-y': 4,
+            'background-color': '#1c222b',
+            'border-width': 1.5,
+            'border-color': '#8d95a3',
+            width: 18,
+            height: 18
+          }
+        },
+        {
+          selector: 'node[kind = "group"]',
+          style: { 'border-color': '#c9a35a', 'background-color': '#2a2418', width: 22, height: 22 }
+        },
+        {
+          selector: 'node[privileged = 1]',
+          style: { 'border-color': '#d36b6b', 'border-width': 2.5 }
+        },
+        {
+          selector: 'node[cycle = 1]',
+          style: { 'border-style': 'dashed', 'border-color': '#d36b6b' }
+        },
+        {
+          selector: 'node[kind = "user"]',
+          style: { 'border-color': '#8eb4d4', 'background-color': '#18222c' }
+        },
+        {
+          selector: 'node:selected',
+          style: { 'background-color': '#24364d', 'border-color': '#7aa2d4' }
+        },
+        {
+          selector: 'edge',
+          style: {
+            width: 1,
+            'line-color': '#3a4250',
+            'target-arrow-color': '#3a4250',
+            'target-arrow-shape': 'triangle',
+            'arrow-scale': 0.7,
+            'curve-style': 'bezier'
+          }
+        }
+      ],
+      layout: {
+        name: 'fcose',
+        animate: false,
+        nodeSeparation: 90,
+        quality: 'proof',
+        randomize: true
+      } as cytoscape.LayoutOptions
+    })
+
+    cy.on('tap', 'node', (ev) => select(ev.target.id()))
+    cy.on('tap', (ev) => {
+      if (ev.target === cy) select(null)
+    })
+    cyRef.current = cy
+    return () => {
+      cy.destroy()
+      cyRef.current = null
+    }
+  }, [snapshot, webShowUsers, select])
+
+  useEffect(() => {
+    const cy = cyRef.current
+    if (!cy) return
+    cy.nodes().unselect()
+    if (selectedId && cy.$id(selectedId).length) {
+      const node = cy.$id(selectedId)
+      node.select()
+      cy.animate({ center: { eles: node }, duration: 180 })
+    }
+  }, [selectedId, snapshot, webShowUsers])
+
+  if (!snapshot) return null
+
+  return (
+    <div className="split-list">
+      <div className="toolbar">
+        <span className="muted">Membership web — groups by default</span>
+        <label>
+          <input type="checkbox" checked={webShowUsers} onChange={(e) => setWebShowUsers(e.target.checked)} />
+          Show users
+        </label>
+        <span className="muted">Gold = group · red ring = privileged · dashed = cycle</span>
+      </div>
+      <div className="web-wrap">
+        <div className="web-canvas" ref={host} />
+      </div>
+    </div>
+  )
+}
