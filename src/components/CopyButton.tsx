@@ -1,3 +1,4 @@
+import { Check, Copy } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 export function CopyButton({ text, label }: { text: string; label: string }) {
@@ -25,6 +26,7 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
         })
       }}
     >
+      {copied ? <Check size={11} aria-hidden /> : <Copy size={11} aria-hidden />}
       {copied ? 'Copied' : 'Copy'}
     </button>
   )

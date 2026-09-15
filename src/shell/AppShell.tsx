@@ -1,3 +1,4 @@
+import { Moon, Search, Sun } from 'lucide-react'
 import type { WorkspaceId } from '@shared/types'
 import { NavGlyph } from '../components/NavGlyph'
 import { WidowMark } from '../components/WidowMark'
@@ -60,15 +61,18 @@ export function AppShell() {
         <header className="topbar">
           <span className="pill">{snapshot.source === 'fixture' ? 'SAMPLE' : snapshot.protocol?.toUpperCase() ?? 'LDAP'}</span>
           <span className="host">{snapshot.dcHost}</span>
-          <input
-            type="search"
-            placeholder="Find name, SAM, UPN…"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value)
-              if (e.target.value) setWorkspace('directory')
-            }}
-          />
+          <label className="search-wrap">
+            <Search size={14} aria-hidden />
+            <input
+              type="search"
+              placeholder="Find name, SAM, UPN…"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                if (e.target.value) setWorkspace('directory')
+              }}
+            />
+          </label>
           <span className="spacer" />
           <button type="button" className="linkish" onClick={() => setWorkspace('hygiene')}>
             {snapshot.findings.length} finding{snapshot.findings.length === 1 ? '' : 's'}
@@ -81,16 +85,7 @@ export function AppShell() {
             title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
             onClick={toggleTheme}
           >
-            {theme === 'dark' ? (
-              <svg viewBox="0 0 16 16" aria-hidden>
-                <circle cx="8" cy="8" r="3.2" />
-                <path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 16 16" aria-hidden>
-                <path d="M13.5 9.7A5.8 5.8 0 1 1 6.3 2.5a4.6 4.6 0 1 0 7.2 7.2z" />
-              </svg>
-            )}
+            {theme === 'dark' ? <Sun size={14} aria-hidden /> : <Moon size={14} aria-hidden />}
           </button>
         </header>
         <div className="workspace">

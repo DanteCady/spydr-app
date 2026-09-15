@@ -1,3 +1,4 @@
+import { ChevronDown, ChevronRight, ShieldAlert } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { membershipReach, membersOf, nodeById } from '@shared/graph'
 import type { DirectoryNode, DirectorySnapshot } from '@shared/types'
@@ -142,7 +143,7 @@ export function MembershipOutline({
           aria-pressed={privOnly}
           onClick={() => setPrivOnly((on) => !on)}
         >
-          Privileged
+          <ShieldAlert size={12} aria-hidden /> Privileged
         </button>
       </div>
       <div className="outline-scroll" role="tree" aria-label="Membership outline">
@@ -163,7 +164,7 @@ export function MembershipOutline({
                 if (r.hasChildren) toggle(r.id)
               }}
             >
-              {r.hasChildren ? (r.expanded ? '▾' : '▸') : ''}
+              {r.hasChildren ? (r.expanded ? <ChevronDown size={12} aria-hidden /> : <ChevronRight size={12} aria-hidden />) : null}
             </span>
             <TypeGlyph type={r.node.type} />
             <span className="outline-name">{r.node.displayName}</span>

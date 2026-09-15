@@ -1,3 +1,4 @@
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { TypeGlyph } from '../components/TypeGlyph'
 import { StatusBadges } from '../components/StatusBadges'
@@ -38,7 +39,7 @@ function TreeRows({
                   if (hasKids) setOpen((s) => ({ ...s, [n.id]: !expanded }))
                 }}
               >
-                {hasKids ? (expanded ? '▾' : '▸') : ''}
+                {hasKids ? (expanded ? <ChevronDown size={12} aria-hidden /> : <ChevronRight size={12} aria-hidden />) : null}
               </span>
               <TypeGlyph type={n.type} />
               <span>{n.name}</span>
