@@ -16,7 +16,7 @@ const TYPES: { id: FindingType | 'all'; label: string }[] = [
 ]
 
 export function Hygiene() {
-  const { snapshot, select, goTo } = useApp()
+  const { snapshot, goToFinding } = useApp()
   const [type, setType] = useState<FindingType | 'all'>('all')
 
   const findings = snapshot?.findings ?? []
@@ -75,11 +75,7 @@ export function Hygiene() {
             {filtered.map((f) => (
               <tr
                 key={f.id}
-                onClick={() => {
-                  const id = f.objectIds[0]
-                  select(id)
-                  goTo('directory', id)
-                }}
+                onClick={() => goToFinding(f)}
               >
                 <td>
                   <span className={`badge ${f.severity}`}>{severityLabel(f.severity)}</span>

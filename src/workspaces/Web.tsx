@@ -7,7 +7,7 @@ import { useApp } from '../state'
 cytoscape.use(fcose as Parameters<typeof cytoscape.use>[0])
 
 export function Web() {
-  const { snapshot, selectedId, select } = useApp()
+  const { snapshot, selectedId, select, activeFinding } = useApp()
   const host = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
   const [userQuery, setUserQuery] = useState('')
@@ -165,6 +165,13 @@ export function Web() {
         />
         <span className="muted">Gold = group · red ring = privileged · dashed = cycle</span>
       </div>
+      {activeFinding && (activeFinding.type === 'circular-nesting' || activeFinding.type === 'deep-nesting' || activeFinding.type === 'distribution-in-security') ? (
+        <div className="path-card" style={{ margin: '8px 12px 0' }}>
+          <span className={`badge ${activeFinding.severity}`}>{activeFinding.severity}</span> {activeFinding.title}
+          <p>{activeFinding.detail}</p>
+          <p className="suggested">{activeFinding.suggestedFix}</p>
+        </div>
+      ) : null}
       <div className="web-wrap">
         <div className="web-canvas" ref={host} />
       </div>
