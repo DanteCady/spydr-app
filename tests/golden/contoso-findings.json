@@ -1,0 +1,189 @@
+[
+  {
+    "id": "circular-0",
+    "type": "circular-nesting",
+    "severity": "critical",
+    "title": "Circular group nesting",
+    "objectIds": [
+      "g-loop-a",
+      "g-loop-b",
+      "g-loop-c"
+    ],
+    "detail": "Loop-A → Loop-B → Loop-C → Loop-A",
+    "suggestedFix": "Break the loop in Active Directory Users and Computers: remove one nested member so the chain is a tree. Circular nesting makes effective membership unpredictable and can loop token evaluation."
+  },
+  {
+    "id": "deep-g-d5",
+    "type": "deep-nesting",
+    "severity": "high",
+    "title": "Nesting depth 4 (limit 3)",
+    "objectIds": [
+      "g-d5"
+    ],
+    "detail": "Depth-5 sits 4 groups above its deepest nested member chain.",
+    "suggestedFix": "Flatten the chain. Nesting more than three groups deep is hard to audit and often leftover from old role groups. Prefer one role group and direct members."
+  },
+  {
+    "id": "empty-g-ea",
+    "type": "empty-security-group",
+    "severity": "low",
+    "title": "Empty security group",
+    "objectIds": [
+      "g-ea"
+    ],
+    "detail": "Enterprise Admins is a security group with no members.",
+    "suggestedFix": "If unused, document and delete it after checking delegated ACLs and file shares. Empty groups linger and get reused by mistake."
+  },
+  {
+    "id": "empty-g-sa",
+    "type": "empty-security-group",
+    "severity": "low",
+    "title": "Empty security group",
+    "objectIds": [
+      "g-sa"
+    ],
+    "detail": "Schema Admins is a security group with no members.",
+    "suggestedFix": "If unused, document and delete it after checking delegated ACLs and file shares. Empty groups linger and get reused by mistake."
+  },
+  {
+    "id": "empty-g-admins",
+    "type": "empty-security-group",
+    "severity": "low",
+    "title": "Empty security group",
+    "objectIds": [
+      "g-admins"
+    ],
+    "detail": "Administrators is a security group with no members.",
+    "suggestedFix": "If unused, document and delete it after checking delegated ACLs and file shares. Empty groups linger and get reused by mistake."
+  },
+  {
+    "id": "empty-g-empty",
+    "type": "empty-security-group",
+    "severity": "low",
+    "title": "Empty security group",
+    "objectIds": [
+      "g-empty"
+    ],
+    "detail": "Empty-Security is a security group with no members.",
+    "suggestedFix": "If unused, document and delete it after checking delegated ACLs and file shares. Empty groups linger and get reused by mistake."
+  },
+  {
+    "id": "disabled-user-bob",
+    "type": "disabled-in-group",
+    "severity": "medium",
+    "title": "Disabled user still in groups",
+    "objectIds": [
+      "user-bob",
+      "g-finance-app"
+    ],
+    "detail": "Bob Martinez is disabled but remains in Finance-App.",
+    "suggestedFix": "Remove the disabled account from application and role groups (leave Domain Users). Disabled members still appear in nested token expansion and confuse access reviews."
+  },
+  {
+    "id": "stale-user-carol",
+    "type": "stale-in-group",
+    "severity": "medium",
+    "title": "Stale user still in groups",
+    "objectIds": [
+      "user-carol",
+      "g-finance",
+      "g-all-staff"
+    ],
+    "detail": "Carol Singh has no logon in 90+ days (or never) and is still in Finance, All-Staff.",
+    "suggestedFix": "Confirm the account is unused, then disable it and strip role-group membership. Stale members are a common source of leftover access in small directories."
+  },
+  {
+    "id": "stale-user-irene",
+    "type": "stale-in-group",
+    "severity": "medium",
+    "title": "Stale user still in groups",
+    "objectIds": [
+      "user-irene",
+      "g-all-staff"
+    ],
+    "detail": "Irene Kim has no logon in 90+ days (or never) and is still in All-Staff.",
+    "suggestedFix": "Confirm the account is unused, then disable it and strip role-group membership. Stale members are a common source of leftover access in small directories."
+  },
+  {
+    "id": "redundant-user-alice-g-it-admins-g-helpdesk",
+    "type": "redundant-membership",
+    "severity": "low",
+    "title": "Redundant direct membership",
+    "objectIds": [
+      "user-alice",
+      "g-helpdesk",
+      "g-it-admins"
+    ],
+    "detail": "Alice Chen is a direct member of IT-Admins and of nested group Helpdesk.",
+    "suggestedFix": "Remove the user from the parent (IT-Admins) or from the nested group — not both. Keep the membership that matches the actual role."
+  },
+  {
+    "id": "redundant-user-dave-g-finance-g-finance-app",
+    "type": "redundant-membership",
+    "severity": "low",
+    "title": "Redundant direct membership",
+    "objectIds": [
+      "user-dave",
+      "g-finance-app",
+      "g-finance"
+    ],
+    "detail": "Dave Okonkwo is a direct member of Finance and of nested group Finance-App.",
+    "suggestedFix": "Remove the user from the parent (Finance) or from the nested group — not both. Keep the membership that matches the actual role."
+  },
+  {
+    "id": "priv-user-alice-g-da",
+    "type": "privileged-nested-path",
+    "severity": "critical",
+    "title": "Nested path to Domain Admins",
+    "objectIds": [
+      "user-alice",
+      "g-it-admins",
+      "g-tier0",
+      "g-da",
+      "g-helpdesk"
+    ],
+    "detail": "Alice Chen → IT-Admins → Tier0 → Domain Admins | Alice Chen → Helpdesk → IT-Admins → Tier0 → Domain Admins",
+    "suggestedFix": "Review why Alice Chen reaches Domain Admins through nested groups. Privileged groups should have direct, named members only."
+  },
+  {
+    "id": "priv-user-frank-g-da",
+    "type": "privileged-nested-path",
+    "severity": "critical",
+    "title": "Nested path to Domain Admins",
+    "objectIds": [
+      "user-frank",
+      "g-helpdesk",
+      "g-it-admins",
+      "g-tier0",
+      "g-da"
+    ],
+    "detail": "Frank Lee → Helpdesk → IT-Admins → Tier0 → Domain Admins",
+    "suggestedFix": "Review why Frank Lee reaches Domain Admins through nested groups. Privileged groups should have direct, named members only."
+  },
+  {
+    "id": "priv-user-james-g-da",
+    "type": "privileged-nested-path",
+    "severity": "critical",
+    "title": "Nested path to Domain Admins",
+    "objectIds": [
+      "user-james",
+      "g-it-admins",
+      "g-tier0",
+      "g-da"
+    ],
+    "detail": "James Brooks → IT-Admins → Tier0 → Domain Admins",
+    "suggestedFix": "Review why James Brooks reaches Domain Admins through nested groups. Privileged groups should have direct, named members only."
+  },
+  {
+    "id": "distsec-g-all-staff-g-corp-sec",
+    "type": "distribution-in-security",
+    "severity": "high",
+    "title": "Distribution group nested in a security group",
+    "objectIds": [
+      "g-all-staff",
+      "g-corp-sec"
+    ],
+    "detail": "All-Staff (distribution) is a member of Corp-Security (security).",
+    "suggestedFix": "Do not nest distribution groups into security groups. Mail-enabled dist groups are not meant to grant access. Create a security group for the role and keep the dist group for email only."
+  }
+]

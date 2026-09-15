@@ -62,6 +62,7 @@ export interface SnapshotStats {
   computers: number
   edges: number
   findings: number
+  hygieneScore: number
 }
 
 export interface DirectorySnapshot {
