@@ -16,7 +16,7 @@ const NAV: { id: WorkspaceId; label: string; hint: string }[] = [
 ]
 
 export function AppShell() {
-  const { snapshot, workspace, setWorkspace, search, setSearch, disconnect } = useApp()
+  const { snapshot, workspace, setWorkspace, search, setSearch, disconnect, theme, toggleTheme } = useApp()
   if (!snapshot) return null
 
   return (
@@ -58,8 +58,8 @@ export function AppShell() {
       </nav>
       <div className="main">
         <header className="topbar">
-          <span className="pill">{snapshot.source === 'fixture' ? 'Sample directory' : snapshot.protocol?.toUpperCase() ?? 'LDAP'}</span>
-          <span className="muted">{snapshot.dcHost}</span>
+          <span className="pill">{snapshot.source === 'fixture' ? 'SAMPLE' : snapshot.protocol?.toUpperCase() ?? 'LDAP'}</span>
+          <span className="host">{snapshot.dcHost}</span>
           <input
             type="search"
             placeholder="Find name, SAM, UPN…"
@@ -74,6 +74,24 @@ export function AppShell() {
             {snapshot.findings.length} finding{snapshot.findings.length === 1 ? '' : 's'}
           </button>
           <span className="muted">ingested {new Date(snapshot.ingestedAt).toLocaleString()}</span>
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            onClick={toggleTheme}
+          >
+            {theme === 'dark' ? (
+              <svg viewBox="0 0 16 16" aria-hidden>
+                <circle cx="8" cy="8" r="3.2" />
+                <path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 16 16" aria-hidden>
+                <path d="M13.5 9.7A5.8 5.8 0 1 1 6.3 2.5a4.6 4.6 0 1 0 7.2 7.2z" />
+              </svg>
+            )}
+          </button>
         </header>
         <div className="workspace">
           {workspace === 'directory' ? <Directory /> : null}

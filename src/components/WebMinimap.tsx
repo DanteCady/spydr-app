@@ -5,10 +5,14 @@ const W = 168
 const H = 112
 const PAD = 10
 
-const FILL: Record<string, string> = {
-  user: '#8eb4d4',
-  group: '#c9a35a',
-  cluster: '#7ea57c'
+function palette(): { fill: Record<string, string>; priv: string; mask: string; frame: string } {
+  const v = (name: string): string => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  return {
+    fill: { user: v('--user'), group: v('--group'), cluster: v('--ou') },
+    priv: v('--crit'),
+    mask: v('--minimap-mask'),
+    frame: v('--brand')
+  }
 }
 
 export function WebMinimap({ cy }: { cy: cytoscape.Core | null }) {
@@ -31,6 +35,7 @@ export function WebMinimap({ cy }: { cy: cytoscape.Core | null }) {
     const draw = (): void => {
       raf = 0
       if (cy.destroyed()) return
+      const pal = palette()
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.clearRect(0, 0, W, H)
 
@@ -44,7 +49,7 @@ export function WebMinimap({ cy }: { cy: cytoscape.Core | null }) {
       cy.nodes().forEach((n) => {
         const p = n.position()
         const priv = n.data('privileged') === 1
-        ctx.fillStyle = priv ? '#d36b6b' : FILL[n.data('kind') as string] ?? '#8d95a3'
+        ctx.fillStyle = priv ? pal.priv : pal.fill[n.data('kind') as string] ?? pal.fill.user
         ctx.beginPath()
         ctx.arc(p.x * scale + ox, p.y * scale + oy, priv ? 3 : 2.2, 0, Math.PI * 2)
         ctx.fill()
@@ -59,12 +64,12 @@ export function WebMinimap({ cy }: { cy: cytoscape.Core | null }) {
       const vw = (container.clientWidth / zoom) * scale
       const vh = (container.clientHeight / zoom) * scale
 
-      ctx.fillStyle = 'rgba(7, 9, 13, 0.55)'
+      ctx.fillStyle = pal.mask
       ctx.beginPath()
       ctx.rect(0, 0, W, H)
       ctx.rect(vx, vy, vw, vh)
       ctx.fill('evenodd')
-      ctx.strokeStyle = '#7aa2d4'
+      ctx.strokeStyle = pal.frame
       ctx.lineWidth = 1
       ctx.strokeRect(vx, vy, vw, vh)
     }
