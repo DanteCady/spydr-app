@@ -654,6 +654,15 @@ export function Web() {
     ev.preventDefault()
   }
 
+  const exportPng = (): void => {
+    const cy = cyRef.current
+    if (!cy || !snapshot) return
+    const a = document.createElement('a')
+    a.href = cy.png({ full: true, scale: 2, bg: '#0c0e12' })
+    a.download = `spydr-web-${snapshot.domain}-${new Date().toISOString().slice(0, 10)}.png`
+    a.click()
+  }
+
   const resetView = (): void => {
     pendingOrganize.current = true
     setScope('forest')
@@ -716,6 +725,9 @@ export function Web() {
           </button>
           <button type="button" className={grid ? 'active' : ''} aria-pressed={grid} onClick={() => setGrid((on) => !on)}>
             Grid
+          </button>
+          <button type="button" onClick={exportPng}>
+            Export
           </button>
           <button type="button" onClick={resetView}>
             Reset
