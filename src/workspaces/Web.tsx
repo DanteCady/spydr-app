@@ -1,15 +1,16 @@
 import cytoscape from 'cytoscape'
 import fcose from 'cytoscape-fcose'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { buildMembershipGraph, findGroupCycles, groupIdSet } from '@shared/graph'
 import { useApp } from '../state'
 
 cytoscape.use(fcose as Parameters<typeof cytoscape.use>[0])
 
 export function Web() {
-  const { snapshot, selectedId, select, webShowUsers, setWebShowUsers } = useApp()
+  const { snapshot, selectedId, select } = useApp()
   const host = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
+  const [userQuery, setUserQuery] = useState('')
 
   useEffect(() => {
     if (!host.current || !snapshot) return
@@ -17,11 +18,26 @@ export function Web() {
     const groups = groupIdSet(snapshot.nodes)
     const graph = buildMembershipGraph(snapshot.nodes, snapshot.edges)
     const cycles = new Set(findGroupCycles(graph, groups).flat())
-    const visible = new Set(
-      snapshot.nodes
-        .filter((n) => n.type === 'group' || (webShowUsers && n.type === 'user'))
-        .map((n) => n.id)
-    )
+    const visible = new Set(snapshot.nodes.filter((n) => n.type === 'group').map((n) => n.id))
+
+    const selected = snapshot.nodes.find((n) => n.id === selectedId)
+    if (selected?.type === 'group') {
+      for (const e of snapshot.edges) {
+        if (e.to !== selected.id) continue
+        const member = snapshot.nodes.find((n) => n.id === e.from)
+        if (member?.type === 'user') visible.add(member.id)
+      }
+    }
+    if (selected?.type === 'user') visible.add(selected.id)
+
+    const q = userQuery.trim().toLowerCase()
+    if (q) {
+      for (const n of snapshot.nodes) {
+        if (n.type !== 'user') continue
+        const hay = `${n.displayName} ${n.sAMAccountName} ${n.userPrincipalName ?? ''}`.toLowerCase()
+        if (hay.includes(q)) visible.add(n.id)
+      }
+    }
 
     const elements: cytoscape.ElementDefinition[] = []
     for (const n of snapshot.nodes) {
@@ -100,7 +116,7 @@ export function Web() {
         animate: false,
         nodeSeparation: 90,
         quality: 'proof',
-        randomize: true
+        randomize: false
       } as cytoscape.LayoutOptions
     })
 
@@ -113,7 +129,7 @@ export function Web() {
       cy.destroy()
       cyRef.current = null
     }
-  }, [snapshot, webShowUsers, select])
+  }, [snapshot, selectedId, userQuery, select])
 
   useEffect(() => {
     const cy = cyRef.current
@@ -124,18 +140,29 @@ export function Web() {
       node.select()
       cy.animate({ center: { eles: node }, duration: 180 })
     }
-  }, [selectedId, snapshot, webShowUsers])
+  }, [selectedId, snapshot, userQuery])
 
   if (!snapshot) return null
+
+  const selected = snapshot.nodes.find((n) => n.id === selectedId)
+  const hint =
+    selected?.type === 'group'
+      ? `Showing members of ${selected.displayName}`
+      : selected?.type === 'user'
+        ? `Showing ${selected.displayName} and groups`
+        : 'Select a group to expand its users'
 
   return (
     <div className="split-list">
       <div className="toolbar">
-        <span className="muted">Membership web — groups by default</span>
-        <label>
-          <input type="checkbox" checked={webShowUsers} onChange={(e) => setWebShowUsers(e.target.checked)} />
-          Show users
-        </label>
+        <span className="muted">{hint}</span>
+        <input
+          type="search"
+          placeholder="Search users onto the web…"
+          value={userQuery}
+          onChange={(e) => setUserQuery(e.target.value)}
+          style={{ maxWidth: 240 }}
+        />
         <span className="muted">Gold = group · red ring = privileged · dashed = cycle</span>
       </div>
       <div className="web-wrap">

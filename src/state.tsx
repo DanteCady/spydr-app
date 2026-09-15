@@ -9,7 +9,6 @@ interface AppState {
   selectedId: string | null
   containerDn: string | null
   search: string
-  webShowUsers: boolean
   pathSource: string
   pathTarget: string
   openSample: () => void
@@ -19,7 +18,6 @@ interface AppState {
   select: (id: string | null) => void
   setContainerDn: (dn: string | null) => void
   setSearch: (q: string) => void
-  setWebShowUsers: (v: boolean) => void
   setPathSource: (id: string) => void
   setPathTarget: (id: string) => void
   goTo: (workspace: WorkspaceId, objectId?: string) => void
@@ -34,7 +32,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [containerDn, setContainerDn] = useState<string | null>(null)
   const [search, setSearch] = useState('')
-  const [webShowUsers, setWebShowUsers] = useState(false)
   const [pathSource, setPathSource] = useState('')
   const [pathTarget, setPathTarget] = useState('')
 
@@ -54,7 +51,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setContainerDn(s.baseDn)
     setSelectedId(null)
     setSearch('')
-    setWebShowUsers(false)
     const user = s.nodes.find((n) => n.type === 'user')
     const da = s.nodes.find((n) => n.sAMAccountName.toLowerCase() === 'domain admins')
     setPathSource(s.nodes.find((n) => n.id === 'user-alice')?.id ?? user?.id ?? '')
@@ -100,7 +96,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectedId,
     containerDn,
     search,
-    webShowUsers,
     pathSource,
     pathTarget,
     openSample,
@@ -110,7 +105,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     select: setSelectedId,
     setContainerDn,
     setSearch,
-    setWebShowUsers,
     setPathSource,
     setPathTarget,
     goTo,
