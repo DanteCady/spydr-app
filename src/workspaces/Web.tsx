@@ -6,6 +6,7 @@ import { buildMembershipGraph, findGroupCycles, groupIdSet, hopNeighborhood, nes
 import { FindingCard } from '../components/FindingCard'
 import { StatusBadges } from '../components/StatusBadges'
 import { TypeGlyph, webNodeIcon } from '../components/TypeGlyph'
+import { WebMinimap } from '../components/WebMinimap'
 import { useApp } from '../state'
 
 cytoscape.use(fcose as Parameters<typeof cytoscape.use>[0])
@@ -297,6 +298,7 @@ export function Web() {
   const [userQuery, setUserQuery] = useState('')
   const [shown, setShown] = useState({ nodes: 0, edges: 0 })
   const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(null)
+  const [cyInstance, setCyInstance] = useState<cytoscape.Core | null>(null)
   const [density, setDensity] = useState<Density>('spread')
   const [grid, setGrid] = useState(true)
   const [scope, setScope] = useState<WebScope>('forest')
@@ -349,12 +351,14 @@ export function Web() {
     }
     cy.on('viewport', onViewport)
     cyRef.current = cy
+    setCyInstance(cy)
     laidOut.current = false
     syncGrid(cy, wrap.current)
     return () => {
       cy.off('viewport', onViewport)
       cy.destroy()
       cyRef.current = null
+      setCyInstance(null)
     }
   }, [snapshot])
 
@@ -642,16 +646,19 @@ export function Web() {
           </span>
           <span className="legend-keys">←→ move · ⏎ center · esc clear</span>
         </div>
-        <div className="web-controls">
-          <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => cyRef.current && zoomBy(cyRef.current, ZOOM_STEP)}>
-            +
-          </button>
-          <button type="button" aria-label="Zoom out" title="Zoom out" onClick={() => cyRef.current && zoomBy(cyRef.current, 1 / ZOOM_STEP)}>
-            −
-          </button>
-          <button type="button" aria-label="Fit to view" title="Fit to view" onClick={() => cyRef.current?.fit(undefined, 36)}>
-            Fit
-          </button>
+        <div className="web-corner">
+          <WebMinimap cy={cyInstance} />
+          <div className="web-controls">
+            <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => cyRef.current && zoomBy(cyRef.current, ZOOM_STEP)}>
+              +
+            </button>
+            <button type="button" aria-label="Zoom out" title="Zoom out" onClick={() => cyRef.current && zoomBy(cyRef.current, 1 / ZOOM_STEP)}>
+              −
+            </button>
+            <button type="button" aria-label="Fit to view" title="Fit to view" onClick={() => cyRef.current?.fit(undefined, 36)}>
+              Fit
+            </button>
+          </div>
         </div>
       </div>
     </div>

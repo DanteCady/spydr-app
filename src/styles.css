@@ -392,12 +392,25 @@ table.grid tr.selected td { background: var(--sel); }
 .legend-dot.group { background: #8a7038; border-color: var(--group); }
 .legend-dot.privileged { background: #6a3a3a; border-color: var(--crit); }
 .legend-dot.cycle { background: transparent; border: 1.5px dashed var(--crit); }
-.web-controls {
+.web-corner {
   position: absolute;
   right: 10px;
   bottom: 10px;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.web-minimap {
+  display: block;
+  background: rgba(22, 26, 33, 0.92);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  cursor: crosshair;
+}
+.web-controls {
+  display: flex;
   gap: 4px;
 }
 .web-controls button {
