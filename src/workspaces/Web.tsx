@@ -10,9 +10,24 @@ cytoscape.use(fcose as Parameters<typeof cytoscape.use>[0])
 type Density = 'compact' | 'spread'
 
 const SEPARATION: Record<Density, number> = {
-  compact: 56,
-  spread: 110
+  compact: 64,
+  spread: 112
 }
+
+const EDGE_LENGTH: Record<Density, number> = {
+  compact: 72,
+  spread: 118
+}
+
+const REPULSION: Record<Density, number> = {
+  compact: 5500,
+  spread: 9000
+}
+
+const GRID_STEP = 28
+const ZOOM_MIN = 0.2
+const ZOOM_MAX = 4
+const ZOOM_STEP = 1.28
 
 const WEB_STYLE: cytoscape.StylesheetJson = [
   {
@@ -86,16 +101,59 @@ function visibleNodeIds(snapshot: DirectorySnapshot, selectedId: string | null, 
   return visible
 }
 
+function nestingConstraints(cy: cytoscape.Core, gap: number): { top: string; bottom: string; gap: number }[] {
+  const constraints: { top: string; bottom: string; gap: number }[] = []
+  cy.edges().forEach((edge) => {
+    const member = edge.source()
+    const group = edge.target()
+    if (member.data('kind') !== 'group' || group.data('kind') !== 'group') return
+    if (member.data('cycle') === 1 && group.data('cycle') === 1) return
+    constraints.push({ top: group.id(), bottom: member.id(), gap })
+  })
+  return constraints
+}
+
 function runOrganize(cy: cytoscape.Core, density: Density): void {
+  const gap = SEPARATION[density]
   cy.layout({
     name: 'fcose',
     animate: false,
-    randomize: false,
+    randomize: true,
     quality: 'proof',
-    nodeSeparation: SEPARATION[density],
+    nodeSeparation: gap,
+    nodeDimensionsIncludeLabels: true,
+    packComponents: true,
+    tile: true,
+    tilingPaddingVertical: gap / 2,
+    tilingPaddingHorizontal: gap / 2,
+    nodeRepulsion: () => REPULSION[density],
+    idealEdgeLength: () => EDGE_LENGTH[density],
+    edgeElasticity: () => 0.45,
+    gravity: 0.35,
+    gravityRange: 2.8,
+    numIter: 2500,
+    relativePlacementConstraint: nestingConstraints(cy, gap),
     fit: true,
     padding: 36
   } as cytoscape.LayoutOptions).run()
+}
+
+function zoomBy(cy: cytoscape.Core, factor: number): void {
+  const container = cy.container()
+  if (!container) return
+  const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, cy.zoom() * factor))
+  cy.zoom({
+    level: next,
+    renderedPosition: { x: container.clientWidth / 2, y: container.clientHeight / 2 }
+  })
+}
+
+function syncGrid(cy: cytoscape.Core, el: HTMLElement | null): void {
+  if (!el) return
+  const size = GRID_STEP * cy.zoom()
+  const pan = cy.pan()
+  el.style.backgroundSize = `${size}px ${size}px`
+  el.style.backgroundPosition = `${pan.x}px ${pan.y}px`
 }
 
 function placeAround(cy: cytoscape.Core, ids: string[], anchorId: string | null): void {
@@ -122,6 +180,7 @@ function placeAround(cy: cytoscape.Core, ids: string[], anchorId: string | null)
 export function Web() {
   const { snapshot, selectedId, select, activeFinding } = useApp()
   const host = useRef<HTMLDivElement>(null)
+  const wrap = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
   const selectRef = useRef(select)
   const densityRef = useRef<Density>('spread')
@@ -129,6 +188,7 @@ export function Web() {
   const pendingOrganize = useRef(false)
   const [userQuery, setUserQuery] = useState('')
   const [density, setDensity] = useState<Density>('spread')
+  const [grid, setGrid] = useState(true)
 
   selectRef.current = select
   densityRef.current = density
@@ -140,6 +200,8 @@ export function Web() {
       container: host.current,
       elements: [],
       wheelSensitivity: 0.3,
+      minZoom: ZOOM_MIN,
+      maxZoom: ZOOM_MAX,
       style: WEB_STYLE,
       layout: { name: 'preset' }
     })
@@ -147,9 +209,13 @@ export function Web() {
     cy.on('tap', (ev) => {
       if (ev.target === cy) selectRef.current(null)
     })
+    const onViewport = (): void => syncGrid(cy, wrap.current)
+    cy.on('viewport', onViewport)
     cyRef.current = cy
     laidOut.current = false
+    syncGrid(cy, wrap.current)
     return () => {
+      cy.off('viewport', onViewport)
       cy.destroy()
       cyRef.current = null
     }
@@ -212,6 +278,11 @@ export function Web() {
     }
   }, [selectedId])
 
+  useEffect(() => {
+    const cy = cyRef.current
+    if (cy) syncGrid(cy, wrap.current)
+  }, [grid])
+
   if (!snapshot) return null
 
   const selected = snapshot.nodes.find((n) => n.id === selectedId)
@@ -272,8 +343,19 @@ export function Web() {
           >
             Spread
           </button>
+          <span className="web-tools-sep" aria-hidden />
+          <button type="button" aria-label="Zoom out" title="Zoom out" onClick={() => cyRef.current && zoomBy(cyRef.current, 1 / ZOOM_STEP)}>
+            −
+          </button>
+          <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => cyRef.current && zoomBy(cyRef.current, ZOOM_STEP)}>
+            +
+          </button>
           <button type="button" onClick={() => cyRef.current?.fit(undefined, 36)}>
             Fit
+          </button>
+          <span className="web-tools-sep" aria-hidden />
+          <button type="button" className={grid ? 'active' : ''} aria-pressed={grid} onClick={() => setGrid((on) => !on)}>
+            Grid
           </button>
           <button type="button" onClick={resetView}>
             Reset
@@ -288,7 +370,7 @@ export function Web() {
           <p className="suggested">{activeFinding.suggestedFix}</p>
         </div>
       ) : null}
-      <div className="web-wrap">
+      <div className={grid ? 'web-wrap has-grid' : 'web-wrap'} ref={wrap}>
         <div className="web-canvas" ref={host} />
       </div>
     </div>
