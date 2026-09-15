@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeImage, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeImage, session, shell } from 'electron'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { discoverDcs, windowsPrefill } from './directory/discoverDc'
@@ -62,6 +62,9 @@ function registerIpc(): void {
 void app.whenReady().then(() => {
   const icon = appIcon()
   if (icon) app.dock?.setIcon(icon)
+  session.defaultSession.on('will-download', (_evt, item) => {
+    item.setSavePath(join(app.getPath('downloads'), item.getFilename()))
+  })
   registerIpc()
   createWindow()
   app.on('activate', () => {
