@@ -246,6 +246,12 @@ table.grid tr.selected td { background: var(--sel); }
   background: var(--panel);
 }
 .toolbar label { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.toolbar input[type='search'] {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  flex: 0 1 240px;
+}
 .web-wrap { flex: 1; min-width: 0; position: relative; }
 .web-canvas { position: absolute; inset: 0; }
 
