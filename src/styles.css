@@ -387,8 +387,8 @@ table.grid tr.selected td { background: var(--sel); }
   background: color-mix(in srgb, var(--low) 10%, transparent);
 }
 
-.glyph { width: 16px; height: 16px; display: inline-flex; }
-.glyph svg { width: 16px; height: 16px; fill: none; stroke-width: 1.35; }
+.glyph { width: 16px; height: 16px; display: inline-flex; flex-shrink: 0; }
+.glyph svg { width: 16px; height: 16px; fill: none; stroke-width: 1.9; }
 .glyph-user svg { stroke: var(--user); }
 .glyph-group svg { stroke: var(--group); }
 .glyph-computer svg { stroke: var(--computer); }
@@ -538,6 +538,64 @@ table.grid tr.selected td { background: var(--sel); }
 .empty-state { padding: 32px 24px; text-align: center; }
 .empty-state .empty-title { margin: 0 0 6px; font-weight: 600; }
 .empty-state .empty-hint { margin: 0 auto; color: var(--muted); font-size: 12px; max-width: 320px; }
+
+/* ── Web split: outline + focus graph ────────────────── */
+.web-split { flex: 1; min-width: 0; display: flex; }
+.outline {
+  flex: 0 0 280px;
+  width: 280px;
+  border-right: 1px solid var(--border);
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.outline-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.outline-head input[type='search'] {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 0 9px;
+  box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.15);
+}
+.outline-head input[type='search']::placeholder { color: var(--muted); }
+.outline-scroll { overflow: auto; flex: 1; min-height: 0; padding: 4px 0 12px; }
+.outline-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 8px 4px 0;
+  cursor: pointer;
+  font-size: 12.5px;
+  border: 1px solid transparent;
+}
+.outline-row:hover { background: var(--hover); }
+.outline-row.selected { background: var(--sel); border-color: color-mix(in srgb, var(--brand) 30%, transparent); }
+.outline-row.faint { opacity: 0.6; }
+.outline-twist { width: 14px; flex-shrink: 0; color: var(--muted); font-size: 10px; text-align: center; }
+.outline-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.outline-tag {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 9.5px;
+  white-space: nowrap;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+.outline-tag.cycle { color: var(--crit); border-color: color-mix(in srgb, var(--crit) 40%, transparent); }
+.outline-tag.ref { color: var(--muted); }
+
+.web-graph { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.web-focus-label { font-weight: 500; color: var(--text); }
 
 /* ── Web canvas ──────────────────────────────────────── */
 .web-wrap {

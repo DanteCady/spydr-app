@@ -1,58 +1,27 @@
 import type { DirectoryObjectType } from '@shared/types'
 
-const BODY: Record<DirectoryObjectType, string> = {
-  user: '<circle cx="16" cy="10.4" r="5.1"/><path d="M6.2 27.2c1.1-7.2 4.4-10.4 9.8-10.4s8.7 3.2 9.8 10.4z"/>',
+// Lucide-style line icons (24×24, 2px round stroke) — sharp and modern at any size.
+const ICON: Record<DirectoryObjectType, string> = {
+  user: '<circle cx="12" cy="8" r="4"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/>',
   group:
-    '<circle cx="11.2" cy="10.2" r="4.4"/><circle cx="20.8" cy="10.2" r="4.4"/><path d="M4.4 27.2c.9-6.4 3.2-9.2 6.9-9.2 1.9 0 3.5.8 4.7 2.1 1.2-1.3 2.8-2.1 4.7-2.1 3.7 0 6 2.8 6.9 9.2z"/>',
-  computer:
-    '<rect x="5.2" y="6.2" width="21.6" height="14.2" rx="2"/><path d="M12 24.8h8M16 20.4v4.4"/>',
-  ou: '<path d="M6 8.2h9.4l2.4 2.6H26v13.2H6z"/>',
-  container: '<path d="M6 8.2h9.4l2.4 2.6H26v13.2H6z"/>'
+    '<circle cx="9" cy="8" r="3.2"/><path d="M3 19v-.8A3.5 3.5 0 0 1 6.5 14.7h5A3.5 3.5 0 0 1 15 18.2V19"/><path d="M16.2 5a3.2 3.2 0 0 1 0 6.1"/><path d="M18.5 14.9a3.5 3.5 0 0 1 2.5 3.3V19"/>',
+  computer: '<rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path d="M8.5 20h7M12 16.5V20"/>',
+  ou: '<path d="M4 19.5a1.8 1.8 0 0 1-1.8-1.8V6.3A1.8 1.8 0 0 1 4 4.5h4.7l2 2.4H20a1.8 1.8 0 0 1 1.8 1.8v9A1.8 1.8 0 0 1 20 19.5Z"/>',
+  container: '<path d="M12 2.6 3.4 7.4v9.2L12 21.4l8.6-4.8V7.4Z"/><path d="m3.6 7.6 8.4 4.7 8.4-4.7"/><path d="M12 21.6V12.3"/>'
 }
 
-export function webNodeIcon(type: DirectoryObjectType, fill = '#f4f7fb'): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 32 32"><g fill="${fill}">${BODY[type]}</g></svg>`
+/** Graph node icon as a data URI. `color` strokes the glyph (white on a tinted disc by default). */
+export function webNodeIcon(type: DirectoryObjectType, color = '#f6f8fb'): string {
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" ` +
+    `stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[type]}</svg>`
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
 
 export function TypeGlyph({ type }: { type: DirectoryObjectType }) {
-  const cls = `glyph glyph-${type}`
-  switch (type) {
-    case 'user':
-      return (
-        <span className={cls} aria-hidden>
-          <svg viewBox="0 0 16 16">
-            <circle cx="8" cy="5" r="2.4" />
-            <path d="M3.5 13.2c.7-2.6 2.3-3.8 4.5-3.8s3.8 1.2 4.5 3.8" />
-          </svg>
-        </span>
-      )
-    case 'group':
-      return (
-        <span className={cls} aria-hidden>
-          <svg viewBox="0 0 16 16">
-            <circle cx="6" cy="5.2" r="2" />
-            <circle cx="10.4" cy="5.2" r="2" />
-            <path d="M2.6 13c.5-2.2 1.8-3.2 3.5-3.2 1 0 1.8.4 2.4 1.1.6-.7 1.4-1.1 2.4-1.1 1.7 0 3 1 3.5 3.2" />
-          </svg>
-        </span>
-      )
-    case 'computer':
-      return (
-        <span className={cls} aria-hidden>
-          <svg viewBox="0 0 16 16">
-            <rect x="2.5" y="3" width="11" height="7.5" rx="1" />
-            <path d="M6 12.8h4M8 10.5v2.3" />
-          </svg>
-        </span>
-      )
-    default:
-      return (
-        <span className={cls} aria-hidden>
-          <svg viewBox="0 0 16 16">
-            <path d="M3 4.5h5.2l1.3 1.5H13v6.5H3z" />
-          </svg>
-        </span>
-      )
-  }
+  return (
+    <span className={`glyph glyph-${type}`} aria-hidden>
+      <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: ICON[type] }} />
+    </span>
+  )
 }
