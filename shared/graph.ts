@@ -124,3 +124,43 @@ export function membersOf(edges: DirectoryEdge[], groupId: string): string[] {
 export function memberOf(edges: DirectoryEdge[], objectId: string): string[] {
   return edges.filter((e) => e.from === objectId).map((e) => e.to)
 }
+
+export function hopNeighborhood(graph: MembershipGraph, start: string): Set<string> {
+  const found = new Set<string>([start])
+  if (!graph.hasNode(start)) return found
+  for (const n of graph.outNeighbors(start)) found.add(n)
+  for (const n of graph.inNeighbors(start)) found.add(n)
+  return found
+}
+
+export function membershipReach(
+  graph: MembershipGraph,
+  start: string,
+  options: { direction: 'in' | 'out'; maxDepth?: number }
+): Set<string> {
+  const found = new Set<string>([start])
+  if (!graph.hasNode(start)) return found
+  const maxDepth = options.maxDepth ?? 8
+  const queue: { id: string; depth: number }[] = [{ id: start, depth: 0 }]
+  const seen = new Set([start])
+  while (queue.length) {
+    const step = queue.shift()
+    if (!step || step.depth >= maxDepth) continue
+    const { id, depth } = step
+    const next = options.direction === 'out' ? graph.outNeighbors(id) : graph.inNeighbors(id)
+    for (const n of next) {
+      if (seen.has(n)) continue
+      seen.add(n)
+      found.add(n)
+      queue.push({ id: n, depth: depth + 1 })
+    }
+  }
+  return found
+}
+
+/** Parent groups (memberOf) plus nested members, without crossing a user's other groups. */
+export function nestedMembership(graph: MembershipGraph, start: string, maxDepth = 8): Set<string> {
+  const found = membershipReach(graph, start, { direction: 'out', maxDepth })
+  for (const id of membershipReach(graph, start, { direction: 'in', maxDepth })) found.add(id)
+  return found
+}

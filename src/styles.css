@@ -260,8 +260,8 @@ table.grid tr.selected td { background: var(--sel); }
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-left: auto;
 }
+.web-toolbar .web-tools:last-of-type { margin-left: auto; }
 .web-tools button {
   background: var(--bg);
   border: 1px solid var(--border);

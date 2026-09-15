@@ -1,5 +1,20 @@
 import type { DirectoryObjectType } from '@shared/types'
 
+const BODY: Record<DirectoryObjectType, string> = {
+  user: '<circle cx="16" cy="10.4" r="5.1"/><path d="M6.2 27.2c1.1-7.2 4.4-10.4 9.8-10.4s8.7 3.2 9.8 10.4z"/>',
+  group:
+    '<circle cx="11.2" cy="10.2" r="4.4"/><circle cx="20.8" cy="10.2" r="4.4"/><path d="M4.4 27.2c.9-6.4 3.2-9.2 6.9-9.2 1.9 0 3.5.8 4.7 2.1 1.2-1.3 2.8-2.1 4.7-2.1 3.7 0 6 2.8 6.9 9.2z"/>',
+  computer:
+    '<rect x="5.2" y="6.2" width="21.6" height="14.2" rx="2"/><path d="M12 24.8h8M16 20.4v4.4"/>',
+  ou: '<path d="M6 8.2h9.4l2.4 2.6H26v13.2H6z"/>',
+  container: '<path d="M6 8.2h9.4l2.4 2.6H26v13.2H6z"/>'
+}
+
+export function webNodeIcon(type: DirectoryObjectType): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 32 32"><g fill="#f4f7fb">${BODY[type]}</g></svg>`
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
 export function TypeGlyph({ type }: { type: DirectoryObjectType }) {
   const cls = `glyph glyph-${type}`
   switch (type) {
