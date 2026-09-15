@@ -32,6 +32,10 @@ export function Hygiene() {
   return (
     <div className="hygiene">
       <div className="metrics">
+        <div className="metric score">
+          <div className="n">{snapshot.stats.hygieneScore}<span className="unit">/100</span></div>
+          <div className="l">Hygiene score</div>
+        </div>
         <div className="metric">
           <div className="n">{findings.length}</div>
           <div className="l">Findings</div>
