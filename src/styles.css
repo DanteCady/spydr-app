@@ -251,8 +251,48 @@ table.grid tr.selected td { background: var(--sel); }
   padding: 6px 8px;
   flex: 0 1 240px;
 }
-.web-wrap { flex: 1; min-width: 0; position: relative; }
-.web-canvas { position: absolute; inset: 0; }
+.web-toolbar { flex-wrap: wrap; }
+.web-toolbar > .muted:last-child {
+  flex: 1 0 100%;
+  font-size: 11px;
+}
+.web-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: auto;
+}
+.web-tools button {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 5px 10px;
+  color: var(--text);
+}
+.web-tools button:hover { background: var(--hover); }
+.web-tools button.active {
+  background: var(--sel);
+  border-color: var(--accent);
+}
+.web-tools-sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+  margin: 0 4px;
+}
+.web-wrap {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  background-color: var(--bg);
+}
+.web-wrap.has-grid {
+  background-image:
+    linear-gradient(to right, rgba(44, 51, 63, 0.9) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(44, 51, 63, 0.9) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.web-canvas { position: absolute; inset: 0; background: transparent; }
+.web-canvas canvas { background: transparent; }
 
 .path-form { display: flex; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--panel); flex-wrap: wrap; }
 .path-form label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 11px; min-width: 220px; flex: 1; }

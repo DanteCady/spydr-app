@@ -1,9 +1,11 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeImage, shell } from 'electron'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { discoverDcs, windowsPrefill } from './directory/discoverDc'
 import { ingestDirectory, testConnection } from './directory/ldapProvider'
 import type { ConnectionInput } from '../shared/types'
+
+app.setName('Spydr')
 
 function preloadPath(): string {
   const mjs = join(__dirname, '../preload/preload.mjs')
@@ -11,7 +13,15 @@ function preloadPath(): string {
   return existsSync(mjs) ? mjs : js
 }
 
+function appIcon(): Electron.NativeImage | undefined {
+  const png = [join(__dirname, '../../resources/icon.png'), join(process.cwd(), 'resources/icon.png')].find(existsSync)
+  if (!png) return undefined
+  const image = nativeImage.createFromPath(png)
+  return image.isEmpty() ? undefined : image
+}
+
 function createWindow(): void {
+  const icon = appIcon()
   const win = new BrowserWindow({
     width: 1440,
     height: 920,
@@ -20,6 +30,7 @@ function createWindow(): void {
     backgroundColor: '#101216',
     title: 'Spydr',
     show: false,
+    ...(icon ? { icon } : {}),
     webPreferences: {
       preload: preloadPath(),
       contextIsolation: true,
@@ -49,6 +60,8 @@ function registerIpc(): void {
 }
 
 void app.whenReady().then(() => {
+  const icon = appIcon()
+  if (icon) app.dock?.setIcon(icon)
   registerIpc()
   createWindow()
   app.on('activate', () => {
