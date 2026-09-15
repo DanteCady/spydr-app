@@ -262,6 +262,34 @@ table.grid tr.selected td { background: var(--sel); }
   border: 1px solid var(--border);
   padding: 6px 8px;
 }
+.picker { position: relative; }
+.picker input { width: 100%; }
+.picker-list {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  right: 0;
+  top: calc(100% + 2px);
+  max-height: 240px;
+  overflow: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+.picker-list button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  color: var(--text);
+  text-align: left;
+}
+.picker-list button:hover { background: var(--hover); }
 .path-card {
   border: 1px solid var(--border);
   margin: 8px 12px;

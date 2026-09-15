@@ -1,3 +1,4 @@
+import { ObjectPicker } from '../components/ObjectPicker'
 import { useApp } from '../state'
 
 export function Pathfinder() {
@@ -13,26 +14,11 @@ export function Pathfinder() {
       <div className="path-form">
         <label>
           Source
-          <select value={pathSource} onChange={(e) => setPathSource(e.target.value)}>
-            <option value="">Select user or group</option>
-            {people.map((n) => (
-              <option key={n.id} value={n.id}>
-                {n.displayName} ({n.type})
-              </option>
-            ))}
-          </select>
+          <ObjectPicker nodes={people} value={pathSource} onChange={setPathSource} placeholder="Type a user or group…" />
         </label>
         <label>
           Target group
-          <select value={pathTarget} onChange={(e) => setPathTarget(e.target.value)}>
-            <option value="">Select group</option>
-            {groups.map((n) => (
-              <option key={n.id} value={n.id}>
-                {n.displayName}
-                {n.privileged ? ' — privileged' : ''}
-              </option>
-            ))}
-          </select>
+          <ObjectPicker nodes={groups} value={pathTarget} onChange={setPathTarget} placeholder="Type a group…" />
         </label>
       </div>
       <div className="toolbar">
