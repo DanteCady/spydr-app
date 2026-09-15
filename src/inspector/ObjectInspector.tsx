@@ -3,6 +3,7 @@ import { isSecurityGroup } from '@shared/adFlags'
 import { memberOf, membersOf } from '@shared/graph'
 import type { DirectoryNode } from '@shared/types'
 import { TypeGlyph } from '../components/TypeGlyph'
+import { StatusBadges } from '../components/StatusBadges'
 import { formatLogon, formatWhen, groupScope, typeLabel, uacSummary } from '../lib/format'
 import { useApp } from '../state'
 
@@ -118,7 +119,7 @@ export function ObjectInspector() {
                   <button type="button" onClick={() => select(id)}>
                     <TypeGlyph type={g.type} />
                     {g.displayName}
-                    {g.privileged ? <span className="badge privileged">Privileged</span> : null}
+                    <StatusBadges node={g} />
                   </button>
                 </li>
               )
@@ -137,6 +138,7 @@ export function ObjectInspector() {
                   <button type="button" onClick={() => select(id)}>
                     <TypeGlyph type={m.type} />
                     {m.displayName}
+                    <StatusBadges node={m} />
                   </button>
                 </li>
               )
