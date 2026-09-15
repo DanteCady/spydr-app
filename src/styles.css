@@ -301,7 +301,7 @@ input:focus-visible, select:focus-visible { outline: none; border-color: var(--r
 }
 .tree-row:hover { background: var(--hover); }
 .tree-row.selected { background: var(--sel); }
-.tree-twist { width: 14px; color: var(--muted); font-size: 10px; }
+.tree-twist { width: 14px; color: var(--muted); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
 .list-head {
   display: flex;
@@ -356,9 +356,9 @@ table.grid tr.selected td { background: var(--sel); }
   white-space: nowrap;
   vertical-align: middle;
 }
-.badge svg { width: 9px; height: 9px; flex-shrink: 0; }
-.badge.severity svg { fill: currentColor; stroke: none; }
-.badge.status svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.badge svg { width: 10px; height: 10px; flex-shrink: 0; }
+.badge.severity svg { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.badge.status svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .badge.disabled,
 .badge.critical {
   color: var(--crit);
@@ -581,7 +581,7 @@ table.grid tr.selected td { background: var(--sel); }
 .outline-row:hover { background: var(--hover); }
 .outline-row.selected { background: var(--sel); border-color: color-mix(in srgb, var(--brand) 30%, transparent); }
 .outline-row.faint { opacity: 0.6; }
-.outline-twist { width: 14px; flex-shrink: 0; color: var(--muted); font-size: 10px; text-align: center; }
+.outline-twist { width: 14px; flex-shrink: 0; color: var(--muted); display: inline-flex; align-items: center; justify-content: center; }
 .outline-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .outline-tag {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
@@ -915,3 +915,17 @@ table.grid tr.selected td { background: var(--sel); }
 .fix { padding: 10px 14px 16px; color: var(--text); }
 .fix p { margin: 0 0 8px; }
 .fix .suggested { color: var(--muted); }
+
+/* ── Lucide icon alignment ───────────────────────────── */
+.seg button, .tool-btn, .chip, .copy-btn, .primary, .ghost, .rail-foot button, .web-controls button, .finding-head .dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.chip, .copy-btn { gap: 4px; }
+.seg button svg, .tool-btn svg, .chip svg, .copy-btn svg { flex-shrink: 0; opacity: 0.9; }
+.search-wrap { position: relative; flex: 1; max-width: 420px; display: flex; align-items: center; }
+.search-wrap > svg { position: absolute; left: 10px; color: var(--muted); pointer-events: none; }
+.topbar .search-wrap input[type='search'] { width: 100%; max-width: none; padding-left: 30px; }
+.outline-head .chip svg { color: var(--crit); }

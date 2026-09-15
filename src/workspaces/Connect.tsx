@@ -1,3 +1,4 @@
+import { DatabaseZap, FolderOpen, Plug, Radar } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { ConnectionInput, Protocol } from '@shared/types'
 import { WidowMark } from '../components/WidowMark'
@@ -108,7 +109,7 @@ export function Connect() {
         </div>
         <p className="lede">Read-only explorer for messy on-prem Active Directory. Sample forest always works. Bind with a normal domain user — not Domain Admin.</p>
         <button className="primary" type="button" onClick={openSample}>
-          Open sample directory
+          <FolderOpen size={15} aria-hidden /> Open sample directory
         </button>
         <p className="note">contoso.lab — nested groups, a membership cycle, stale and disabled users, a path into Domain Admins.</p>
         <fieldset>
@@ -165,13 +166,13 @@ export function Connect() {
             </label>
           </div>
           <button className="ghost" type="button" disabled={busy !== null || !domain} onClick={() => void discover()}>
-            {busy === 'discover' ? 'Discovering…' : 'Find DCs from domain'}
+            <Radar size={14} aria-hidden /> {busy === 'discover' ? 'Discovering…' : 'Find DCs from domain'}
           </button>
           <button className="ghost" type="button" disabled={busy !== null || !host || !bindUsername} onClick={() => void test()}>
-            {busy === 'test' ? 'Testing…' : 'Test connection'}
+            <Plug size={14} aria-hidden /> {busy === 'test' ? 'Testing…' : 'Test connection'}
           </button>
           <button className="ghost" type="button" disabled={busy !== null || !host || !bindUsername} onClick={() => void ingest()}>
-            {busy === 'ingest' ? 'Ingesting…' : 'Ingest directory'}
+            <DatabaseZap size={14} aria-hidden /> {busy === 'ingest' ? 'Ingesting…' : 'Ingest directory'}
           </button>
           {!desktop ? <p className="note">Bind and ingest run in the Electron app. This browser preview can still open the sample directory.</p> : null}
           {ok ? <p className="ok">{ok}</p> : null}

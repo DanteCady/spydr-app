@@ -1,4 +1,5 @@
 import cytoscape from 'cytoscape'
+import { Download, LayoutGrid, Maximize, Minus, Plus, RotateCcw } from 'lucide-react'
 import dagre from 'cytoscape-dagre'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { buildMembershipGraph, findGroupCycles, groupIdSet, membershipReach } from '@shared/graph'
@@ -487,13 +488,13 @@ export function Web() {
           </div>
           <div className="seg" role="toolbar" aria-label="Canvas">
             <button type="button" className={grid ? 'active' : ''} aria-pressed={grid} onClick={() => setGrid((on) => !on)}>
-              Grid
+              <LayoutGrid size={13} aria-hidden /> Grid
             </button>
             <button type="button" onClick={exportPng}>
-              Export
+              <Download size={13} aria-hidden /> Export
             </button>
             <button type="button" onClick={() => select(null)}>
-              Reset
+              <RotateCcw size={13} aria-hidden /> Reset
             </button>
           </div>
         </div>
@@ -559,13 +560,13 @@ export function Web() {
             <WebMinimap cy={cyInstance} />
             <div className="web-controls">
               <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => cyRef.current && zoomBy(cyRef.current, ZOOM_STEP)}>
-                +
+                <Plus size={14} aria-hidden />
               </button>
               <button type="button" aria-label="Zoom out" title="Zoom out" onClick={() => cyRef.current && zoomBy(cyRef.current, 1 / ZOOM_STEP)}>
-                −
+                <Minus size={14} aria-hidden />
               </button>
               <button type="button" aria-label="Fit to view" title="Fit to view" onClick={() => cyRef.current?.fit(undefined, 44)}>
-                Fit
+                <Maximize size={14} aria-hidden />
               </button>
             </div>
           </div>

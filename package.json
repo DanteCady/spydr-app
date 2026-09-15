@@ -21,6 +21,8 @@
     "dagre": "^0.8.5",
     "graphology": "^0.25.4",
     "ldapts": "^7.4.0",
+    "lucide-react": "^1.46.0",
+    "lucide-static": "^1.46.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
