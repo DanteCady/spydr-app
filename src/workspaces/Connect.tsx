@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ConnectionInput, Protocol } from '@shared/types'
+import { WidowMark } from '../components/WidowMark'
 import { useApp } from '../state'
 
 function defaultPort(protocol: Protocol): number {
@@ -101,7 +102,10 @@ export function Connect() {
   return (
     <div className="connect">
       <div className="connect-card">
-        <h1>Spydr</h1>
+        <div className="connect-brand">
+          <WidowMark size={40} />
+          <h1>Spydr</h1>
+        </div>
         <p className="lede">Read-only explorer for messy on-prem Active Directory. Sample forest always works. Bind with a normal domain user — not Domain Admin.</p>
         <button className="primary" type="button" onClick={openSample}>
           Open sample directory

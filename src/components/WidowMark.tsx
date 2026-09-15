@@ -1,0 +1,27 @@
+export function WidowMark({ size = 22 }: { size?: number }) {
+  return (
+    <svg
+      viewBox="0 0 32 32"
+      width={size}
+      height={size}
+      fill="currentColor"
+      aria-hidden
+    >
+      <g stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" fill="none">
+        <path d="M13 10.5C9.2 7.2 6.5 4.4 3.8 2.6" />
+        <path d="M19 10.5C22.8 7.2 25.5 4.4 28.2 2.6" />
+        <path d="M11.4 13C6.2 12.2 3.4 11.2 1.6 10" />
+        <path d="M20.6 13C25.8 12.2 28.6 11.2 30.4 10" />
+        <path d="M11.4 17.4C6 19 3.2 22.6 2.2 26.2" />
+        <path d="M20.6 17.4C26 19 28.8 22.6 29.8 26.2" />
+        <path d="M13 20C10 24.2 8.2 27.6 7.4 30.4" />
+        <path d="M19 20C22 24.2 23.8 27.6 24.6 30.4" />
+      </g>
+      <ellipse cx="16" cy="10.6" rx="2.7" ry="2.35" />
+      <path
+        fillRule="evenodd"
+        d="M16 13.4c4.05 0 7.05 2.85 7.05 6.45S20.05 26.3 16 26.3 8.95 23.45 8.95 19.85 11.95 13.4 16 13.4zm0 3.15-2.7-1.95v2.55L16 19.15l2.7-2v-2.55zm0 3.35-2.7 2.15v1.9L16 22.55l2.7 2.05v-1.9z"
+      />
+    </svg>
+  )
+}
