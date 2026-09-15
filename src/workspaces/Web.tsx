@@ -1,4 +1,5 @@
 import cytoscape from 'cytoscape'
+import dagre from 'cytoscape-dagre'
 import fcose from 'cytoscape-fcose'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DirectoryObjectType, DirectorySnapshot } from '@shared/types'
@@ -10,9 +11,11 @@ import { WebMinimap } from '../components/WebMinimap'
 import { useApp } from '../state'
 
 cytoscape.use(fcose as Parameters<typeof cytoscape.use>[0])
+cytoscape.use(dagre as Parameters<typeof cytoscape.use>[0])
 
 type Density = 'compact' | 'spread'
 type WebScope = 'forest' | 'around' | 'nested'
+type LayoutMode = 'tree' | 'web'
 
 const SEPARATION: Record<Density, number> = {
   compact: 64,
@@ -43,7 +46,7 @@ function typeIconColor(type: string): string {
   return cssVar(type === 'user' ? '--user' : type === 'group' ? '--group' : '--computer')
 }
 
-function buildWebStyle(): cytoscape.StylesheetJson {
+function buildWebStyle(mode: LayoutMode): cytoscape.StylesheetJson {
   const text = cssVar('--foreground')
   const canvas = cssVar('--canvas')
   const brand = cssVar('--brand')
@@ -51,6 +54,11 @@ function buildWebStyle(): cytoscape.StylesheetJson {
   const border = cssVar('--border')
   const member = cssVar('--edge-member')
   const primary = cssVar('--edge-primary')
+  // Tree mode routes edges as orthogonal org-chart connectors flowing upward;
+  // organic mode keeps soft bezier curves.
+  const edgeCurve = mode === 'tree'
+    ? { 'curve-style': 'taxi', 'taxi-direction': 'upward', 'taxi-turn': '40%', 'taxi-turn-min-distance': '8px' }
+    : { 'curve-style': 'bezier' }
   return [
     // arcelyt card nodes: neutral rounded-rect, name inside, colored type glyph at left
     {
@@ -132,7 +140,7 @@ function buildWebStyle(): cytoscape.StylesheetJson {
       selector: 'edge',
       style: {
         width: 'mapData(w, 1, 10, 1.6, 4)',
-        'curve-style': 'bezier',
+        ...edgeCurve,
         'line-color': member,
         'target-arrow-color': member,
         'target-arrow-shape': 'triangle',
@@ -143,7 +151,7 @@ function buildWebStyle(): cytoscape.StylesheetJson {
         'font-family': 'IBM Plex Mono, ui-monospace, monospace',
         color: member,
         'text-opacity': 0,
-        'text-rotation': 'autorotate',
+        'text-rotation': mode === 'tree' ? 'none' : 'autorotate',
         'text-background-color': canvas,
         'text-background-opacity': 0.9,
         'text-background-padding': '2px',
@@ -398,6 +406,30 @@ function runOrganize(cy: cytoscape.Core, density: Density): void {
   } as cytoscape.LayoutOptions).run()
 }
 
+const RANK_SEP: Record<Density, number> = { compact: 58, spread: 92 }
+const NODE_SEP: Record<Density, number> = { compact: 16, spread: 32 }
+
+function runTree(cy: cytoscape.Core, density: Density): void {
+  cy.layout({
+    name: 'dagre',
+    // Edges run member -> group; BT ranks members low and the groups they nest
+    // into progressively higher, so privileged targets land at the top.
+    rankDir: 'BT',
+    ranker: 'network-simplex',
+    nodeSep: NODE_SEP[density],
+    rankSep: RANK_SEP[density],
+    edgeSep: 12,
+    animate: false,
+    fit: true,
+    padding: 40
+  } as cytoscape.LayoutOptions).run()
+}
+
+function runLayout(cy: cytoscape.Core, mode: LayoutMode, density: Density): void {
+  if (mode === 'tree') runTree(cy, density)
+  else runOrganize(cy, density)
+}
+
 function orderedNodeIds(cy: cytoscape.Core): string[] {
   return cy
     .nodes()
@@ -456,6 +488,7 @@ export function Web() {
   const cyRef = useRef<cytoscape.Core | null>(null)
   const selectRef = useRef(select)
   const densityRef = useRef<Density>('spread')
+  const modeRef = useRef<LayoutMode>('tree')
   const laidOut = useRef(false)
   const pendingOrganize = useRef(false)
   const [userQuery, setUserQuery] = useState('')
@@ -466,12 +499,14 @@ export function Web() {
   const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(null)
   const [cyInstance, setCyInstance] = useState<cytoscape.Core | null>(null)
   const [density, setDensity] = useState<Density>('spread')
+  const [mode, setMode] = useState<LayoutMode>('tree')
   const [grid, setGrid] = useState(false)
   const [scope, setScope] = useState<WebScope>('forest')
   const [groupsOnly, setGroupsOnly] = useState(false)
 
   selectRef.current = select
   densityRef.current = density
+  modeRef.current = mode
 
   useEffect(() => {
     if (
@@ -494,7 +529,7 @@ export function Web() {
       minZoom: ZOOM_MIN,
       maxZoom: ZOOM_MAX,
       pixelRatio: 2,
-      style: buildWebStyle(),
+      style: buildWebStyle(modeRef.current),
       layout: { name: 'preset' }
     })
     cy.on('tap', 'node', (ev) => {
@@ -546,9 +581,17 @@ export function Web() {
     const edgeIds = new Set(built.edges.map((e) => e.id))
 
     const prevPos = new Map<string, { x: number; y: number }>()
+    const prevElIds = new Set<string>()
     cy.nodes().forEach((n) => {
       prevPos.set(n.id(), { ...n.position() })
     })
+    cy.elements().forEach((el) => {
+      prevElIds.add(el.id())
+    })
+    const structureChanged =
+      prevElIds.size !== nodeIds.size + edgeIds.size ||
+      [...nodeIds].some((id) => !prevElIds.has(id)) ||
+      [...edgeIds].some((id) => !prevElIds.has(id))
 
     cy.nodes().filter((node) => !nodeIds.has(node.id())).remove()
     cy.edges().filter((edge) => !edgeIds.has(edge.id())).remove()
@@ -582,26 +625,36 @@ export function Web() {
     applyFocus(cy, selectedId)
     setShown({ nodes: cy.nodes().length, edges: cy.edges().length, clusters: built.clusters, collapsed: built.collapsed })
 
-    if (added.length && laidOut.current && scope === 'forest') {
-      const byOrigin = new Map<string, string[]>()
-      const rest: string[] = []
-      for (const id of added) {
-        const n = byId.get(id)
-        const cid = n?.type === 'group' && n.parentDn ? `ou:${n.parentDn}` : null
-        if (cid && prevPos.has(cid)) {
-          byOrigin.set(cid, [...(byOrigin.get(cid) ?? []), id])
-        } else {
-          rest.push(id)
-        }
+    if (modeRef.current === 'tree') {
+      // Deterministic hierarchy: relayout only when the element set changes,
+      // so merely selecting a node never reshuffles the tree.
+      if (!laidOut.current || pendingOrganize.current || structureChanged) {
+        pendingOrganize.current = false
+        laidOut.current = true
+        runTree(cy, densityRef.current)
       }
-      for (const [cid, ids] of byOrigin) placeAround(cy, ids, null, prevPos.get(cid))
-      if (rest.length) placeAround(cy, rest, selectedId)
-    }
+    } else {
+      if (added.length && laidOut.current && scope === 'forest') {
+        const byOrigin = new Map<string, string[]>()
+        const rest: string[] = []
+        for (const id of added) {
+          const n = byId.get(id)
+          const cid = n?.type === 'group' && n.parentDn ? `ou:${n.parentDn}` : null
+          if (cid && prevPos.has(cid)) {
+            byOrigin.set(cid, [...(byOrigin.get(cid) ?? []), id])
+          } else {
+            rest.push(id)
+          }
+        }
+        for (const [cid, ids] of byOrigin) placeAround(cy, ids, null, prevPos.get(cid))
+        if (rest.length) placeAround(cy, rest, selectedId)
+      }
 
-    if (!laidOut.current || pendingOrganize.current || scope !== 'forest') {
-      pendingOrganize.current = false
-      laidOut.current = true
-      runOrganize(cy, densityRef.current)
+      if (!laidOut.current || pendingOrganize.current || scope !== 'forest') {
+        pendingOrganize.current = false
+        laidOut.current = true
+        runOrganize(cy, densityRef.current)
+      }
     }
   }, [snapshot, selectedId, userQuery, scope, groupsOnly, expandedOus])
 
@@ -630,7 +683,7 @@ export function Web() {
     const id = requestAnimationFrame(() => {
       const cy = cyRef.current
       if (!cy || cy.destroyed()) return
-      cy.style(buildWebStyle())
+      cy.style(buildWebStyle(modeRef.current))
       cy.nodes().forEach((n) => {
         const kind = n.data('kind') as DirectoryObjectType | 'cluster'
         if (kind !== 'cluster') n.data('icon', webNodeIcon(kind, typeIconColor(kind)))
@@ -679,7 +732,16 @@ export function Web() {
       setDensity(next)
     }
     const cy = cyRef.current
-    if (cy) runOrganize(cy, next ?? densityRef.current)
+    if (cy) runLayout(cy, modeRef.current, next ?? densityRef.current)
+  }
+
+  const changeMode = (next: LayoutMode): void => {
+    modeRef.current = next
+    setMode(next)
+    const cy = cyRef.current
+    if (!cy) return
+    cy.style(buildWebStyle(next))
+    runLayout(cy, next, densityRef.current)
   }
 
   const onCanvasKeys = (ev: React.KeyboardEvent): void => {
@@ -747,7 +809,7 @@ export function Web() {
     if (!userQuery && !selectedId && scope === 'forest' && !groupsOnly) {
       pendingOrganize.current = false
       const cy = cyRef.current
-      if (cy) runOrganize(cy, densityRef.current)
+      if (cy) runLayout(cy, modeRef.current, densityRef.current)
     }
   }
 
@@ -775,6 +837,14 @@ export function Web() {
           onChange={(e) => setUserQuery(e.target.value)}
         />
         <span className="spacer" />
+        <div className="seg" role="toolbar" aria-label="Layout mode">
+          <button type="button" className={mode === 'tree' ? 'active' : ''} aria-pressed={mode === 'tree'} onClick={() => changeMode('tree')}>
+            Tree
+          </button>
+          <button type="button" className={mode === 'web' ? 'active' : ''} aria-pressed={mode === 'web'} onClick={() => changeMode('web')}>
+            Organic
+          </button>
+        </div>
         <div className="seg" role="toolbar" aria-label="Layout density">
           <button
             type="button"
