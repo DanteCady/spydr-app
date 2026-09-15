@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { isSecurityGroup } from '@shared/adFlags'
 import { memberOf, membersOf } from '@shared/graph'
 import type { DirectoryNode } from '@shared/types'
+import { SeverityBadge } from '../components/SeverityBadge'
 import { TypeGlyph } from '../components/TypeGlyph'
 import { StatusBadges } from '../components/StatusBadges'
 import { formatLogon, formatWhen, groupScope, typeLabel, uacSummary } from '../lib/format'
@@ -192,7 +193,7 @@ export function ObjectInspector() {
             </p>
             {findings.map((f) => (
               <div key={f.id} className="path-card">
-                <span className={`badge ${f.severity}`}>{f.severity}</span> {f.title}
+                <SeverityBadge severity={f.severity} /> {f.title}
                 <p>{f.detail}</p>
                 <p className="suggested">{f.suggestedFix}</p>
                 <button type="button" className="linkish" onClick={() => goTo('hygiene', f.objectIds[0])}>

@@ -3,6 +3,7 @@ import fcose from 'cytoscape-fcose'
 import { useEffect, useRef, useState } from 'react'
 import type { DirectorySnapshot } from '@shared/types'
 import { buildMembershipGraph, findGroupCycles, groupIdSet, hopNeighborhood, nestedMembership } from '@shared/graph'
+import { SeverityBadge } from '../components/SeverityBadge'
 import { webNodeIcon } from '../components/TypeGlyph'
 import { useApp } from '../state'
 
@@ -457,7 +458,7 @@ export function Web() {
       </div>
       {activeFinding && (activeFinding.type === 'circular-nesting' || activeFinding.type === 'deep-nesting' || activeFinding.type === 'distribution-in-security') ? (
         <div className="path-card" style={{ margin: '8px 12px 0' }}>
-          <span className={`badge ${activeFinding.severity}`}>{activeFinding.severity}</span> {activeFinding.title}
+          <SeverityBadge severity={activeFinding.severity} /> {activeFinding.title}
           <p>{activeFinding.detail}</p>
           <p className="suggested">{activeFinding.suggestedFix}</p>
         </div>
