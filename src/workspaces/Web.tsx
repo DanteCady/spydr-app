@@ -2,12 +2,14 @@ import cytoscape from 'cytoscape'
 import fcose from 'cytoscape-fcose'
 import { useEffect, useRef, useState } from 'react'
 import type { DirectorySnapshot } from '@shared/types'
-import { buildMembershipGraph, findGroupCycles, groupIdSet } from '@shared/graph'
+import { buildMembershipGraph, findGroupCycles, groupIdSet, hopNeighborhood, nestedMembership } from '@shared/graph'
+import { webNodeIcon } from '../components/TypeGlyph'
 import { useApp } from '../state'
 
 cytoscape.use(fcose as Parameters<typeof cytoscape.use>[0])
 
 type Density = 'compact' | 'spread'
+type WebScope = 'forest' | 'around' | 'nested'
 
 const SEPARATION: Record<Density, number> = {
   compact: 64,
@@ -38,21 +40,30 @@ const WEB_STYLE: cytoscape.StylesheetJson = [
       'font-size': 10,
       'font-family': 'Segoe UI, system-ui, sans-serif',
       'text-valign': 'bottom',
-      'text-margin-y': 4,
-      'background-color': '#1c222b',
+      'text-margin-y': 5,
+      'background-image': 'data(icon)',
+      'background-fit': 'contain',
+      'background-clip': 'node',
+      'background-width': '70%',
+      'background-height': '70%',
       'border-width': 1.5,
       'border-color': '#8d95a3',
-      width: 18,
-      height: 18
+      width: 34,
+      height: 34
     }
   },
   {
     selector: 'node[kind = "group"]',
-    style: { 'border-color': '#c9a35a', 'background-color': '#2a2418', width: 22, height: 22 }
+    style: {
+      'background-color': '#8a7038',
+      'border-color': '#c9a35a',
+      width: 38,
+      height: 38
+    }
   },
   {
     selector: 'node[privileged = 1]',
-    style: { 'border-color': '#d36b6b', 'border-width': 2.5 }
+    style: { 'border-color': '#d36b6b', 'border-width': 2.5, 'background-color': '#6a3a3a' }
   },
   {
     selector: 'node[cycle = 1]',
@@ -60,11 +71,11 @@ const WEB_STYLE: cytoscape.StylesheetJson = [
   },
   {
     selector: 'node[kind = "user"]',
-    style: { 'border-color': '#8eb4d4', 'background-color': '#18222c' }
+    style: { 'background-color': '#3d6484', 'border-color': '#8eb4d4' }
   },
   {
     selector: 'node:selected',
-    style: { 'background-color': '#24364d', 'border-color': '#7aa2d4' }
+    style: { 'border-color': '#7aa2d4', 'border-width': 2.5 }
   },
   {
     selector: 'edge',
@@ -79,24 +90,62 @@ const WEB_STYLE: cytoscape.StylesheetJson = [
   }
 ]
 
-function visibleNodeIds(snapshot: DirectorySnapshot, selectedId: string | null, userQuery: string): Set<string> {
-  const visible = new Set(snapshot.nodes.filter((n) => n.type === 'group').map((n) => n.id))
-  const selected = snapshot.nodes.find((n) => n.id === selectedId)
-  if (selected?.type === 'group') {
-    for (const e of snapshot.edges) {
-      if (e.to !== selected.id) continue
-      const member = snapshot.nodes.find((n) => n.id === e.from)
-      if (member?.type === 'user') visible.add(member.id)
+function visibleNodeIds(
+  snapshot: DirectorySnapshot,
+  graph: ReturnType<typeof buildMembershipGraph>,
+  selectedId: string | null,
+  userQuery: string,
+  scope: WebScope,
+  groupsOnly: boolean
+): Set<string> {
+  const byId = new Map(snapshot.nodes.map((n) => [n.id, n]))
+  const groups = groupIdSet(snapshot.nodes)
+  const selected = selectedId ? byId.get(selectedId) ?? null : null
+  const focused = Boolean(scope !== 'forest' && selected && graph.hasNode(selected.id))
+
+  let visible: Set<string>
+  if (focused && selected && scope === 'around') {
+    visible = hopNeighborhood(graph, selected.id)
+  } else if (focused && selected && scope === 'nested') {
+    visible = nestedMembership(graph, selected.id)
+  } else {
+    visible = new Set(groups)
+    if (selected?.type === 'user') visible.add(selected.id)
+    if (selected?.type === 'group' && !groupsOnly) {
+      for (const e of snapshot.edges) {
+        if (e.to !== selected.id) continue
+        const member = byId.get(e.from)
+        if (member?.type === 'user') visible.add(member.id)
+      }
     }
   }
-  if (selected?.type === 'user') visible.add(selected.id)
+
+  if (groupsOnly) {
+    for (const id of [...visible]) {
+      if (byId.get(id)?.type === 'user' && id !== selectedId) visible.delete(id)
+    }
+  }
+
   const q = userQuery.trim().toLowerCase()
   if (q) {
     for (const n of snapshot.nodes) {
       if (n.type !== 'user') continue
       const hay = `${n.displayName} ${n.sAMAccountName} ${n.userPrincipalName ?? ''}`.toLowerCase()
-      if (hay.includes(q)) visible.add(n.id)
+      if (!hay.includes(q)) continue
+      visible.add(n.id)
+      if (!graph.hasNode(n.id)) continue
+      if (scope === 'around') {
+        for (const id of hopNeighborhood(graph, n.id)) visible.add(id)
+      }
+      if (scope === 'nested') {
+        for (const id of nestedMembership(graph, n.id)) visible.add(id)
+      }
     }
+  }
+
+  for (const id of [...visible]) {
+    const type = byId.get(id)?.type
+    if (type !== 'user' && type !== 'group') visible.delete(id)
   }
   return visible
 }
@@ -189,9 +238,22 @@ export function Web() {
   const [userQuery, setUserQuery] = useState('')
   const [density, setDensity] = useState<Density>('spread')
   const [grid, setGrid] = useState(true)
+  const [scope, setScope] = useState<WebScope>('forest')
+  const [groupsOnly, setGroupsOnly] = useState(false)
 
   selectRef.current = select
   densityRef.current = density
+
+  useEffect(() => {
+    if (
+      activeFinding &&
+      (activeFinding.type === 'circular-nesting' ||
+        activeFinding.type === 'deep-nesting' ||
+        activeFinding.type === 'distribution-in-security')
+    ) {
+      setScope('nested')
+    }
+  }, [activeFinding])
 
   useEffect(() => {
     if (!host.current || !snapshot) return
@@ -202,6 +264,7 @@ export function Web() {
       wheelSensitivity: 0.3,
       minZoom: ZOOM_MIN,
       maxZoom: ZOOM_MAX,
+      pixelRatio: 2,
       style: WEB_STYLE,
       layout: { name: 'preset' }
     })
@@ -228,7 +291,7 @@ export function Web() {
     const groups = groupIdSet(snapshot.nodes)
     const graph = buildMembershipGraph(snapshot.nodes, snapshot.edges)
     const cycles = new Set(findGroupCycles(graph, groups).flat())
-    const visible = visibleNodeIds(snapshot, selectedId, userQuery)
+    const visible = visibleNodeIds(snapshot, graph, selectedId, userQuery, scope, groupsOnly)
     const byId = new Map(snapshot.nodes.map((n) => [n.id, n]))
 
     cy.nodes().filter((node) => !visible.has(node.id())).remove()
@@ -244,7 +307,8 @@ export function Web() {
           label: n.displayName,
           kind: n.type,
           privileged: n.privileged ? 1 : 0,
-          cycle: cycles.has(n.id) ? 1 : 0
+          cycle: cycles.has(n.id) ? 1 : 0,
+          icon: webNodeIcon(n.type)
         }
       })
       added.push(id)
@@ -256,16 +320,16 @@ export function Web() {
       cy.add({ data: { id: eid, source: e.from, target: e.to } })
     }
 
-    if (added.length && laidOut.current) {
+    if (added.length && laidOut.current && scope === 'forest') {
       placeAround(cy, added, selectedId)
     }
 
-    if (!laidOut.current || pendingOrganize.current) {
+    if (!laidOut.current || pendingOrganize.current || scope !== 'forest') {
       pendingOrganize.current = false
       laidOut.current = true
       runOrganize(cy, densityRef.current)
     }
-  }, [snapshot, selectedId, userQuery])
+  }, [snapshot, selectedId, userQuery, scope, groupsOnly])
 
   useEffect(() => {
     const cy = cyRef.current
@@ -286,12 +350,24 @@ export function Web() {
   if (!snapshot) return null
 
   const selected = snapshot.nodes.find((n) => n.id === selectedId)
-  const hint =
-    selected?.type === 'group'
-      ? `Showing members of ${selected.displayName}`
-      : selected?.type === 'user'
-        ? `Showing ${selected.displayName} and groups`
-        : 'Select a group to expand its users'
+  const focused = scope !== 'forest' && selected && (selected.type === 'user' || selected.type === 'group')
+  const hint = !focused
+    ? scope === 'around'
+      ? 'Select a user or group to see direct membership'
+      : scope === 'nested'
+        ? 'Select a user or group to see nested membership'
+        : selected?.type === 'group'
+          ? `Showing members of ${selected.displayName}`
+          : selected?.type === 'user'
+            ? `Showing ${selected.displayName} and groups`
+            : 'Select a group to expand its users'
+    : scope === 'around' && selected.type === 'user'
+      ? `Direct groups for ${selected.displayName}`
+      : scope === 'around'
+        ? `Direct members and parent groups of ${selected.displayName}`
+        : selected.type === 'user'
+          ? `Groups ${selected.displayName} nests into`
+          : `Nested members and parent groups of ${selected.displayName}`
 
   const organizeNow = (next?: Density): void => {
     if (next) {
@@ -304,9 +380,11 @@ export function Web() {
 
   const resetView = (): void => {
     pendingOrganize.current = true
+    setScope('forest')
+    setGroupsOnly(false)
     setUserQuery('')
     select(null)
-    if (!userQuery && !selectedId) {
+    if (!userQuery && !selectedId && scope === 'forest' && !groupsOnly) {
       pendingOrganize.current = false
       const cy = cyRef.current
       if (cy) runOrganize(cy, densityRef.current)
@@ -323,6 +401,20 @@ export function Web() {
           value={userQuery}
           onChange={(e) => setUserQuery(e.target.value)}
         />
+        <div className="web-tools" role="toolbar" aria-label="Membership scope">
+          <button type="button" className={scope === 'forest' ? 'active' : ''} aria-pressed={scope === 'forest'} onClick={() => setScope('forest')}>
+            Forest
+          </button>
+          <button type="button" className={scope === 'around' ? 'active' : ''} aria-pressed={scope === 'around'} onClick={() => setScope('around')}>
+            Around
+          </button>
+          <button type="button" className={scope === 'nested' ? 'active' : ''} aria-pressed={scope === 'nested'} onClick={() => setScope('nested')}>
+            Nested
+          </button>
+          <button type="button" className={groupsOnly ? 'active' : ''} aria-pressed={groupsOnly} onClick={() => setGroupsOnly((on) => !on)}>
+            Groups only
+          </button>
+        </div>
         <div className="web-tools" role="toolbar" aria-label="Canvas layout">
           <button type="button" onClick={() => organizeNow()}>
             Organize
@@ -361,7 +453,7 @@ export function Web() {
             Reset
           </button>
         </div>
-        <span className="muted">Gold = group · red ring = privileged · dashed = cycle · layout stays put until Organize</span>
+        <span className="muted">Gold = group · blue = user · red = privileged · dashed = cycle · layout stays put until Organize</span>
       </div>
       {activeFinding && (activeFinding.type === 'circular-nesting' || activeFinding.type === 'deep-nesting' || activeFinding.type === 'distribution-in-security') ? (
         <div className="path-card" style={{ margin: '8px 12px 0' }}>
