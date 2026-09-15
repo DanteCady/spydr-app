@@ -1,7 +1,8 @@
 import cytoscape from 'cytoscape'
-import { Download, LayoutGrid, Maximize, Minus, Plus, RotateCcw } from 'lucide-react'
+import { ChevronsDownUp, ChevronsUpDown, Download, Grid2x2, Info, Maximize, Minus, Plus, RotateCcw } from 'lucide-react'
 import dagre from 'cytoscape-dagre'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { DirectoryObjectType } from '@shared/types'
 import { buildMembershipGraph, findGroupCycles, groupIdSet, membershipReach } from '@shared/graph'
 import { FindingCard } from '../components/FindingCard'
 import { MembershipOutline } from '../components/MembershipOutline'
@@ -26,6 +27,10 @@ function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 }
 
+function typeIconColor(type: DirectoryObjectType): string {
+  return cssVar(type === 'user' ? '--user' : type === 'group' ? '--group' : type === 'computer' ? '--computer' : '--ou')
+}
+
 function buildWebStyle(): cytoscape.StylesheetJson {
   const text = cssVar('--foreground')
   const canvas = cssVar('--canvas')
@@ -34,72 +39,71 @@ function buildWebStyle(): cytoscape.StylesheetJson {
   const member = cssVar('--edge-member')
   const primary = cssVar('--edge-primary')
   return [
-    // Icon nodes: a type-tinted disc with the white glyph, name plated beneath.
+    // Modern tile nodes: soft type-tinted rounded square, crisp type-colored glyph, name beneath.
     {
       selector: 'node',
       style: {
-        shape: 'ellipse',
-        'background-color': cssVar('--web-user-bg'),
-        'border-width': 1.5,
-        'border-color': cssVar('--user'),
+        shape: 'round-rectangle',
+        'corner-radius': '11px',
+        'background-color': cssVar('--node-user-bg'),
+        'border-width': 0,
         'background-image': 'data(icon)',
         'background-fit': 'contain',
         'background-clip': 'node',
-        'background-width': '60%',
-        'background-height': '60%',
+        'background-width': '58%',
+        'background-height': '58%',
         label: 'data(label)',
         color: text,
-        'font-size': 10,
+        'font-size': 10.5,
+        'font-weight': 500,
         'font-family': 'IBM Plex Sans, system-ui, sans-serif',
         'text-valign': 'bottom',
-        'text-margin-y': 5,
+        'text-margin-y': 6,
         'text-wrap': 'ellipsis',
-        'text-max-width': '120px',
+        'text-max-width': '124px',
         'text-background-color': canvas,
-        'text-background-opacity': 0.82,
-        'text-background-padding': '2px',
+        'text-background-opacity': 0.85,
+        'text-background-padding': '3px',
         'text-background-shape': 'roundrectangle',
         'min-zoomed-font-size': 7,
         'transition-property': 'opacity',
         'transition-duration': 120,
-        width: 34,
-        height: 34
-      }
-    },
-    {
-      selector: 'node[kind = "group"]',
-      style: {
-        'background-color': cssVar('--web-group-bg'),
-        'border-color': cssVar('--group'),
-        'font-weight': 600,
         width: 40,
         height: 40
       }
     },
     {
+      selector: 'node[kind = "group"]',
+      style: {
+        'background-color': cssVar('--node-group-bg'),
+        'font-weight': 600,
+        width: 44,
+        height: 44
+      }
+    },
+    {
       selector: 'node[privileged = 1]',
       style: {
-        'background-color': cssVar('--web-priv-bg'),
-        'border-color': crit,
-        'border-width': 2,
+        'background-color': cssVar('--node-priv-bg'),
         'underlay-color': crit,
-        'underlay-opacity': 0.14,
-        'underlay-padding': 6
+        'underlay-opacity': 0.2,
+        'underlay-padding': 5,
+        'underlay-shape': 'round-rectangle'
       }
     },
     {
       selector: 'node[cycle = 1]',
-      style: { 'border-style': 'dashed', 'border-color': crit }
+      style: { 'border-width': 1.5, 'border-style': 'dashed', 'border-color': crit, 'border-opacity': 0.9 }
     },
     // the anchor of the current neighborhood
     {
       selector: 'node:selected',
       style: {
-        'border-color': brand,
-        'border-width': 3,
+        'background-color': cssVar('--node-focus-bg'),
         'underlay-color': brand,
-        'underlay-opacity': 0.24,
-        'underlay-padding': 8
+        'underlay-opacity': 0.3,
+        'underlay-padding': 6,
+        'underlay-shape': 'round-rectangle'
       }
     },
     {
@@ -246,6 +250,7 @@ export function Web() {
   const densityRef = useRef<Density>('spread')
   const [density, setDensity] = useState<Density>('spread')
   const [grid, setGrid] = useState(false)
+  const [legend, setLegend] = useState(true)
   const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(null)
   const [shown, setShown] = useState({ nodes: 0, edges: 0, trimmed: 0 })
   const [cyInstance, setCyInstance] = useState<cytoscape.Core | null>(null)
@@ -364,7 +369,7 @@ export function Web() {
             kind: n.type,
             privileged: n.privileged ? 1 : 0,
             cycle: cycles.has(n.id) ? 1 : 0,
-            icon: webNodeIcon(n.type)
+            icon: webNodeIcon(n.type, typeIconColor(n.type))
           }
         })
       }
@@ -397,6 +402,10 @@ export function Web() {
       const cy = cyRef.current
       if (!cy || cy.destroyed()) return
       cy.style(buildWebStyle())
+      cy.nodes().forEach((n) => {
+        const kind = n.data('kind') as DirectoryObjectType
+        n.data('icon', webNodeIcon(kind, typeIconColor(kind)))
+      })
       cy.emit('viewport')
     })
     return () => cancelAnimationFrame(id)
@@ -407,7 +416,7 @@ export function Web() {
   const tipNode = tip ? snapshot.nodes.find((n) => n.id === tip.id) : null
   const focusNode = snapshot.nodes.find((n) => n.id === focusId)
   const hint = focusNode
-    ? `Neighborhood of ${focusNode.displayName}`
+    ? focusNode.displayName
     : 'Pick a group or user from the outline'
 
   const relayout = (next?: Density): void => {
@@ -476,25 +485,44 @@ export function Web() {
       ) : null}
       <div className="web-graph">
         <div className="toolbar web-toolbar">
-          <span className="muted web-focus-label">{hint}</span>
-          <span className="spacer" />
-          <div className="seg" role="toolbar" aria-label="Spacing">
-            <button type="button" className={density === 'compact' ? 'active' : ''} aria-pressed={density === 'compact'} onClick={() => relayout('compact')}>
-              Compact
+          <div className="web-title" aria-live="polite">
+            <span className="web-title-focus">
+              {focusNode ? <TypeGlyph type={focusNode.type} /> : null}
+              {hint}
+            </span>
+            <span className="web-title-meta">
+              neighborhood · {shown.nodes} node{shown.nodes === 1 ? '' : 's'} · {shown.edges} edge{shown.edges === 1 ? '' : 's'}
+              {shown.trimmed > 0 ? ` · +${shown.trimmed} hidden — click a member to walk in` : ''}
+            </span>
+          </div>
+          <div className="tb-group" role="toolbar" aria-label="Spacing">
+            <button type="button" className={`tb-btn${density === 'compact' ? ' active' : ''}`} aria-pressed={density === 'compact'} title="Compact spacing" onClick={() => relayout('compact')}>
+              <ChevronsDownUp size={15} aria-hidden />
+              <span>Compact</span>
             </button>
-            <button type="button" className={density === 'spread' ? 'active' : ''} aria-pressed={density === 'spread'} onClick={() => relayout('spread')}>
-              Spread
+            <button type="button" className={`tb-btn${density === 'spread' ? ' active' : ''}`} aria-pressed={density === 'spread'} title="Spread spacing" onClick={() => relayout('spread')}>
+              <ChevronsUpDown size={15} aria-hidden />
+              <span>Spread</span>
             </button>
           </div>
-          <div className="seg" role="toolbar" aria-label="Canvas">
-            <button type="button" className={grid ? 'active' : ''} aria-pressed={grid} onClick={() => setGrid((on) => !on)}>
-              <LayoutGrid size={13} aria-hidden /> Grid
+          <div className="tb-group" role="toolbar" aria-label="View">
+            <button type="button" className={`tb-btn${grid ? ' active' : ''}`} aria-pressed={grid} title="Toggle grid" onClick={() => setGrid((on) => !on)}>
+              <Grid2x2 size={15} aria-hidden />
+              <span>Grid</span>
             </button>
-            <button type="button" onClick={exportPng}>
-              <Download size={13} aria-hidden /> Export
+            <button type="button" className={`tb-btn${legend ? ' active' : ''}`} aria-pressed={legend} title="Toggle legend" onClick={() => setLegend((on) => !on)}>
+              <Info size={15} aria-hidden />
+              <span>Legend</span>
             </button>
-            <button type="button" onClick={() => select(null)}>
-              <RotateCcw size={13} aria-hidden /> Reset
+          </div>
+          <div className="tb-group" role="toolbar" aria-label="Actions">
+            <button type="button" className="tb-btn" title="Export PNG" onClick={exportPng}>
+              <Download size={15} aria-hidden />
+              <span>Export</span>
+            </button>
+            <button type="button" className="tb-btn" title="Back to the default focus" onClick={() => select(null)}>
+              <RotateCcw size={15} aria-hidden />
+              <span>Reset</span>
             </button>
           </div>
         </div>
@@ -507,13 +535,6 @@ export function Web() {
           onKeyDown={onCanvasKeys}
         >
           <div className="web-canvas" ref={host} />
-          <div className="web-status" aria-live="polite">
-            <span>{hint}</span>
-            <span className="web-status-counts">
-              {shown.nodes} node{shown.nodes === 1 ? '' : 's'} · {shown.edges} edge{shown.edges === 1 ? '' : 's'}
-              {shown.trimmed > 0 ? ` · +${shown.trimmed} more members hidden — click a member to walk in` : ''}
-            </span>
-          </div>
           {activeFinding &&
           (activeFinding.type === 'circular-nesting' ||
             activeFinding.type === 'deep-nesting' ||
@@ -539,6 +560,7 @@ export function Web() {
               <StatusBadges node={tipNode} />
             </div>
           ) : null}
+          {legend ? (
           <div className="web-legend" aria-hidden>
             <span className="legend-row">
               <span className="legend-dot user" /> User
@@ -556,6 +578,7 @@ export function Web() {
               <span className="legend-line line-primary" /> Primary group
             </span>
           </div>
+          ) : null}
           <div className="web-corner">
             <WebMinimap cy={cyInstance} />
             <div className="web-controls">
