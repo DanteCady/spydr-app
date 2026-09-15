@@ -7,7 +7,8 @@ const PAD = 10
 
 const FILL: Record<string, string> = {
   user: '#8eb4d4',
-  group: '#c9a35a'
+  group: '#c9a35a',
+  cluster: '#7ea57c'
 }
 
 export function WebMinimap({ cy }: { cy: cytoscape.Core | null }) {
