@@ -4,10 +4,16 @@ export const emptySecurityGroup = defineRule({
   id: 'empty-security-group',
   name: 'Empty security group',
   severity: 'low',
-  describe: 'Security groups with no members at all.',
+  describe: 'Security groups with no members at all, excluding the ones AD creates itself.',
   detect: (ctx) =>
     ctx.nodes
-      .filter((n) => n.type === 'group' && ctx.isSecurityGroup(n) && (ctx.membersOf.get(n.id)?.length ?? 0) === 0)
+      .filter(
+        (n) =>
+          n.type === 'group' &&
+          ctx.isSecurityGroup(n) &&
+          !ctx.isBuiltin(n) &&
+          (ctx.membersOf.get(n.id)?.length ?? 0) === 0
+      )
       .map((n) => ({
         id: `empty-${n.id}`,
         type: 'empty-security-group' as const,

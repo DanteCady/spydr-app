@@ -1,4 +1,4 @@
-import { isDisabled, isDistributionGroup, isSecurityGroup } from '../adFlags'
+import { isBuiltinAccount, isBuiltinGroup, isDisabled, isDistributionGroup, isSecurityGroup } from '../adFlags'
 import { ancestorDepth, buildMembershipGraph, findGroupCycles, groupIdSet, type MembershipGraph } from '../graph'
 import type { DirectoryEdge, DirectoryNode } from '../types'
 import type { EngineConfig } from './rule'
@@ -34,6 +34,8 @@ export interface EngineContext {
   isDisabled(node: DirectoryNode): boolean
   isSecurityGroup(node: DirectoryNode): boolean
   isDistributionGroup(node: DirectoryNode): boolean
+  /** Created by AD itself: skipped by cleanup rules, never by privilege rules. */
+  isBuiltin(node: DirectoryNode): boolean
 }
 
 export function buildContext(
@@ -85,6 +87,8 @@ export function buildContext(
     isStale: (ts) => ts == null || ts === 0 || now - ts > staleMs,
     isDisabled: (n) => isDisabled(n.userAccountControl),
     isSecurityGroup: (n) => isSecurityGroup(n.groupType),
-    isDistributionGroup: (n) => isDistributionGroup(n.groupType)
+    isDistributionGroup: (n) => isDistributionGroup(n.groupType),
+    isBuiltin: (n) =>
+      n.type === 'group' ? isBuiltinGroup(n.sAMAccountName, n.dn) : isBuiltinAccount(n.sAMAccountName)
   }
 }

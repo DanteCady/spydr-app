@@ -78,6 +78,11 @@ grp "FS01_Share_Users"     Global Security "$LG" "Old file server"
 grp "FS01_Share_Admins"    Global Security "$LG" ""
 grp "Backup Operators Legacy" Global Security "$LG" ""
 grp "Project Meridian"     Global Security "$LG" "Project closed 2021"
+# Abandoned groups nobody ever populated or emptied out — the real empty-group problem,
+# as opposed to the built-in groups AD ships empty on purpose.
+grp "SG-Project-Atlas"     Global Security "$LG" "Project Atlas — cancelled before kickoff"
+grp "DL-FS-Archive-RO"     Domain Security "$LG" "Archive share, decommissioned 2022"
+grp "GG_Temp_Auditors"     Global Security "$LG" "External audit 2023"
 
 echo "[seed] people"
 U="OU=Users,OU=Harborview"

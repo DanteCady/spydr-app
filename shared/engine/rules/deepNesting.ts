@@ -4,11 +4,12 @@ export const deepNesting = defineRule({
   id: 'deep-nesting',
   name: 'Deep nesting',
   severity: 'high',
-  describe: 'Groups nested more levels deep than the configured limit.',
+  describe: 'Groups nested more levels deep than the configured limit, outside of reported cycles.',
   detect: (ctx) => {
     const limit = ctx.config.deepNesting
     const out = []
     for (const id of ctx.groups) {
+      if (ctx.inCycle.has(id)) continue // the cycle finding already covers these
       const depth = ctx.depth.get(id)
       if (depth === undefined || depth <= limit) continue
       out.push({

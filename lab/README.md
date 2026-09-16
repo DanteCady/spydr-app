@@ -44,7 +44,10 @@ The mess the engine should surface:
   `sgreen` (ex-accountant, still in Finance), `svc-citrix`, `ext.mliu`.
 - **Stale:** contractors and legacy service accounts never logged on. Current staff get a real logon
   during seeding so they are not flagged.
-- **Empty groups:** several `DL-Print-*`/legacy groups end up empty, plus the built-in
-  Enterprise/Schema Admins.
+- **Empty groups:** `SG-Project-Atlas`, `DL-FS-Archive-RO`, `GG_Temp_Auditors` — abandoned and never
+  populated. Groups AD creates empty on purpose (Cryptographic Operators, Domain Computers, …) are
+  excluded, so the finding is signal rather than noise.
+- **Primary group membership:** every account's Domain Users membership is resolved from
+  `primaryGroupID`, which AD stores on the account rather than in the group's member list.
 
 Reseeding is safe; the script skips anything that already exists.

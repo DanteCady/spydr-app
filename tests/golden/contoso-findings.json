@@ -24,39 +24,6 @@
     "suggestedFix": "Flatten the chain. Nesting more than three groups deep is hard to audit and often leftover from old role groups. Prefer one role group and direct members."
   },
   {
-    "id": "empty-g-ea",
-    "type": "empty-security-group",
-    "severity": "low",
-    "title": "Empty security group",
-    "objectIds": [
-      "g-ea"
-    ],
-    "detail": "Enterprise Admins is a security group with no members.",
-    "suggestedFix": "If unused, document and delete it after checking delegated ACLs and file shares. Empty groups linger and get reused by mistake."
-  },
-  {
-    "id": "empty-g-sa",
-    "type": "empty-security-group",
-    "severity": "low",
-    "title": "Empty security group",
-    "objectIds": [
-      "g-sa"
-    ],
-    "detail": "Schema Admins is a security group with no members.",
-    "suggestedFix": "If unused, document and delete it after checking delegated ACLs and file shares. Empty groups linger and get reused by mistake."
-  },
-  {
-    "id": "empty-g-admins",
-    "type": "empty-security-group",
-    "severity": "low",
-    "title": "Empty security group",
-    "objectIds": [
-      "g-admins"
-    ],
-    "detail": "Administrators is a security group with no members.",
-    "suggestedFix": "If unused, document and delete it after checking delegated ACLs and file shares. Empty groups linger and get reused by mistake."
-  },
-  {
     "id": "empty-g-empty",
     "type": "empty-security-group",
     "severity": "low",

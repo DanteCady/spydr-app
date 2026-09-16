@@ -8,7 +8,7 @@ export const disabledInGroup = defineRule({
   detect: (ctx) => {
     const out = []
     for (const n of ctx.users) {
-      if (!ctx.isDisabled(n)) continue
+      if (ctx.isBuiltin(n) || !ctx.isDisabled(n)) continue
       const groups = ctx.memberEdgesToGroups.get(n.id) ?? []
       if (groups.length === 0) continue
       out.push({
