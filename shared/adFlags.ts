@@ -42,3 +42,38 @@ export const PRIVILEGED_SAM = new Set([
 export function isPrivilegedSam(sam: string): boolean {
   return PRIVILEGED_SAM.has(sam.trim().toLowerCase())
 }
+
+/**
+ * Groups and accounts Active Directory creates itself. They are excluded from cleanup findings
+ * (an empty Cryptographic Operators is normal, not mess) but never from privilege analysis —
+ * Domain Admins is built-in and still the thing we care most about.
+ */
+export const BUILTIN_GROUP_SAM = new Set([
+  'domain admins', 'domain users', 'domain guests', 'domain computers', 'domain controllers',
+  'enterprise admins', 'schema admins', 'group policy creator owners', 'cert publishers',
+  'read-only domain controllers', 'enterprise read-only domain controllers', 'dnsadmins',
+  'dnsupdateproxy', 'ras and ias servers', 'allowed rodc password replication group',
+  'denied rodc password replication group', 'protected users', 'key admins', 'enterprise key admins',
+  'cloneable domain controllers', 'administrators', 'users', 'guests', 'account operators',
+  'server operators', 'print operators', 'backup operators', 'replicator', 'remote desktop users',
+  'network configuration operators', 'performance monitor users', 'performance log users',
+  'distributed com users', 'iis_iusrs', 'cryptographic operators', 'event log readers',
+  'certificate service dcom access', 'rds remote access servers', 'rds endpoint servers',
+  'rds management servers', 'hyper-v administrators', 'access control assistance operators',
+  'remote management users', 'storage replica administrators', 'terminal server license servers',
+  'pre-windows 2000 compatible access', 'incoming forest trust builders',
+  'windows authorization access group'
+])
+
+export const BUILTIN_ACCOUNT_SAM = new Set([
+  'administrator', 'guest', 'krbtgt', 'defaultaccount', 'wdagutilityaccount'
+])
+
+export function isBuiltinGroup(sAMAccountName: string, dn: string): boolean {
+  if (/,CN=Builtin,/i.test(dn)) return true
+  return BUILTIN_GROUP_SAM.has(sAMAccountName.trim().toLowerCase())
+}
+
+export function isBuiltinAccount(sAMAccountName: string): boolean {
+  return BUILTIN_ACCOUNT_SAM.has(sAMAccountName.trim().toLowerCase())
+}

@@ -133,3 +133,58 @@ describe('rules', () => {
     expect(res.facts.rulesRun).toBe(RULES.length - 1)
   })
 })
+
+describe('built-ins and scoring', () => {
+  const builtin = (sam: string, dn: string) =>
+    group(sam, { sAMAccountName: sam.toLowerCase(), dn, displayName: sam })
+
+  it('ignores AD-created groups when reporting empty security groups', () => {
+    const own = group('SG-Unused')
+    const b1 = builtin('Cryptographic Operators', `CN=Cryptographic Operators,CN=Builtin,${BASE}`)
+    const b2 = builtin('Domain Computers', `CN=Domain Computers,CN=Users,${BASE}`)
+    const empties = runEngine([own, b1, b2], []).findings
+      .filter((f) => f.type === 'empty-security-group')
+      .map((f) => f.objectIds[0])
+    expect(empties).toEqual([own.id])
+  })
+
+  it('still analyses privilege through built-in groups', () => {
+    const da = builtin('Domain Admins', `CN=Domain Admins,CN=Users,${BASE}`)
+    da.privileged = true
+    const mid = group('SG-Mid')
+    const u = user('Nia')
+    const res = runEngine([da, mid, u], [member(mid, da), member(u, mid)])
+    expect(types(res.findings)).toContain('privileged-nested-path')
+  })
+
+  it('never flags krbtgt or Guest as stale', () => {
+    const g = group('SG-Legacy')
+    const krbtgt = user('krbtgt', { sAMAccountName: 'krbtgt', lastLogonTimestamp: null })
+    const real = user('Ida', { lastLogonTimestamp: null })
+    const stale = runEngine([g, krbtgt, real], [member(krbtgt, g), member(real, g)]).findings
+      .filter((f) => f.type === 'stale-in-group')
+      .map((f) => f.objectIds[0])
+    expect(stale).toEqual([real.id])
+  })
+
+  it('does not re-report nesting depth for groups inside a cycle', () => {
+    const ring = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5'].map((n) => group(n))
+    const edges = ring.map((g, i) => member(g, ring[(i + 1) % ring.length]))
+    const kinds = types(runEngine(ring, edges).findings)
+    expect(kinds).toContain('circular-nesting')
+    expect(kinds).not.toContain('deep-nesting')
+  })
+
+  it('score saturates instead of bottoming out, and stays monotonic', () => {
+    const g = group('A'); const u = user('B')
+    const clean = runEngine([g, u], [member(u, g)]) // a group with a member is not "empty"
+    expect(clean.findings).toEqual([])
+    expect(clean.score).toBe(100)
+    const mess = Array.from({ length: 40 }, (_, i) => group(`Empty${i}`))
+    const messy = runEngine(mess, [])
+    expect(messy.score).toBeGreaterThan(0)
+    expect(messy.score).toBeLessThan(clean.score)
+    const worse = runEngine([...mess, ...Array.from({ length: 40 }, (_, i) => group(`More${i}`))], [])
+    expect(worse.score).toBeLessThan(messy.score)
+  })
+})

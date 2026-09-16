@@ -14,6 +14,9 @@ services:
       - "389:389"
       - "636:636"
     volumes:
+      # Mounted rather than baked in, so editing seed.sh takes effect on the next lab:seed
+      # without rebuilding the image.
+      - ./:/lab:ro
       - lab-samba:/var/lib/samba
       - lab-etc:/etc/samba
     cap_add:

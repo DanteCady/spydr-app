@@ -24,6 +24,7 @@ const USER_ATTRS = [
   'whenCreated',
   'whenChanged',
   'primaryGroupID',
+  'objectSid',
   'memberOf'
 ]
 const GROUP_ATTRS = [
@@ -37,6 +38,7 @@ const GROUP_ATTRS = [
   'managedBy',
   'whenCreated',
   'whenChanged',
+  'objectSid',
   'member'
 ]
 const OU_ATTRS = ['objectGUID', 'distinguishedName', 'name', 'ou', 'cn', 'description', 'whenCreated', 'whenChanged']
@@ -138,6 +140,19 @@ function parentDn(dn: string): string | null {
   return null
 }
 
+/**
+ * Relative identifier from an objectSid. A user's primary group is stored as this RID on the
+ * user, not as a member/memberOf link, so it is the only way to see Domain Users membership.
+ */
+function ridFrom(raw: unknown): number | null {
+  const buf = Buffer.isBuffer(raw) ? raw : Array.isArray(raw) && Buffer.isBuffer(raw[0]) ? raw[0] : null
+  if (!buf || buf.length < 12) return null
+  const subAuthorityCount = buf[1]
+  const end = 8 + subAuthorityCount * 4
+  if (subAuthorityCount === 0 || buf.length < end) return null
+  return buf.readUInt32LE(end - 4)
+}
+
 function fileTimeMs(value: unknown): number | null {
   const s = first(value)
   if (!s || s === '0') return null
@@ -164,7 +179,7 @@ async function searchAll(client: Client, baseDn: string, filter: string, attribu
     filter,
     attributes,
     paged: { pageSize: 500 },
-    explicitBufferAttributes: ['objectGUID']
+    explicitBufferAttributes: ['objectGUID', 'objectSid']
   })
   return searchEntries as unknown as Record<string, unknown>[]
 }
@@ -311,11 +326,23 @@ export async function ingestDirectory(input: ConnectionInput): Promise<Directory
       edges.push({ from: from.id, to: toId, via })
     }
 
+    const groupIdByRid = new Map<number, string>()
     for (const entry of groups) {
       const groupNode = toNode(entry, 'group')
       if (!groupNode) continue
+      const rid = ridFrom(entry.objectSid ?? entry.objectsid)
+      if (rid !== null) groupIdByRid.set(rid, groupNode.id)
       const members = await readMembers(client, groupNode.dn, entry)
       for (const memberDn of members) addEdge(memberDn, groupNode.id, 'member')
+    }
+
+    // Primary group membership (usually Domain Users) never appears in member/memberOf.
+    for (const entry of [...users, ...computers]) {
+      const rid = Number(first(entry.primaryGroupID))
+      if (!rid) continue
+      const groupId = groupIdByRid.get(rid)
+      const dn = first(entry.distinguishedName) || first(entry.dn)
+      if (groupId && dn) addEdge(dn, groupId, 'primaryGroup')
     }
 
     const domain = tested.baseDn

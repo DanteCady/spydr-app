@@ -19,9 +19,17 @@ export interface EngineResult {
 
 const WEIGHT: Record<FindingSeverity, number> = { critical: 12, high: 6, medium: 3, low: 1 }
 
+/** Penalty at which a directory scores 50. Tuned so a typical messy domain lands mid-range. */
+const HALF_LIFE = 100
+
+/**
+ * 0–100, where 100 is a clean directory. The curve saturates rather than subtracting, because a
+ * linear penalty hits zero on any real domain and stops being informative — this stays strictly
+ * monotonic, so fixing anything always moves the number up.
+ */
 export function hygieneScore(findings: Finding[]): number {
   const penalty = findings.reduce((sum, f) => sum + WEIGHT[f.severity], 0)
-  return Math.max(0, 100 - penalty)
+  return Math.round((100 * HALF_LIFE) / (HALF_LIFE + penalty))
 }
 
 export function runEngine(
