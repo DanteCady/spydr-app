@@ -11,7 +11,13 @@
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "verify:fixture": "npx tsx electron/verify-fixture.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lab:up": "docker compose -f lab/docker-compose.yml up -d --build",
+    "lab:seed": "docker compose -f lab/docker-compose.yml exec dc /lab/seed.sh",
+    "lab:verify": "npx tsx lab/verify.ts",
+    "lab:down": "docker compose -f lab/docker-compose.yml down",
+    "lab:reset": "docker compose -f lab/docker-compose.yml down -v",
+    "lab:logs": "docker compose -f lab/docker-compose.yml logs -f dc"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.3.0",
