@@ -8,9 +8,9 @@ import type { ConnectionInput } from '../shared/types'
 app.setName('Spydr')
 
 function preloadPath(): string {
-  const mjs = join(__dirname, '../preload/preload.mjs')
   const js = join(__dirname, '../preload/preload.js')
-  return existsSync(mjs) ? mjs : js
+  const mjs = join(__dirname, '../preload/preload.mjs')
+  return existsSync(js) ? js : mjs
 }
 
 function appIcon(): Electron.NativeImage | undefined {

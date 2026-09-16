@@ -1,0 +1,24 @@
+# Local Samba AD DC to point Spydr at. `npm run lab:up`, then `npm run lab:seed`.
+services:
+  dc:
+    build: .
+    container_name: spydr-lab-dc
+    hostname: dc01
+    domainname: harborview.local
+    environment:
+      REALM: HARBORVIEW.LOCAL
+      DOMAIN: HARBORVIEW
+      ADMINPASS: Harbor!Lab2026
+      SEEDPASS: Harbor!Lab2026
+    ports:
+      - "389:389"
+      - "636:636"
+    volumes:
+      - lab-samba:/var/lib/samba
+      - lab-etc:/etc/samba
+    cap_add:
+      - SYS_ADMIN
+    restart: unless-stopped
+volumes:
+  lab-samba:
+  lab-etc:
