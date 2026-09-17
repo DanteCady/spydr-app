@@ -1,0 +1,56 @@
+appId: com.spydr.directory
+productName: Spydr
+copyright: Spydr
+
+directories:
+  output: release
+  buildResources: resources
+
+# Only the built output ships. Renderer dependencies are bundled by Vite; main and preload keep
+# their externalized deps (ldapts, graphology) from node_modules.
+files:
+  - out/**/*
+  - package.json
+  - '!**/*.map'
+  # Vite bundles the renderer, so its libraries must not also ship as node_modules. Only the
+  # deps electron-vite externalizes for main/preload (ldapts, graphology) are needed at runtime.
+  - '!node_modules/{react,react-dom,scheduler}/**'
+  - '!node_modules/{cytoscape,cytoscape-dagre,cytoscape-fcose,dagre,graphlib,layout-base,cose-base}/**'
+  - '!node_modules/{lucide-react,lucide-static}/**'
+  - '!node_modules/@fontsource/**'
+  - '!node_modules/@types/**'
+
+mac:
+  category: public.app-category.developer-tools
+  icon: resources/icon.icns
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  # Signing and notarization need credentials in CI; see lab/../docs/RELEASING.md.
+  notarize: false
+
+win:
+  icon: resources/icon.png
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  shortcutName: Spydr
+
+linux:
+  icon: resources/icon.png
+  category: Utility
+  target:
+    - target: AppImage
+      arch: [x64, arm64]
+    - target: deb
+      arch: [x64, arm64]

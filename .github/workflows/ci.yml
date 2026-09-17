@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, tests, fixture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      # Guards the sample forest: every rule must still fire on it.
+      - run: npm run verify:fixture
+
+  package:
+    name: Package ${{ matrix.os }}
+    needs: verify
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Unsigned here. Signing and notarization happen in release.yml, which has the credentials.
+      - run: npm run package
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spydr-${{ matrix.os }}
+          path: |
+            release/*.dmg
+            release/*.exe
+            release/*.AppImage
+            release/*.deb
+          if-no-files-found: error
+          retention-days: 14

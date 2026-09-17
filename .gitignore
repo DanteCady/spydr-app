@@ -20,3 +20,4 @@ userData/
 # Never commit AD snapshots or encrypted bind secrets
 snapshots/
 .spydr/
+release/
