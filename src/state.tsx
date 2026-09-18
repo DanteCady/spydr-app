@@ -3,7 +3,9 @@ import { loadContosoFixture } from '../fixtures/contoso-lab'
 import { buildMembershipGraph, enumeratePaths } from '@shared/graph'
 import type { ConnectionInput, DirectorySnapshot, Finding, PathResult, WorkspaceId } from '@shared/types'
 
-export type Theme = 'dark' | 'light'
+export type Theme = 'dark' | 'light' | 'vivid'
+
+export const THEMES: Theme[] = ['dark', 'light', 'vivid']
 
 interface AppState {
   theme: Theme
@@ -42,9 +44,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pathSource, setPathSource] = useState('')
   const [pathTarget, setPathTarget] = useState('')
   const [activeFinding, setActiveFinding] = useState<Finding | null>(null)
-  const [theme, setTheme] = useState<Theme>(() =>
-    window.localStorage.getItem('spydr-theme') === 'light' ? 'light' : 'dark'
-  )
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = window.localStorage.getItem('spydr-theme')
+    return THEMES.includes(saved as Theme) ? (saved as Theme) : 'dark'
+  })
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -154,7 +157,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value: AppState = {
     theme,
-    toggleTheme: useCallback(() => setTheme((t) => (t === 'dark' ? 'light' : 'dark')), []),
+    toggleTheme: useCallback(() => setTheme((t) => THEMES[(THEMES.indexOf(t) + 1) % THEMES.length]), []),
     snapshot,
     workspace,
     selectedId,
