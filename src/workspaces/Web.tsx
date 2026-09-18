@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DirectoryObjectType } from '@shared/types'
 import { buildMembershipGraph, findGroupCycles, groupIdSet, membershipReach } from '@shared/graph'
 import { FindingCard } from '../components/FindingCard'
-import { MembershipOutline } from '../components/MembershipOutline'
+import { DirectoryTree } from '../components/DirectoryTree'
 import { StatusBadges } from '../components/StatusBadges'
 import { TypeGlyph, webNodeIcon } from '../components/TypeGlyph'
 import { WebMinimap } from '../components/WebMinimap'
@@ -482,9 +482,7 @@ export function Web() {
 
   return (
     <div className="web-split">
-      {graph ? (
-        <MembershipOutline snapshot={snapshot} graph={graph} selectedId={selectedId} onSelect={select} />
-      ) : null}
+      <DirectoryTree snapshot={snapshot} selectedId={selectedId} onSelect={select} />
       <div className="web-graph">
         <div className="toolbar web-toolbar">
           <div className="web-title" aria-live="polite">
