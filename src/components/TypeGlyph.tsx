@@ -44,7 +44,6 @@ const SVG: Record<DirectoryObjectType, string> = {
   container: BoxSvg
 }
 
-/** Well-known containers get the icon an admin expects, the way ADUC distinguishes them. */
 /** Icon for an OU that reflects what it holds, so a folder of groups looks like groups. */
 const BY_CONTENT: Partial<Record<DirectoryObjectType, LucideIcon>> = {
   group: Users,
@@ -52,39 +51,52 @@ const BY_CONTENT: Partial<Record<DirectoryObjectType, LucideIcon>> = {
   computer: Server
 }
 
-function containerIcon(node: DirectoryNode, contains?: DirectoryObjectType): LucideIcon {
+/** The icon plus the type whose colour it should take. */
+export interface Glyph {
+  Icon: LucideIcon
+  tone: DirectoryObjectType
+}
+
+/** Well-known containers get the icon an admin expects, the way ADUC distinguishes them. */
+function containerGlyph(node: DirectoryNode, contains?: DirectoryObjectType): Glyph {
+  const own = node.type
   const rdn = node.dn.split(',')[0]?.replace(/^(CN|OU|DC)=/i, '').toLowerCase() ?? ''
-  if (/^DC=/i.test(node.dn.split(',')[0] ?? '')) return Globe // the domain root itself
-  if (rdn === 'builtin') return ShieldCheck
-  if (rdn === 'users') return UsersRound
-  if (rdn === 'computers') return Server
-  if (rdn === 'domain controllers') return Server
-  if (rdn === 'managed service accounts') return Cog
-  if (node.type !== 'ou') return Box
+  if (/^DC=/i.test(node.dn.split(',')[0] ?? '')) return { Icon: Globe, tone: own } // the domain root
+  if (rdn === 'builtin') return { Icon: ShieldCheck, tone: own }
+  if (rdn === 'users') return { Icon: UsersRound, tone: own }
+  if (rdn === 'computers') return { Icon: Server, tone: own }
+  if (rdn === 'domain controllers') return { Icon: Server, tone: own }
+  if (rdn === 'managed service accounts') return { Icon: Cog, tone: own }
+  if (node.type !== 'ou') return { Icon: Box, tone: own }
   // One icon per level of nesting, so depth is legible from the glyph and not only indentation:
-  // a top-level OU is a plain folder, one inside it stacked folders, anything deeper layers.
+  // a top-level OU is a plain folder, one inside it stacked folders, anything deeper takes the
+  // shape and the colour of whatever it holds.
   const depth = (node.dn.match(/(^|,)OU=/gi) ?? []).length
-  if (depth <= 1) return Folder
-  if (depth === 2) return FolderTree
-  return (contains && BY_CONTENT[contains]) ?? Layers
+  if (depth <= 1) return { Icon: Folder, tone: own }
+  if (depth === 2) return { Icon: FolderTree, tone: own }
+  const byContent = contains && BY_CONTENT[contains]
+  return byContent ? { Icon: byContent, tone: contains } : { Icon: Layers, tone: own }
 }
 
 /**
  * The icon for an object, chosen from what it actually is rather than its bare type: a disabled
  * account, a distribution list, a privileged group and a plain user should not look alike.
  */
-export function iconFor(node: DirectoryNode, contains?: DirectoryObjectType): LucideIcon {
+export function glyphFor(node: DirectoryNode, contains?: DirectoryObjectType): Glyph {
   switch (node.type) {
     case 'user':
-      return isDisabled(node.userAccountControl) ? UserRoundX : User
+      return { Icon: isDisabled(node.userAccountControl) ? UserRoundX : User, tone: 'user' }
     case 'group':
-      if (node.privileged) return ShieldAlert
-      return node.groupType !== undefined && !isSecurityGroup(node.groupType) ? AtSign : Users
+      if (node.privileged) return { Icon: ShieldAlert, tone: 'group' }
+      return {
+        Icon: node.groupType !== undefined && !isSecurityGroup(node.groupType) ? AtSign : Users,
+        tone: 'group'
+      }
     case 'computer':
-      return /server/i.test(node.operatingSystem ?? '') ? Server : Laptop
+      return { Icon: /server/i.test(node.operatingSystem ?? '') ? Server : Laptop, tone: 'computer' }
     case 'ou':
     case 'container':
-      return containerIcon(node, contains)
+      return containerGlyph(node, contains)
   }
 }
 
@@ -108,9 +120,9 @@ export function TypeGlyph({
   /** For containers: the kind of object it mostly holds. */
   contains?: DirectoryObjectType
 }) {
-  const Icon = node ? iconFor(node, contains) : BY_TYPE[type]
+  const { Icon, tone } = node ? glyphFor(node, contains) : { Icon: BY_TYPE[type], tone: type }
   return (
-    <span className={`glyph glyph-${type}`} aria-hidden>
+    <span className={`glyph glyph-${tone}`} aria-hidden>
       <Icon size={16} strokeWidth={1.9} />
     </span>
   )
