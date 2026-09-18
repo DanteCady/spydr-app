@@ -679,7 +679,8 @@ table.grid tr.selected td { background: var(--sel); }
 }
 .web-wrap:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
 .web-wrap.has-grid {
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--muted) 18%, transparent) 1px, transparent 1px);
+  /* 18% of muted at 1px was technically present but invisible, which read as a broken toggle. */
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--muted) 55%, transparent) 1.6px, transparent 1.6px);
   background-size: 28px 28px;
 }
 .web-canvas { position: absolute; inset: 0; background: transparent; }
