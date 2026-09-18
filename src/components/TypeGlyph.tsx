@@ -2,7 +2,7 @@ import {
   AtSign,
   Box,
   Cog,
-  FolderTree,
+  Folder,
   Globe,
   Laptop,
   Monitor,
@@ -20,7 +20,7 @@ import {
   User as UserSvg,
   Users as UsersSvg,
   Box as BoxSvg,
-  FolderTree as FolderTreeSvg
+  Folder as FolderSvg
 } from 'lucide-static'
 import { isDisabled, isSecurityGroup } from '@shared/adFlags'
 import type { DirectoryNode, DirectoryObjectType } from '@shared/types'
@@ -30,7 +30,7 @@ const BY_TYPE: Record<DirectoryObjectType, LucideIcon> = {
   user: User,
   group: Users,
   computer: Monitor,
-  ou: FolderTree,
+  ou: Folder,
   container: Box
 }
 
@@ -38,7 +38,7 @@ const SVG: Record<DirectoryObjectType, string> = {
   user: UserSvg,
   group: UsersSvg,
   computer: MonitorSvg,
-  ou: FolderTreeSvg,
+  ou: FolderSvg,
   container: BoxSvg
 }
 
@@ -51,7 +51,7 @@ function containerIcon(node: DirectoryNode): LucideIcon {
   if (rdn === 'computers') return Server
   if (rdn === 'domain controllers') return Server
   if (rdn === 'managed service accounts') return Cog
-  return node.type === 'ou' ? FolderTree : Box
+  return node.type === 'ou' ? Folder : Box
 }
 
 /**
