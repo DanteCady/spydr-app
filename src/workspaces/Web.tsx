@@ -1,9 +1,9 @@
 import cytoscape from 'cytoscape'
-import { ChevronsDownUp, ChevronsUpDown, Download, GitBranch, Grid2x2, Info, Maximize, Minus, Network, Plus, RotateCcw, Route, Shapes, Type } from 'lucide-react'
+import { ChevronsDownUp, ChevronsUpDown, Download, GitBranch, Grid2x2, Info, Maximize, Minus, Network, Plus, RotateCcw, Route, Shapes, Type, Wand2 } from 'lucide-react'
 import dagre from 'cytoscape-dagre'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DirectoryObjectType } from '@shared/types'
-import type { DirectorySnapshot } from '@shared/types'
+import type { DirectoryNode, DirectorySnapshot } from '@shared/types'
 import { buildMembershipGraph, enumeratePaths, findGroupCycles, groupIdSet, membershipReach } from '@shared/graph'
 import { FindingCard } from '../components/FindingCard'
 import { DirectoryTree } from '../components/DirectoryTree'
@@ -14,9 +14,9 @@ import { useApp } from '../state'
 
 cytoscape.use(dagre as Parameters<typeof cytoscape.use>[0])
 
-type Density = 'compact' | 'spread'
-/** Tree ranks strictly upward; mind map spreads left to right from the focus with curved branches. */
-type LayoutMode = 'tree' | 'mindmap'
+type Density = 'auto' | 'compact' | 'spread'
+/** Tree ranks membership upward; structure fans containment out to the right from the focus. */
+type LayoutMode = 'tree' | 'structure'
 
 const ZOOM_MIN = 0.2
 const ZOOM_MAX = 4
@@ -26,9 +26,16 @@ const FOCUS_CAP = 48
 // Labels sit under the node and are wider than it, so siblings must be separated by more than
 // LABEL_WIDTH or their names collide. Ranks leave room for a wrapped label plus the next node.
 const LABEL_WIDTH = 84
-const RANK_SEP: Record<Density, number> = { compact: 58, spread: 88 }
-// The label lives inside the box, so dagre already accounts for its width; these are true gaps.
-const NODE_SEP: Record<Density, number> = { compact: 26, spread: 52 }
+/**
+ * Spacing per density. Auto scales with the size of the neighbourhood: a handful of nodes wants to
+ * sit close together, fifty need room, and past that more space stops helping.
+ */
+function spacingFor(density: Density, count: number): { node: number; rank: number } {
+  if (density === 'compact') return { node: 26, rank: 58 }
+  if (density === 'spread') return { node: 52, rank: 88 }
+  const k = Math.min(count, 60)
+  return { node: Math.round(22 + k * 0.7), rank: Math.round(54 + k * 0.8) }
+}
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
@@ -151,6 +158,16 @@ function buildWebStyle(labels: boolean, mode: LayoutMode): cytoscape.StylesheetJ
         'text-background-padding': '2px',
         'transition-property': 'opacity',
         'transition-duration': 120
+      }
+    },
+    {
+      selector: 'edge[via = "contains"]',
+      style: {
+        'line-color': cssVar('--border'),
+        'target-arrow-color': cssVar('--border'),
+        'target-arrow-shape': 'none',
+        width: 1.5,
+        opacity: 1
       }
     },
     {
@@ -308,20 +325,156 @@ function tracePath(
   return options.sort((x, y) => x.nodeIds.length - y.nodeIds.length)[0].nodeIds
 }
 
-function runLayout(cy: cytoscape.Core, density: Density, mode: LayoutMode = 'tree'): void {
+interface WebNodeDef {
+  id: string
+  label: string
+  kind: string
+  privileged: number
+  cycle: number
+  icon: string
+  /** Levels below the root in the containment tree; absent for membership views. */
+  depth?: number
+}
+
+interface WebEdgeDef {
+  id: string
+  source: string
+  target: string
+  w: number
+  via: string
+  rel: string
+}
+
+/**
+ * The structure under a container: the container itself as the root, every container beneath it,
+ * and the objects they hold. Containment is a true tree, so laid out left to right it fans out from
+ * the root without the edge crossings that many-to-many membership produces.
+ */
+function containmentElements(
+  snapshot: DirectorySnapshot,
+  rootId: string,
+  cycles: Set<string>
+): { nodes: WebNodeDef[]; edges: WebEdgeDef[]; trimmed: number } {
+  const root = snapshot.nodes.find((n) => n.id === rootId)
+  if (!root) return { nodes: [], edges: [], trimmed: 0 }
+  const suffix = `,${root.dn.toLowerCase()}`
+  const within = snapshot.nodes.filter(
+    (n) => n.id === root.id || n.dn.toLowerCase().endsWith(suffix)
+  )
+  const byDn = new Map(within.map((n) => [n.dn.toLowerCase(), n]))
+  const depthOf = (n: DirectoryNode): number =>
+    n.id === root.id ? 0 : n.dn.slice(0, n.dn.length - root.dn.length).split(',').filter(Boolean).length
+
+  const nodes: WebNodeDef[] = []
+  const edges: WebEdgeDef[] = []
+  let trimmed = 0
+  for (const n of within) {
+    if (nodes.length >= FOCUS_CAP) {
+      trimmed++
+      continue
+    }
+    nodes.push({
+      id: n.id,
+      label: n.displayName,
+      kind: n.type,
+      privileged: n.privileged ? 1 : 0,
+      cycle: cycles.has(n.id) ? 1 : 0,
+      icon: webNodeIcon(n.type, iconColor(n.type, Boolean(n.privileged))),
+      depth: depthOf(n)
+    })
+  }
+  const drawn = new Set(nodes.map((n) => n.id))
+  for (const n of within) {
+    if (n.id === root.id || !drawn.has(n.id)) continue
+    const parent = n.parentDn ? byDn.get(n.parentDn.toLowerCase()) : undefined
+    if (!parent || !drawn.has(parent.id)) continue
+    edges.push({ id: `${parent.id}=>${n.id}`, source: parent.id, target: n.id, w: 1, via: 'contains', rel: 'contains' })
+  }
+  return { nodes, edges, trimmed }
+}
+
+/**
+ * Tidy tree, left to right: the root at the far left, each level one column further right, and a
+ * parent sitting level with the middle of its children. Leaves take successive rows, so siblings
+ * stay together and no edge ever crosses another — the property that made wrapping levels into
+ * blocks unusable, however compact it was.
+ */
+function layoutTidyTree(cy: cytoscape.Core, gap: { node: number; rank: number }, rootId: string): void {
+  const root = cy.$id(rootId)
+  if (root.empty()) return
+
+  const children = new Map<string, cytoscape.NodeSingular[]>()
+  cy.edges().forEach((e) => {
+    const from = e.source().id()
+    children.set(from, [...(children.get(from) ?? []), e.target()])
+  })
+
+  // One column per level, each wide enough for its widest box.
+  const widest = new Map<number, number>()
+  cy.nodes().forEach((n) => {
+    const d = (n.data('depth') as number | undefined) ?? 0
+    widest.set(d, Math.max(widest.get(d) ?? 0, n.width()))
+  })
+  const columnX = new Map<number, number>()
+  let x = 0
+  for (const d of [...widest.keys()].sort((a, b) => a - b)) {
+    columnX.set(d, x)
+    x += (widest.get(d) ?? 0) + gap.rank
+  }
+
+  const rowHeight = Math.max(...cy.nodes().map((n) => n.height())) + gap.node
+  let nextLeafY = 0
+  const seen = new Set<string>()
+
+  const place = (node: cytoscape.NodeSingular): number => {
+    seen.add(node.id())
+    const depth = (node.data('depth') as number | undefined) ?? 0
+    const kids = (children.get(node.id()) ?? [])
+      .filter((k) => !seen.has(k.id()))
+      .sort((a, b) => String(a.data('label') ?? '').localeCompare(String(b.data('label') ?? '')))
+    let y: number
+    if (kids.length === 0) {
+      y = nextLeafY
+      nextLeafY += rowHeight
+    } else {
+      const ys = kids.map(place)
+      y = (ys[0] + ys[ys.length - 1]) / 2
+    }
+    node.position({ x: columnX.get(depth) ?? 0, y })
+    return y
+  }
+
+  place(root)
+  // Anything the tree did not reach (an object whose parent was trimmed) is parked below it.
+  cy.nodes().forEach((n) => {
+    if (seen.has(n.id())) return
+    n.position({ x: columnX.get((n.data('depth') as number | undefined) ?? 0) ?? 0, y: nextLeafY })
+    nextLeafY += rowHeight
+  })
+}
+
+function runLayout(cy: cytoscape.Core, density: Density, mode: LayoutMode = 'tree', focusId = ''): void {
+  const gap = spacingFor(density, cy.nodes().length)
+  if (mode === 'structure') {
+    // A tidy tree is as tall as it has leaves, so it must be allowed to fit however far out that
+    // takes; clamping the zoom here would push most of the tree off screen.
+    layoutTidyTree(cy, gap, focusId)
+    cy.fit(undefined, 44)
+    return
+  }
   cy.layout({
     name: 'dagre',
-    // Membership runs member -> group, so BT stacks escalation upward and LR fans it rightward,
-    // which puts the focus between its members and the groups it reaches.
-    rankDir: mode === 'tree' ? 'BT' : 'LR',
+    // Membership runs member -> group: BT stacks escalation upward, LR fans it out to the right.
+    rankDir: 'BT',
     ranker: 'network-simplex',
-    nodeSep: NODE_SEP[density],
-    rankSep: RANK_SEP[density],
+    nodeSep: gap.node,
+    rankSep: gap.rank,
     edgeSep: 14,
     animate: false,
     fit: true,
     padding: 44
   } as cytoscape.LayoutOptions).run()
+
   if (cy.zoom() < MIN_FIT_ZOOM) {
     const container = cy.container()
     cy.zoom({
@@ -362,8 +515,8 @@ export function Web() {
   const cyRef = useRef<cytoscape.Core | null>(null)
   const selectRef = useRef(select)
   const labelsRef = useRef(true)
-  const densityRef = useRef<Density>('spread')
-  const [density, setDensity] = useState<Density>('spread')
+  const densityRef = useRef<Density>('auto')
+  const [density, setDensity] = useState<Density>('auto')
   const [grid, setGrid] = useState(false)
   const [labels, setLabels] = useState(true)
   const [layout, setLayout] = useState<LayoutMode>('tree')
@@ -463,24 +616,34 @@ export function Web() {
     const cy = cyRef.current
     if (!cy || !snapshot || !graph || !focusId) return
     const byId = new Map(snapshot.nodes.map((n) => [n.id, n]))
-    const { ids, trimmed, container } = focusNeighborhood(graph, focusId, snapshot)
+    const structural = layout === 'structure' && Boolean(
+      snapshot.nodes.find((n) => n.id === focusId && (n.type === 'ou' || n.type === 'container'))
+    )
+    const built = structural ? containmentElements(snapshot, focusId, cycles) : null
+    const { ids, trimmed, container } = built
+      ? { ids: new Set(built.nodes.map((n) => n.id)), trimmed: built.trimmed, container: true }
+      : focusNeighborhood(graph, focusId, snapshot)
 
-    const edgeDefs = new Map<string, { id: string; source: string; target: string; w: number; via: string; rel: string }>()
-    for (const e of snapshot.edges) {
-      if (!ids.has(e.from) || !ids.has(e.to)) continue
-      const eid = `${e.from}->${e.to}`
-      const cur = edgeDefs.get(eid)
-      if (cur) {
-        cur.w = Math.min(10, cur.w + 1)
-      } else {
-        edgeDefs.set(eid, {
-          id: eid,
-          source: e.from,
-          target: e.to,
-          w: 1,
-          via: e.via,
-          rel: e.via === 'primaryGroup' ? 'primary group' : 'member of'
-        })
+    const edgeDefs = new Map<string, WebEdgeDef>()
+    if (built) {
+      for (const e of built.edges) edgeDefs.set(e.id, e)
+    } else {
+      for (const e of snapshot.edges) {
+        if (!ids.has(e.from) || !ids.has(e.to)) continue
+        const eid = `${e.from}->${e.to}`
+        const cur = edgeDefs.get(eid)
+        if (cur) {
+          cur.w = Math.min(10, cur.w + 1)
+        } else {
+          edgeDefs.set(eid, {
+            id: eid,
+            source: e.from,
+            target: e.to,
+            w: 1,
+            via: e.via,
+            rel: e.via === 'primaryGroup' ? 'primary group' : 'member of'
+          })
+        }
       }
     }
     const edgeIds = new Set(edgeDefs.keys())
@@ -488,9 +651,17 @@ export function Web() {
     cy.batch(() => {
       cy.nodes().filter((n) => !ids.has(n.id())).remove()
       cy.edges().filter((e) => !edgeIds.has(e.id())).remove()
+      // Depth is per view, so it must be written to nodes that are being reused as well as to new
+      // ones; otherwise switching into the structure view leaves every node at the same level.
+      const depthById = new Map(built?.nodes.map((n) => [n.id, n.depth ?? 0]) ?? [])
       for (const id of ids) {
         const n = byId.get(id)
-        if (!n || cy.$id(id).nonempty()) continue
+        if (!n) continue
+        const existing = cy.$id(id)
+        if (existing.nonempty()) {
+          existing.data('depth', depthById.get(id))
+          continue
+        }
         cy.add({
           data: {
             id: n.id,
@@ -498,7 +669,8 @@ export function Web() {
             kind: n.type,
             privileged: n.privileged ? 1 : 0,
             cycle: cycles.has(n.id) ? 1 : 0,
-            icon: webNodeIcon(n.type, iconColor(n.type, Boolean(n.privileged)))
+            icon: webNodeIcon(n.type, iconColor(n.type, Boolean(n.privileged))),
+            depth: depthById.get(id)
           }
         })
       }
@@ -511,7 +683,7 @@ export function Web() {
       })
     })
 
-    runLayout(cy, densityRef.current, layoutRef.current)
+    runLayout(cy, densityRef.current, layoutRef.current, focusId ?? '')
     cy.nodes().unselect()
     cy.edges().removeClass('sel')
     if (cy.$id(focusId).nonempty()) {
@@ -519,7 +691,7 @@ export function Web() {
       cy.$id(focusId).connectedEdges().addClass('sel')
     }
     setShown({ nodes: cy.nodes().length, edges: cy.edges().length, trimmed, container })
-  }, [snapshot, graph, cycles, focusId])
+  }, [snapshot, graph, cycles, focusId, layout])
 
   useEffect(() => {
     setTraceTarget(null)
@@ -566,7 +738,7 @@ export function Web() {
     const cy = cyRef.current
     if (!cy || cy.destroyed()) return
     cy.style(buildWebStyle(labels, layout))
-    runLayout(cy, densityRef.current, layout) // box size or edge routing changed, so redo the ranks
+    runLayout(cy, densityRef.current, layout, focusId ?? '') // box size or edge routing changed, so redo the ranks
   }, [labels, layout])
 
   useEffect(() => {
@@ -597,7 +769,7 @@ export function Web() {
       setDensity(next)
     }
     const cy = cyRef.current
-    if (cy) runLayout(cy, next ?? densityRef.current, layoutRef.current)
+    if (cy) runLayout(cy, next ?? densityRef.current, layoutRef.current, focusId ?? '')
   }
 
   const onCanvasKeys = (ev: React.KeyboardEvent): void => {
@@ -668,16 +840,20 @@ export function Web() {
             </span>
           </div>
           <div className="tb-group" role="toolbar" aria-label="Layout">
-            <button type="button" className={`tb-btn${layout === 'tree' ? ' active' : ''}`} aria-pressed={layout === 'tree'} title="Hierarchy, escalation upward" onClick={() => setLayout('tree')}>
+            <button type="button" className={`tb-btn${layout === 'tree' ? ' active' : ''}`} aria-pressed={layout === 'tree'} title="Membership, escalation upward" onClick={() => setLayout('tree')}>
               <Network size={15} aria-hidden />
               <span>Tree</span>
             </button>
-            <button type="button" className={`tb-btn${layout === 'mindmap' ? ' active' : ''}`} aria-pressed={layout === 'mindmap'} title="Mind map, branching from the focus" onClick={() => setLayout('mindmap')}>
+            <button type="button" className={`tb-btn${layout === 'structure' ? ' active' : ''}`} aria-pressed={layout === 'structure'} title="Structure, fanning out to the right from the focus" onClick={() => setLayout('structure')}>
               <GitBranch size={15} aria-hidden />
-              <span>Mind map</span>
+              <span>Structure</span>
             </button>
           </div>
           <div className="tb-group" role="toolbar" aria-label="Spacing">
+            <button type="button" className={`tb-btn${density === 'auto' ? ' active' : ''}`} aria-pressed={density === 'auto'} title="Fit the spacing to the size of the view" onClick={() => relayout('auto')}>
+              <Wand2 size={15} aria-hidden />
+              <span>Auto</span>
+            </button>
             <button type="button" className={`tb-btn${density === 'compact' ? ' active' : ''}`} aria-pressed={density === 'compact'} title="Compact spacing" onClick={() => relayout('compact')}>
               <ChevronsDownUp size={15} aria-hidden />
               <span>Compact</span>
