@@ -1,5 +1,5 @@
 import cytoscape from 'cytoscape'
-import { ChevronsDownUp, ChevronsUpDown, Download, Grid2x2, Info, Maximize, Minus, Plus, RotateCcw, Route, Shapes, Type } from 'lucide-react'
+import { ChevronsDownUp, ChevronsUpDown, Download, GitBranch, Grid2x2, Info, Maximize, Minus, Network, Plus, RotateCcw, Route, Shapes, Type } from 'lucide-react'
 import dagre from 'cytoscape-dagre'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DirectoryObjectType } from '@shared/types'
@@ -15,6 +15,8 @@ import { useApp } from '../state'
 cytoscape.use(dagre as Parameters<typeof cytoscape.use>[0])
 
 type Density = 'compact' | 'spread'
+/** Tree ranks strictly upward; mind map spreads left to right from the focus with curved branches. */
+type LayoutMode = 'tree' | 'mindmap'
 
 const ZOOM_MIN = 0.2
 const ZOOM_MAX = 4
@@ -37,7 +39,7 @@ function iconColor(type: DirectoryObjectType, privileged: boolean): string {
   return cssVar(type === 'user' ? '--user' : type === 'group' ? '--group' : type === 'computer' ? '--computer' : '--ou')
 }
 
-function buildWebStyle(labels: boolean): cytoscape.StylesheetJson {
+function buildWebStyle(labels: boolean, mode: LayoutMode): cytoscape.StylesheetJson {
   const text = cssVar('--foreground')
   const canvas = cssVar('--canvas')
   const brand = cssVar('--brand')
@@ -121,10 +123,18 @@ function buildWebStyle(labels: boolean): cytoscape.StylesheetJson {
       selector: 'edge',
       style: {
         width: 'mapData(w, 1, 10, 1.6, 4)',
-        'curve-style': 'taxi',
-        'taxi-direction': 'upward',
-        'taxi-turn': '38%',
-        'taxi-turn-min-distance': '8px',
+        ...(mode === 'tree'
+          ? {
+              'curve-style': 'taxi' as const,
+              'taxi-direction': 'upward' as const,
+              'taxi-turn': '38%',
+              'taxi-turn-min-distance': '8px'
+            }
+          : {
+              'curve-style': 'unbundled-bezier' as const,
+              'control-point-distances': [38],
+              'control-point-weights': [0.5]
+            }),
         'line-color': member,
         'target-arrow-color': member,
         'target-arrow-shape': 'triangle',
@@ -298,10 +308,12 @@ function tracePath(
   return options.sort((x, y) => x.nodeIds.length - y.nodeIds.length)[0].nodeIds
 }
 
-function runLayout(cy: cytoscape.Core, density: Density): void {
+function runLayout(cy: cytoscape.Core, density: Density, mode: LayoutMode = 'tree'): void {
   cy.layout({
     name: 'dagre',
-    rankDir: 'BT',
+    // Membership runs member -> group, so BT stacks escalation upward and LR fans it rightward,
+    // which puts the focus between its members and the groups it reaches.
+    rankDir: mode === 'tree' ? 'BT' : 'LR',
     ranker: 'network-simplex',
     nodeSep: NODE_SEP[density],
     rankSep: RANK_SEP[density],
@@ -354,6 +366,8 @@ export function Web() {
   const [density, setDensity] = useState<Density>('spread')
   const [grid, setGrid] = useState(false)
   const [labels, setLabels] = useState(true)
+  const [layout, setLayout] = useState<LayoutMode>('tree')
+  const layoutRef = useRef<LayoutMode>('tree')
   const [tracing, setTracing] = useState(false)
   const [traceTarget, setTraceTarget] = useState<string | null>(null)
   const tracingRef = useRef(false)
@@ -365,6 +379,7 @@ export function Web() {
 
   selectRef.current = select
   labelsRef.current = labels
+  layoutRef.current = layout
   tracingRef.current = tracing
   setTraceTargetRef.current = setTraceTarget
   densityRef.current = density
@@ -406,7 +421,7 @@ export function Web() {
       minZoom: ZOOM_MIN,
       maxZoom: ZOOM_MAX,
       pixelRatio: 2,
-      style: buildWebStyle(labelsRef.current),
+      style: buildWebStyle(labelsRef.current, layoutRef.current),
       layout: { name: 'preset' }
     })
     cy.on('tap', 'node', (ev) => {
@@ -496,7 +511,7 @@ export function Web() {
       })
     })
 
-    runLayout(cy, densityRef.current)
+    runLayout(cy, densityRef.current, layoutRef.current)
     cy.nodes().unselect()
     cy.edges().removeClass('sel')
     if (cy.$id(focusId).nonempty()) {
@@ -550,15 +565,15 @@ export function Web() {
   useEffect(() => {
     const cy = cyRef.current
     if (!cy || cy.destroyed()) return
-    cy.style(buildWebStyle(labels))
-    runLayout(cy, densityRef.current) // box dimensions changed, so the ranks need redoing
-  }, [labels])
+    cy.style(buildWebStyle(labels, layout))
+    runLayout(cy, densityRef.current, layout) // box size or edge routing changed, so redo the ranks
+  }, [labels, layout])
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       const cy = cyRef.current
       if (!cy || cy.destroyed()) return
-      cy.style(buildWebStyle(labelsRef.current))
+      cy.style(buildWebStyle(labelsRef.current, layoutRef.current))
       cy.nodes().forEach((n) => {
         const kind = n.data('kind') as DirectoryObjectType
         n.data('icon', webNodeIcon(kind, iconColor(kind, n.data('privileged') === 1)))
@@ -582,7 +597,7 @@ export function Web() {
       setDensity(next)
     }
     const cy = cyRef.current
-    if (cy) runLayout(cy, next ?? densityRef.current)
+    if (cy) runLayout(cy, next ?? densityRef.current, layoutRef.current)
   }
 
   const onCanvasKeys = (ev: React.KeyboardEvent): void => {
@@ -651,6 +666,16 @@ export function Web() {
               {shown.container ? 'contents' : 'neighborhood'} · {shown.nodes} node{shown.nodes === 1 ? '' : 's'} · {shown.edges} edge{shown.edges === 1 ? '' : 's'}
               {shown.trimmed > 0 ? ` · +${shown.trimmed} hidden — click a member to walk in` : ''}
             </span>
+          </div>
+          <div className="tb-group" role="toolbar" aria-label="Layout">
+            <button type="button" className={`tb-btn${layout === 'tree' ? ' active' : ''}`} aria-pressed={layout === 'tree'} title="Hierarchy, escalation upward" onClick={() => setLayout('tree')}>
+              <Network size={15} aria-hidden />
+              <span>Tree</span>
+            </button>
+            <button type="button" className={`tb-btn${layout === 'mindmap' ? ' active' : ''}`} aria-pressed={layout === 'mindmap'} title="Mind map, branching from the focus" onClick={() => setLayout('mindmap')}>
+              <GitBranch size={15} aria-hidden />
+              <span>Mind map</span>
+            </button>
           </div>
           <div className="tb-group" role="toolbar" aria-label="Spacing">
             <button type="button" className={`tb-btn${density === 'compact' ? ' active' : ''}`} aria-pressed={density === 'compact'} title="Compact spacing" onClick={() => relayout('compact')}>
