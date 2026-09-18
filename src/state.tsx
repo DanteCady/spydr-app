@@ -11,6 +11,7 @@ export const THEMES: Theme[] = ['dark', 'light', 'vivid']
 interface AppState {
   theme: Theme
   toggleTheme: () => void
+  setTheme: (theme: Theme) => void
   snapshot: DirectorySnapshot | null
   workspace: WorkspaceId
   selectedId: string | null
@@ -215,6 +216,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value: AppState = {
     theme,
     toggleTheme: useCallback(() => setTheme((t) => THEMES[(THEMES.indexOf(t) + 1) % THEMES.length]), []),
+    setTheme,
     snapshot,
     workspace,
     selectedId,

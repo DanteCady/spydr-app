@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { discoverDcs, windowsPrefill } from './directory/discoverDc'
 import { ingestDirectory, testConnection } from './directory/ldapProvider'
+import { buildMenu } from './menu'
 import {
   clearSession,
   loadSession,
@@ -82,6 +83,7 @@ void app.whenReady().then(() => {
     item.setSavePath(join(app.getPath('downloads'), item.getFilename()))
   })
   registerIpc()
+  buildMenu()
   createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

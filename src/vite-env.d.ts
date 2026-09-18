@@ -14,6 +14,7 @@ export interface SpydrApi {
     view: SessionView
   }) => Promise<void>
   sessionClear: () => Promise<void>
+  onMenuCommand: (handler: (command: string) => void) => () => void
 }
 
 export type { SessionMeta, SessionProfile, SessionView }

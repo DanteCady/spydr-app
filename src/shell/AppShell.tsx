@@ -1,6 +1,7 @@
 import { Moon, Palette, Search, Sun } from 'lucide-react'
 import type { WorkspaceId } from '@shared/types'
 import { NavGlyph } from '../components/NavGlyph'
+import { useMenuCommand } from '../lib/useMenuCommand'
 import { WidowMark } from '../components/WidowMark'
 import { ObjectInspector } from '../inspector/ObjectInspector'
 import { useApp } from '../state'
@@ -20,7 +21,23 @@ const NAV: { id: WorkspaceId; label: string; hint: string }[] = [
 const NEXT_THEME: Record<string, string> = { dark: 'light', light: 'vivid', vivid: 'dark' }
 
 export function AppShell() {
-  const { snapshot, workspace, setWorkspace, search, setSearch, disconnect, theme, toggleTheme } = useApp()
+  const { snapshot, workspace, setWorkspace, search, setSearch, disconnect, theme, toggleTheme, setTheme } = useApp()
+
+  // Menu commands that belong to the shell; the canvas handles its own.
+  useMenuCommand((command) => {
+    if (command === 'view:directory') setWorkspace('directory')
+    else if (command === 'view:web') setWorkspace('web')
+    else if (command === 'view:pathfinder') setWorkspace('pathfinder')
+    else if (command === 'view:hygiene') setWorkspace('hygiene')
+    else if (command === 'view:theme:dark') setTheme('dark')
+    else if (command === 'view:theme:light') setTheme('light')
+    else if (command === 'view:theme:vivid') setTheme('vivid')
+    else if (command === 'file:disconnect') disconnect()
+    else if (command === 'edit:find') {
+      document.querySelector<HTMLInputElement>('.topbar input[type="search"]')?.focus()
+    }
+  })
+
   if (!snapshot) return null
 
   return (

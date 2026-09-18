@@ -10,6 +10,7 @@ import { DirectoryTree } from '../components/DirectoryTree'
 import { StatusBadges } from '../components/StatusBadges'
 import { TypeGlyph, webNodeIcon } from '../components/TypeGlyph'
 import { WebMinimap } from '../components/WebMinimap'
+import { useMenuCommand } from '../lib/useMenuCommand'
 import { useApp } from '../state'
 
 cytoscape.use(dagre as Parameters<typeof cytoscape.use>[0])
@@ -833,6 +834,24 @@ export function Web() {
     a.download = `spydr-web-${snapshot.domain}-${new Date().toISOString().slice(0, 10)}.png`
     a.click()
   }
+
+  // The View > Canvas menu drives the same state the toolbar does.
+  useMenuCommand((command) => {
+    const cy = cyRef.current
+    if (command === 'canvas:tree') setLayout('tree')
+    else if (command === 'canvas:structure') setLayout('structure')
+    else if (command === 'canvas:grid') setGrid((on) => !on)
+    else if (command === 'canvas:legend') setLegend((on) => !on)
+    else if (command === 'canvas:labels') setLabels((on) => !on)
+    else if (command === 'canvas:trace') {
+      setTracing((on) => !on)
+      setTraceTarget(null)
+    } else if (command === 'canvas:zoom-in' && cy) zoomBy(cy, ZOOM_STEP)
+    else if (command === 'canvas:zoom-out' && cy) zoomBy(cy, 1 / ZOOM_STEP)
+    else if (command === 'canvas:fit' && cy) cy.fit(undefined, 44)
+    else if (command === 'canvas:reset') select(null)
+    else if (command === 'file:export') exportPng()
+  })
 
   return (
     <div className="web-split">
