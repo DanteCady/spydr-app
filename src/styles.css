@@ -980,3 +980,19 @@ table.grid tr.selected td { background: var(--sel); }
 .tb-btn svg { flex-shrink: 0; }
 .metric.score .n { color: var(--brand); }
 .metric .unit { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 2px; letter-spacing: 0; }
+
+/* ── Directory tree header ───────────────────────────── */
+.tree-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.tree-head .tb-btn { padding: 0 8px; height: 26px; font-size: 11px; }
+.tree-head .tb-btn:last-child { margin-left: auto; padding: 0 7px; }
+.tree-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
