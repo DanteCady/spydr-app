@@ -3,13 +3,21 @@ import { useMemo, useState } from 'react'
 import { TypeGlyph } from '../components/TypeGlyph'
 import { StatusBadges } from '../components/StatusBadges'
 import { typeLabel } from '../lib/format'
-import { buildOuTree, expandableIds, isSystemContainer, objectsInContainer, type OuTreeNode } from '../lib/tree'
+import {
+  buildOuTree,
+  dominantChildType,
+  expandableIds,
+  isSystemContainer,
+  objectsInContainer,
+  type OuTreeNode
+} from '../lib/tree'
 import { useApp } from '../state'
 
 function TreeRows({
   nodes,
   depth,
   selectedDn,
+  contains,
   isOpen,
   onToggle,
   onSelect
@@ -17,6 +25,7 @@ function TreeRows({
   nodes: OuTreeNode[]
   depth: number
   selectedDn: string | null
+  contains: Map<string, import('@shared/types').DirectoryObjectType>
   isOpen: (id: string) => boolean
   onToggle: (id: string) => void
   onSelect: (dn: string) => void
@@ -43,7 +52,7 @@ function TreeRows({
               >
                 {hasKids ? (expanded ? <ChevronDown size={12} aria-hidden /> : <ChevronRight size={12} aria-hidden />) : null}
               </span>
-              <TypeGlyph type={n.type} node={n.node} />
+              <TypeGlyph type={n.type} node={n.node} contains={contains.get(n.dn.toLowerCase())} />
               <span className="tree-name">{n.name}</span>
             </button>
             {expanded ? (
@@ -51,6 +60,7 @@ function TreeRows({
                 nodes={n.children}
                 depth={depth + 1}
                 selectedDn={selectedDn}
+                contains={contains}
                 isOpen={isOpen}
                 onToggle={onToggle}
                 onSelect={onSelect}
@@ -69,6 +79,7 @@ export function Directory() {
   // undefined = follow the default (expanded); a boolean is an explicit user choice.
   const [open, setOpen] = useState<Record<string, boolean>>({})
 
+  const contains = useMemo(() => (snapshot ? dominantChildType(snapshot.nodes) : new Map()), [snapshot])
   const tree = useMemo(
     () => (snapshot ? buildOuTree(snapshot.nodes, snapshot.baseDn, { includeSystem: showSystem }) : []),
     [snapshot, showSystem]
@@ -125,6 +136,7 @@ export function Directory() {
             nodes={tree}
             depth={0}
             selectedDn={containerDn}
+            contains={contains}
             isOpen={isOpen}
             onToggle={toggle}
             onSelect={setContainerDn}
@@ -158,7 +170,7 @@ export function Directory() {
                 >
                   <td>
                     <span className="name-cell">
-                      <TypeGlyph type={n.type} node={n} />
+                      <TypeGlyph type={n.type} node={n} contains={contains.get(n.dn.toLowerCase())} />
                       {n.displayName}
                     </span>
                   </td>
