@@ -100,3 +100,32 @@ export function objectsInContainer(nodes: DirectoryNode[], containerDn: string, 
     return n.parentDn?.toLowerCase() === want
   })
 }
+
+/**
+ * The kind of object each container mostly holds, by lowercased DN. Used to give an OU an icon
+ * that reflects its contents — a folder of groups should look like groups.
+ */
+export function dominantChildType(nodes: DirectoryNode[]): Map<string, DirectoryObjectType> {
+  const counts = new Map<string, Map<DirectoryObjectType, number>>()
+  for (const n of nodes) {
+    if (n.type !== 'user' && n.type !== 'group' && n.type !== 'computer') continue
+    const parent = n.parentDn?.toLowerCase()
+    if (!parent) continue
+    if (!counts.has(parent)) counts.set(parent, new Map())
+    const byType = counts.get(parent)!
+    byType.set(n.type, (byType.get(n.type) ?? 0) + 1)
+  }
+  const out = new Map<string, DirectoryObjectType>()
+  for (const [dn, byType] of counts) {
+    let best: DirectoryObjectType | null = null
+    let bestCount = 0
+    for (const [type, count] of byType) {
+      if (count > bestCount) {
+        best = type
+        bestCount = count
+      }
+    }
+    if (best) out.set(dn, best)
+  }
+  return out
+}

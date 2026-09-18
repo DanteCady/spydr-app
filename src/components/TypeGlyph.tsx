@@ -45,7 +45,14 @@ const SVG: Record<DirectoryObjectType, string> = {
 }
 
 /** Well-known containers get the icon an admin expects, the way ADUC distinguishes them. */
-function containerIcon(node: DirectoryNode): LucideIcon {
+/** Icon for an OU that reflects what it holds, so a folder of groups looks like groups. */
+const BY_CONTENT: Partial<Record<DirectoryObjectType, LucideIcon>> = {
+  group: Users,
+  user: User,
+  computer: Server
+}
+
+function containerIcon(node: DirectoryNode, contains?: DirectoryObjectType): LucideIcon {
   const rdn = node.dn.split(',')[0]?.replace(/^(CN|OU|DC)=/i, '').toLowerCase() ?? ''
   if (/^DC=/i.test(node.dn.split(',')[0] ?? '')) return Globe // the domain root itself
   if (rdn === 'builtin') return ShieldCheck
@@ -59,14 +66,14 @@ function containerIcon(node: DirectoryNode): LucideIcon {
   const depth = (node.dn.match(/(^|,)OU=/gi) ?? []).length
   if (depth <= 1) return Folder
   if (depth === 2) return FolderTree
-  return Layers
+  return (contains && BY_CONTENT[contains]) ?? Layers
 }
 
 /**
  * The icon for an object, chosen from what it actually is rather than its bare type: a disabled
  * account, a distribution list, a privileged group and a plain user should not look alike.
  */
-export function iconFor(node: DirectoryNode): LucideIcon {
+export function iconFor(node: DirectoryNode, contains?: DirectoryObjectType): LucideIcon {
   switch (node.type) {
     case 'user':
       return isDisabled(node.userAccountControl) ? UserRoundX : User
@@ -77,7 +84,7 @@ export function iconFor(node: DirectoryNode): LucideIcon {
       return /server/i.test(node.operatingSystem ?? '') ? Server : Laptop
     case 'ou':
     case 'container':
-      return containerIcon(node)
+      return containerIcon(node, contains)
   }
 }
 
@@ -91,8 +98,17 @@ export function webNodeIcon(type: DirectoryObjectType, color = '#f6f8fb'): strin
 }
 
 /** Pass `node` for the specific icon; `type` alone falls back to the generic one. */
-export function TypeGlyph({ type, node }: { type: DirectoryObjectType; node?: DirectoryNode }) {
-  const Icon = node ? iconFor(node) : BY_TYPE[type]
+export function TypeGlyph({
+  type,
+  node,
+  contains
+}: {
+  type: DirectoryObjectType
+  node?: DirectoryNode
+  /** For containers: the kind of object it mostly holds. */
+  contains?: DirectoryObjectType
+}) {
+  const Icon = node ? iconFor(node, contains) : BY_TYPE[type]
   return (
     <span className={`glyph glyph-${type}`} aria-hidden>
       <Icon size={16} strokeWidth={1.9} />
