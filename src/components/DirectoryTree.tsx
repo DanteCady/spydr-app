@@ -129,7 +129,11 @@ export function DirectoryTree({
             aria-expanded={r.hasChildren ? r.expanded : undefined}
             className={`outline-row${selectedId === r.id ? ' selected' : ''}`}
             style={{ paddingLeft: 6 + r.depth * 14 }}
-            onClick={() => (r.isContainer ? setOpen((s) => ({ ...s, [r.id]: !r.expanded })) : onSelect(r.id))}
+            onClick={() => {
+              // A container both opens and becomes the focus, so the canvas follows the tree.
+              if (r.isContainer) setOpen((s) => ({ ...s, [r.id]: !r.expanded }))
+              onSelect(r.id)
+            }}
           >
             <span
               className="outline-twist"

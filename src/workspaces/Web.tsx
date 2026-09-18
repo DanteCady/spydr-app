@@ -1,8 +1,9 @@
 import cytoscape from 'cytoscape'
-import { ChevronsDownUp, ChevronsUpDown, Download, Grid2x2, Info, Maximize, Minus, Plus, RotateCcw } from 'lucide-react'
+import { ChevronsDownUp, ChevronsUpDown, Download, Grid2x2, Info, Maximize, Minus, Plus, RotateCcw, Shapes, Type } from 'lucide-react'
 import dagre from 'cytoscape-dagre'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DirectoryObjectType } from '@shared/types'
+import type { DirectorySnapshot } from '@shared/types'
 import { buildMembershipGraph, findGroupCycles, groupIdSet, membershipReach } from '@shared/graph'
 import { FindingCard } from '../components/FindingCard'
 import { DirectoryTree } from '../components/DirectoryTree'
@@ -22,9 +23,10 @@ const GRID_STEP = 28
 const FOCUS_CAP = 48
 // Labels sit under the node and are wider than it, so siblings must be separated by more than
 // LABEL_WIDTH or their names collide. Ranks leave room for a wrapped label plus the next node.
-const LABEL_WIDTH = 116
-const RANK_SEP: Record<Density, number> = { compact: 74, spread: 104 }
-const NODE_SEP: Record<Density, number> = { compact: LABEL_WIDTH - 24, spread: LABEL_WIDTH + 24 }
+const LABEL_WIDTH = 84
+const RANK_SEP: Record<Density, number> = { compact: 58, spread: 88 }
+// The label lives inside the box, so dagre already accounts for its width; these are true gaps.
+const NODE_SEP: Record<Density, number> = { compact: 26, spread: 52 }
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
@@ -35,7 +37,7 @@ function iconColor(type: DirectoryObjectType, privileged: boolean): string {
   return cssVar(type === 'user' ? '--user' : type === 'group' ? '--group' : type === 'computer' ? '--computer' : '--ou')
 }
 
-function buildWebStyle(): cytoscape.StylesheetJson {
+function buildWebStyle(labels: boolean): cytoscape.StylesheetJson {
   const text = cssVar('--foreground')
   const canvas = cssVar('--canvas')
   const brand = cssVar('--brand')
@@ -43,69 +45,76 @@ function buildWebStyle(): cytoscape.StylesheetJson {
   const member = cssVar('--edge-member')
   const primary = cssVar('--edge-primary')
   return [
-    // Bare glyph nodes: only the icon is drawn, colored by type (red when privileged); no tile, no border.
+    // Visio/Lucidchart style: a box with the icon above the name, both inside it. Stacking keeps
+    // boxes narrow; the icon-only mode drops the label for a compact overview.
     {
       selector: 'node',
       style: {
-        shape: 'ellipse',
-        'background-opacity': 0,
-        'border-width': 0,
+        shape: 'round-rectangle',
+        'corner-radius': '6px',
+        'background-color': cssVar('--card'),
+        'background-opacity': 1,
+        'border-width': 1.25,
+        'border-color': cssVar('--user'),
         'background-image': 'data(icon)',
-        'background-fit': 'contain',
-        'background-clip': 'none',
-        'background-width': '100%',
-        'background-height': '100%',
-        'background-image-opacity': 1,
-        label: 'data(label)',
+        'background-fit': 'none',
+        'background-width': labels ? '18px' : '22px',
+        'background-height': labels ? '18px' : '22px',
+        'background-position-x': '50%',
+        'background-position-y': labels ? '11px' : '50%',
+        'background-clip': 'node',
+        label: labels ? 'data(label)' : '',
         color: text,
         'font-size': 10.5,
         'font-weight': 500,
         'font-family': 'IBM Plex Sans, system-ui, sans-serif',
-        'text-valign': 'bottom',
-        'text-margin-y': 4,
-        // Wrap rather than truncate: a name like "Denied RODC Password Replication Group" is
-        // unreadable cut to "Denied RODC Passwor…".
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'text-margin-y': 13,
         'text-wrap': 'wrap',
         'text-max-width': `${LABEL_WIDTH}px`,
-        // Break at spaces only. 'anywhere' splits mid-word ("Passw / ord Replication Grou / p");
-        // a name with no spaces just runs a little wide, which the node separation absorbs.
         'text-overflow-wrap': 'whitespace',
-        'text-background-color': canvas,
-        'text-background-opacity': 0.85,
-        'text-background-padding': '3px',
-        'text-background-shape': 'roundrectangle',
         'min-zoomed-font-size': 7,
         'transition-property': 'opacity',
         'transition-duration': 120,
-        width: 34,
-        height: 34
+        width: labels ? 'label' : 44,
+        height: labels ? 62 : 44,
+        padding: labels ? '12px' : '0px'
       }
     },
     {
       selector: 'node[kind = "group"]',
-      style: { 'font-weight': 600, width: 38, height: 38 }
+      style: { 'border-color': cssVar('--group'), 'font-weight': 600 }
+    },
+    {
+      selector: 'node[kind = "computer"]',
+      style: { 'border-color': cssVar('--computer') }
     },
     {
       selector: 'node[privileged = 1]',
       style: {
+        'border-color': crit,
+        'border-width': 1.75,
         'underlay-color': crit,
-        'underlay-opacity': 0.14,
-        'underlay-padding': 8,
-        'underlay-shape': 'ellipse'
+        'underlay-opacity': 0.09,
+        'underlay-padding': 5,
+        'underlay-shape': 'round-rectangle'
       }
     },
     {
       selector: 'node[cycle = 1]',
-      style: { 'border-width': 1.5, 'border-style': 'dashed', 'border-color': crit, 'border-opacity': 0.9 }
+      style: { 'border-style': 'dashed', 'border-color': crit }
     },
-    // the anchor of the current neighborhood
+    // the anchor of the current neighbourhood
     {
       selector: 'node:selected',
       style: {
+        'border-color': brand,
+        'border-width': 2.25,
         'underlay-color': brand,
-        'underlay-opacity': 0.26,
-        'underlay-padding': 9,
-        'underlay-shape': 'ellipse'
+        'underlay-opacity': 0.16,
+        'underlay-padding': 6,
+        'underlay-shape': 'round-rectangle'
       }
     },
     {
@@ -178,13 +187,46 @@ function buildWebStyle(): cytoscape.StylesheetJson {
 }
 
 /** The neighborhood drawn for a focus: its full upward nesting chain plus members two hops down, capped. */
+/**
+ * What to draw for a focus. A user or group shows its own membership neighbourhood; a container has
+ * no membership edges of its own, so it shows the objects it holds and the groups they reach.
+ */
 function focusNeighborhood(
   graph: ReturnType<typeof buildMembershipGraph>,
-  focusId: string
-): { ids: Set<string>; trimmed: number } {
+  focusId: string,
+  snapshot: DirectorySnapshot
+): { ids: Set<string>; trimmed: number; container: boolean } {
+  const focus = snapshot.nodes.find((n) => n.id === focusId)
+  if (focus && (focus.type === 'ou' || focus.type === 'container')) {
+    const ids = new Set<string>()
+    let trimmed = 0
+    // Everything in the subtree, not just direct children: a top-level OU usually holds only
+    // sub-OUs, so direct children alone would leave the canvas empty.
+    const want = focus.dn.toLowerCase()
+    const inside = snapshot.nodes.filter(
+      (n) =>
+        n.type !== 'ou' &&
+        n.type !== 'container' &&
+        (n.parentDn?.toLowerCase() === want || n.dn.toLowerCase().endsWith(`,${want}`))
+    )
+    for (const n of inside) {
+      if (ids.size >= FOCUS_CAP) {
+        trimmed++
+        continue
+      }
+      ids.add(n.id)
+      if (!graph.hasNode(n.id)) continue
+      for (const g of graph.outNeighbors(n.id)) {
+        if (ids.size >= FOCUS_CAP) break
+        ids.add(g)
+      }
+    }
+    return { ids, trimmed, container: true }
+  }
+
   const ids = new Set<string>([focusId])
   let trimmed = 0
-  if (!graph.hasNode(focusId)) return { ids, trimmed }
+  if (!graph.hasNode(focusId)) return { ids, trimmed, container: false }
   for (const g of membershipReach(graph, focusId, { direction: 'out', maxDepth: 12 })) ids.add(g)
   const seen = new Set<string>([focusId])
   const queue: { id: string; depth: number }[] = [{ id: focusId, depth: 0 }]
@@ -202,8 +244,11 @@ function focusNeighborhood(
       queue.push({ id: m, depth: step.depth + 1 })
     }
   }
-  return { ids, trimmed }
+  return { ids, trimmed, container: false }
 }
+
+/** Below this, boxes are too small to read; pan or use the minimap instead of zooming out further. */
+const MIN_FIT_ZOOM = 0.45
 
 function runLayout(cy: cytoscape.Core, density: Density): void {
   cy.layout({
@@ -217,6 +262,13 @@ function runLayout(cy: cytoscape.Core, density: Density): void {
     fit: true,
     padding: 44
   } as cytoscape.LayoutOptions).run()
+  if (cy.zoom() < MIN_FIT_ZOOM) {
+    const container = cy.container()
+    cy.zoom({
+      level: MIN_FIT_ZOOM,
+      renderedPosition: { x: (container?.clientWidth ?? 0) / 2, y: (container?.clientHeight ?? 0) / 2 }
+    })
+  }
 }
 
 function orderedNodeIds(cy: cytoscape.Core): string[] {
@@ -249,15 +301,18 @@ export function Web() {
   const wrap = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
   const selectRef = useRef(select)
+  const labelsRef = useRef(true)
   const densityRef = useRef<Density>('spread')
   const [density, setDensity] = useState<Density>('spread')
   const [grid, setGrid] = useState(false)
+  const [labels, setLabels] = useState(true)
   const [legend, setLegend] = useState(true)
   const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(null)
-  const [shown, setShown] = useState({ nodes: 0, edges: 0, trimmed: 0 })
+  const [shown, setShown] = useState({ nodes: 0, edges: 0, trimmed: 0, container: false })
   const [cyInstance, setCyInstance] = useState<cytoscape.Core | null>(null)
 
   selectRef.current = select
+  labelsRef.current = labels
   densityRef.current = density
 
   const graph = useMemo(
@@ -297,7 +352,7 @@ export function Web() {
       minZoom: ZOOM_MIN,
       maxZoom: ZOOM_MAX,
       pixelRatio: 2,
-      style: buildWebStyle(),
+      style: buildWebStyle(labelsRef.current),
       layout: { name: 'preset' }
     })
     cy.on('tap', 'node', (ev) => selectRef.current(ev.target.id()))
@@ -336,7 +391,7 @@ export function Web() {
     const cy = cyRef.current
     if (!cy || !snapshot || !graph || !focusId) return
     const byId = new Map(snapshot.nodes.map((n) => [n.id, n]))
-    const { ids, trimmed } = focusNeighborhood(graph, focusId)
+    const { ids, trimmed, container } = focusNeighborhood(graph, focusId, snapshot)
 
     const edgeDefs = new Map<string, { id: string; source: string; target: string; w: number; via: string; rel: string }>()
     for (const e of snapshot.edges) {
@@ -391,7 +446,7 @@ export function Web() {
       cy.$id(focusId).select()
       cy.$id(focusId).connectedEdges().addClass('sel')
     }
-    setShown({ nodes: cy.nodes().length, edges: cy.edges().length, trimmed })
+    setShown({ nodes: cy.nodes().length, edges: cy.edges().length, trimmed, container })
   }, [snapshot, graph, cycles, focusId])
 
   useEffect(() => {
@@ -400,10 +455,17 @@ export function Web() {
   }, [grid])
 
   useEffect(() => {
+    const cy = cyRef.current
+    if (!cy || cy.destroyed()) return
+    cy.style(buildWebStyle(labels))
+    runLayout(cy, densityRef.current) // box dimensions changed, so the ranks need redoing
+  }, [labels])
+
+  useEffect(() => {
     const id = requestAnimationFrame(() => {
       const cy = cyRef.current
       if (!cy || cy.destroyed()) return
-      cy.style(buildWebStyle())
+      cy.style(buildWebStyle(labelsRef.current))
       cy.nodes().forEach((n) => {
         const kind = n.data('kind') as DirectoryObjectType
         n.data('icon', webNodeIcon(kind, iconColor(kind, n.data('privileged') === 1)))
@@ -491,7 +553,7 @@ export function Web() {
               {hint}
             </span>
             <span className="web-title-meta">
-              neighborhood · {shown.nodes} node{shown.nodes === 1 ? '' : 's'} · {shown.edges} edge{shown.edges === 1 ? '' : 's'}
+              {shown.container ? 'contents' : 'neighborhood'} · {shown.nodes} node{shown.nodes === 1 ? '' : 's'} · {shown.edges} edge{shown.edges === 1 ? '' : 's'}
               {shown.trimmed > 0 ? ` · +${shown.trimmed} hidden — click a member to walk in` : ''}
             </span>
           </div>
@@ -514,6 +576,16 @@ export function Web() {
               <Info size={15} aria-hidden />
               <span>Legend</span>
             </button>
+            <button
+              type="button"
+              className={`tb-btn${labels ? '' : ' active'}`}
+              aria-pressed={!labels}
+              title={labels ? 'Show icons only' : 'Show names'}
+              onClick={() => setLabels((on) => !on)}
+            >
+              {labels ? <Type size={15} aria-hidden /> : <Shapes size={15} aria-hidden />}
+              <span>{labels ? 'Names' : 'Icons'}</span>
+            </button>
           </div>
           <div className="tb-group" role="toolbar" aria-label="Actions">
             <button type="button" className="tb-btn" title="Export PNG" onClick={exportPng}>
@@ -535,6 +607,16 @@ export function Web() {
           onKeyDown={onCanvasKeys}
         >
           <div className="web-canvas" ref={host} />
+          {shown.nodes === 0 ? (
+            <div className="web-empty">
+              <p className="empty-title">Nothing to draw here</p>
+              <p className="empty-hint">
+                {focusNode
+                  ? `${focusNode.displayName} holds no users, groups or computers.`
+                  : 'Pick a user, group or container from the directory.'}
+              </p>
+            </div>
+          ) : null}
           {activeFinding &&
           (activeFinding.type === 'circular-nesting' ||
             activeFinding.type === 'deep-nesting' ||

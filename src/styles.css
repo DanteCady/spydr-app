@@ -1005,8 +1005,9 @@ table.grid tr.selected td { background: var(--sel); }
 .outline-head .chip svg { color: var(--crit); }
 
 /* ── Web toolbar (modern, icon-first) ────────────────── */
-.web-toolbar { gap: 6px; padding: 6px 12px; min-height: 46px; flex-wrap: nowrap; }
-.web-title { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1 1 0; margin-right: 6px; }
+.web-toolbar { gap: 6px; padding: 6px 12px; min-height: 46px; flex-wrap: wrap; }
+/* Never let the focus name collapse to an ellipsis; the toolbar wraps to a second row instead. */
+.web-title { display: flex; flex-direction: column; gap: 1px; flex: 1 1 200px; min-width: 170px; margin-right: 6px; }
 .web-title-focus {
   display: flex;
   align-items: center;
@@ -1084,3 +1085,20 @@ table.grid tr.selected td { background: var(--sel); }
 .restore-forget:hover { color: var(--text); }
 .restore-detail { margin: 0 0 2px; font-size: 12px; }
 .restore-card .primary { margin-top: 10px; }
+
+.web-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
+  text-align: center;
+}
+.web-empty .empty-hint { max-width: 280px; }
+
+/* Keep the focus line to one row; a narrow panel should ellipsize it, not stack it. */
+.web-title-focus, .web-title-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.web-title { max-width: 100%; }
