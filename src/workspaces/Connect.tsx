@@ -1,4 +1,4 @@
-import { DatabaseZap, FolderOpen, Plug, Radar } from 'lucide-react'
+import { DatabaseZap, FolderOpen, History, Plug, Radar, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { ConnectionInput, Protocol } from '@shared/types'
 import { WidowMark } from '../components/WidowMark'
@@ -9,7 +9,7 @@ function defaultPort(protocol: Protocol): number {
 }
 
 export function Connect() {
-  const { openSample, ingestLdap } = useApp()
+  const { openSample, ingestLdap, savedSession, restoreSession, forgetSession } = useApp()
   const [domain, setDomain] = useState('')
   const [host, setHost] = useState('')
   const [protocol, setProtocol] = useState<Protocol>('ldaps')
@@ -23,6 +23,19 @@ export function Connect() {
   const [ok, setOk] = useState<string | null>(null)
 
   const desktop = Boolean(window.spydr?.ingest)
+
+  // A restored profile is a better prefill than the Windows environment, so it wins.
+  useEffect(() => {
+    const p = savedSession?.profile
+    if (!p) return
+    setDomain((d) => d || p.domain)
+    setHost((h) => h || p.host)
+    setProtocol(p.protocol)
+    setPort(p.port)
+    setBindUsername((u) => u || p.bindUsername)
+    setBaseDn((b) => b || p.baseDn)
+    setTrustServerCert(p.trustServerCert)
+  }, [savedSession])
 
   useEffect(() => {
     if (!window.spydr?.windowsPrefill) return
@@ -108,7 +121,29 @@ export function Connect() {
           <h1>Spydr</h1>
         </div>
         <p className="lede">Read-only explorer for messy on-prem Active Directory. Sample forest always works. Bind with a normal domain user — not Domain Admin.</p>
-        <button className="primary" type="button" onClick={openSample}>
+        {savedSession ? (
+          <div className="restore-card">
+            <div className="restore-head">
+              <History size={15} aria-hidden />
+              <strong>Restore last session</strong>
+              <button type="button" className="restore-forget" title="Forget this session" onClick={() => void forgetSession()}>
+                <X size={13} aria-hidden />
+              </button>
+            </div>
+            <p className="restore-detail">
+              {savedSession.domain} · {savedSession.stats.users} users · {savedSession.stats.groups} groups ·{' '}
+              {savedSession.stats.findings} findings
+            </p>
+            <p className="restore-detail muted">
+              {savedSession.source === 'fixture' ? 'Sample directory' : savedSession.dcHost} · saved{' '}
+              {new Date(savedSession.savedAt).toLocaleString()}
+            </p>
+            <button className="primary" type="button" onClick={() => void restoreSession()}>
+              <History size={15} aria-hidden /> Reopen {savedSession.domain}
+            </button>
+          </div>
+        ) : null}
+        <button className={savedSession ? 'ghost' : 'primary'} type="button" onClick={openSample}>
           <FolderOpen size={15} aria-hidden /> Open sample directory
         </button>
         <p className="note">contoso.lab — nested groups, a membership cycle, stale and disabled users, a path into Domain Admins.</p>

@@ -1,7 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { loadContosoFixture } from '../fixtures/contoso-lab'
 import { buildMembershipGraph, enumeratePaths } from '@shared/graph'
 import type { ConnectionInput, DirectorySnapshot, Finding, PathResult, WorkspaceId } from '@shared/types'
+import type { SessionMeta } from './vite-env'
 
 export type Theme = 'dark' | 'light' | 'vivid'
 
@@ -31,6 +32,10 @@ interface AppState {
   clearFinding: () => void
   activeFinding: Finding | null
   paths: PathResult[]
+  /** Header of the session on disk, or null when there is nothing to restore. */
+  savedSession: SessionMeta | null
+  restoreSession: () => Promise<void>
+  forgetSession: () => Promise<void>
 }
 
 const Ctx = createContext<AppState | null>(null)
@@ -44,6 +49,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pathSource, setPathSource] = useState('')
   const [pathTarget, setPathTarget] = useState('')
   const [activeFinding, setActiveFinding] = useState<Finding | null>(null)
+  const [savedSession, setSavedSession] = useState<SessionMeta | null>(null)
+  // Kept out of the snapshot so the password never travels with it.
+  const lastInput = useRef<ConnectionInput | null>(null)
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = window.localStorage.getItem('spydr-theme')
     return THEMES.includes(saved as Theme) ? (saved as Theme) : 'dark'
@@ -53,6 +61,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.theme = theme
     window.localStorage.setItem('spydr-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    void window.spydr?.sessionPeek().then(setSavedSession)
+  }, [])
 
   const graph = useMemo(
     () => (snapshot ? buildMembershipGraph(snapshot.nodes, snapshot.edges) : null),
@@ -64,11 +76,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return enumeratePaths(graph, pathSource, pathTarget)
   }, [graph, pathSource, pathTarget])
 
-  const applySnapshot = useCallback((s: DirectorySnapshot) => {
+  const applySnapshot = useCallback((s: DirectorySnapshot, view?: { workspace: WorkspaceId; selectedId: string | null; containerDn: string | null }) => {
     setSnapshot(s)
-    setWorkspace('directory')
-    setContainerDn(s.baseDn)
-    setSelectedId(null)
+    setWorkspace(view?.workspace ?? 'directory')
+    setContainerDn(view?.containerDn ?? s.baseDn)
+    setSelectedId(view?.selectedId ?? null)
     setSearch('')
     setActiveFinding(null)
     const user = s.nodes.find((n) => n.type === 'user')
@@ -87,16 +99,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
         throw new Error('Run Spydr as the desktop app to bind to Active Directory.')
       }
       const s = await window.spydr.ingest(input)
+      lastInput.current = input
       applySnapshot(s)
     },
     [applySnapshot]
   )
 
+  // Disconnecting clears the view but deliberately leaves the saved session in place, so it can
+  // still be restored. Forgetting it is a separate, explicit action.
   const disconnect = useCallback(() => {
     setSnapshot(null)
     setSelectedId(null)
     setSearch('')
     setActiveFinding(null)
+    void window.spydr?.sessionPeek().then(setSavedSession)
+  }, [])
+
+  const restoreSession = useCallback(async () => {
+    const saved = await window.spydr?.sessionRestore()
+    if (!saved) {
+      setSavedSession(null)
+      return
+    }
+    applySnapshot(saved.snapshot, saved.view)
+  }, [applySnapshot])
+
+  const forgetSession = useCallback(async () => {
+    await window.spydr?.sessionClear()
+    setSavedSession(null)
   }, [])
 
   const goTo = useCallback((w: WorkspaceId, objectId?: string) => {
@@ -155,6 +185,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  // Persist whenever the snapshot or the user's place in it changes. Debounced so that clicking
+  // through the tree does not rewrite a large directory on every selection.
+  useEffect(() => {
+    if (!snapshot || !window.spydr?.sessionSave) return
+    const id = window.setTimeout(() => {
+      void window.spydr
+        ?.sessionSave({
+          snapshot,
+          profile:
+            snapshot.source === 'ldap' && lastInput.current
+              ? {
+                  domain: lastInput.current.domain,
+                  host: lastInput.current.host,
+                  port: lastInput.current.port,
+                  protocol: lastInput.current.protocol,
+                  bindUsername: lastInput.current.bindUsername,
+                  baseDn: lastInput.current.baseDn,
+                  trustServerCert: lastInput.current.trustServerCert
+                }
+              : null,
+          view: { workspace, selectedId, containerDn }
+        })
+        .then(() => window.spydr?.sessionPeek().then(setSavedSession))
+    }, 600)
+    return () => window.clearTimeout(id)
+  }, [snapshot, workspace, selectedId, containerDn])
+
   const value: AppState = {
     theme,
     toggleTheme: useCallback(() => setTheme((t) => THEMES[(THEMES.indexOf(t) + 1) % THEMES.length]), []),
@@ -178,7 +235,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     goToFinding,
     clearFinding: useCallback(() => setActiveFinding(null), []),
     activeFinding,
-    paths
+    paths,
+    savedSession,
+    restoreSession,
+    forgetSession
   }
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

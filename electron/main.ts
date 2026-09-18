@@ -3,7 +3,15 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { discoverDcs, windowsPrefill } from './directory/discoverDc'
 import { ingestDirectory, testConnection } from './directory/ldapProvider'
-import type { ConnectionInput } from '../shared/types'
+import {
+  clearSession,
+  loadSession,
+  loadSessionMeta,
+  saveSession,
+  type SessionProfile,
+  type SessionView
+} from './directory/session'
+import type { ConnectionInput, DirectorySnapshot } from '../shared/types'
 
 app.setName('Spydr')
 
@@ -57,6 +65,14 @@ function registerIpc(): void {
   ipcMain.handle('spydr:discover', async (_evt, domain: string) => discoverDcs(domain))
   ipcMain.handle('spydr:test', async (_evt, input: ConnectionInput) => testConnection(input))
   ipcMain.handle('spydr:ingest', async (_evt, input: ConnectionInput) => ingestDirectory(input))
+  ipcMain.handle('spydr:session:peek', () => loadSessionMeta())
+  ipcMain.handle('spydr:session:restore', () => loadSession())
+  ipcMain.handle(
+    'spydr:session:save',
+    (_evt, payload: { snapshot: DirectorySnapshot; profile: SessionProfile | null; view: SessionView }) =>
+      saveSession(payload.snapshot, payload.profile, payload.view)
+  )
+  ipcMain.handle('spydr:session:clear', () => clearSession())
 }
 
 void app.whenReady().then(() => {

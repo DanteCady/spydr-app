@@ -1061,3 +1061,25 @@ table.grid tr.selected td { background: var(--sel); }
 .tree-head .tb-btn { padding: 0 8px; height: 26px; font-size: 11px; }
 .tree-head .tb-btn:last-child { margin-left: auto; padding: 0 7px; }
 .tree-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Restore last session ────────────────────────────── */
+.restore-card {
+  border: 1px solid color-mix(in srgb, var(--brand) 35%, transparent);
+  background: var(--brand-muted);
+  border-radius: var(--radius);
+  padding: 12px 14px 14px;
+  margin-bottom: 14px;
+}
+.restore-head { display: flex; align-items: center; gap: 7px; color: var(--brand); margin-bottom: 6px; }
+.restore-head strong { font-size: 13px; }
+.restore-forget {
+  margin-left: auto;
+  display: inline-flex;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 2px;
+}
+.restore-forget:hover { color: var(--text); }
+.restore-detail { margin: 0 0 2px; font-size: 12px; }
+.restore-card .primary { margin-top: 10px; }
