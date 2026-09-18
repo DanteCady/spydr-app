@@ -1,10 +1,10 @@
 import cytoscape from 'cytoscape'
-import { ChevronsDownUp, ChevronsUpDown, Download, Grid2x2, Info, Maximize, Minus, Plus, RotateCcw, Shapes, Type } from 'lucide-react'
+import { ChevronsDownUp, ChevronsUpDown, Download, Grid2x2, Info, Maximize, Minus, Plus, RotateCcw, Route, Shapes, Type } from 'lucide-react'
 import dagre from 'cytoscape-dagre'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DirectoryObjectType } from '@shared/types'
 import type { DirectorySnapshot } from '@shared/types'
-import { buildMembershipGraph, findGroupCycles, groupIdSet, membershipReach } from '@shared/graph'
+import { buildMembershipGraph, enumeratePaths, findGroupCycles, groupIdSet, membershipReach } from '@shared/graph'
 import { FindingCard } from '../components/FindingCard'
 import { DirectoryTree } from '../components/DirectoryTree'
 import { StatusBadges } from '../components/StatusBadges'
@@ -163,6 +163,39 @@ function buildWebStyle(labels: boolean): cytoscape.StylesheetJson {
         color: crit
       }
     },
+    // Trace: the path stands out and everything else recedes, so one chain can be read alone.
+    {
+      selector: 'node.dimmed',
+      style: { opacity: 0.1, 'text-opacity': 0.1 }
+    },
+    {
+      selector: 'edge.dimmed',
+      style: { opacity: 0.06, 'text-opacity': 0 }
+    },
+    {
+      selector: 'node.on-path',
+      style: {
+        'border-color': brand,
+        'border-width': 2.5,
+        'underlay-color': brand,
+        'underlay-opacity': 0.22,
+        'underlay-padding': 7,
+        'underlay-shape': 'round-rectangle',
+        'z-index': 20
+      }
+    },
+    {
+      selector: 'edge.on-path',
+      style: {
+        'line-color': brand,
+        'target-arrow-color': brand,
+        width: 3,
+        opacity: 1,
+        'line-style': 'dashed',
+        'line-dash-pattern': [9, 5],
+        'z-index': 20
+      }
+    },
     {
       selector: 'edge.sel',
       style: {
@@ -250,6 +283,21 @@ function focusNeighborhood(
 /** Below this, boxes are too small to read; pan or use the minimap instead of zooming out further. */
 const MIN_FIT_ZOOM = 0.45
 
+/** Shortest membership chain between two objects, in whichever direction one exists. */
+function tracePath(
+  graph: ReturnType<typeof buildMembershipGraph>,
+  a: string,
+  b: string
+): string[] | null {
+  if (a === b || !graph.hasNode(a) || !graph.hasNode(b)) return null
+  const options = [
+    ...enumeratePaths(graph, a, b, { maxDepth: 12, maxPaths: 16 }),
+    ...enumeratePaths(graph, b, a, { maxDepth: 12, maxPaths: 16 })
+  ]
+  if (options.length === 0) return null
+  return options.sort((x, y) => x.nodeIds.length - y.nodeIds.length)[0].nodeIds
+}
+
 function runLayout(cy: cytoscape.Core, density: Density): void {
   cy.layout({
     name: 'dagre',
@@ -306,6 +354,10 @@ export function Web() {
   const [density, setDensity] = useState<Density>('spread')
   const [grid, setGrid] = useState(false)
   const [labels, setLabels] = useState(true)
+  const [tracing, setTracing] = useState(false)
+  const [traceTarget, setTraceTarget] = useState<string | null>(null)
+  const tracingRef = useRef(false)
+  const setTraceTargetRef = useRef(setTraceTarget)
   const [legend, setLegend] = useState(true)
   const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(null)
   const [shown, setShown] = useState({ nodes: 0, edges: 0, trimmed: 0, container: false })
@@ -313,6 +365,8 @@ export function Web() {
 
   selectRef.current = select
   labelsRef.current = labels
+  tracingRef.current = tracing
+  setTraceTargetRef.current = setTraceTarget
   densityRef.current = density
 
   const graph = useMemo(
@@ -355,7 +409,10 @@ export function Web() {
       style: buildWebStyle(labelsRef.current),
       layout: { name: 'preset' }
     })
-    cy.on('tap', 'node', (ev) => selectRef.current(ev.target.id()))
+    cy.on('tap', 'node', (ev) => {
+      if (tracingRef.current) setTraceTargetRef.current(ev.target.id())
+      else selectRef.current(ev.target.id())
+    })
     cy.on('tap', (ev) => {
       if (ev.target === cy) selectRef.current(null)
     })
@@ -450,9 +507,45 @@ export function Web() {
   }, [snapshot, graph, cycles, focusId])
 
   useEffect(() => {
+    setTraceTarget(null)
+  }, [focusId])
+
+  useEffect(() => {
     const cy = cyRef.current
     if (cy) syncGrid(cy, wrap.current)
   }, [grid])
+
+  useEffect(() => {
+    const cy = cyRef.current
+    if (!cy || cy.destroyed() || !graph || !focusId) return
+    cy.batch(() => {
+      cy.elements().removeClass('dimmed on-path')
+    })
+    if (!tracing || !traceTarget) return
+    const path = tracePath(graph, focusId, traceTarget)
+    if (!path) return
+    const ids = new Set(path)
+    cy.batch(() => {
+      cy.nodes().forEach((n) => {
+        n.addClass(ids.has(n.id()) ? 'on-path' : 'dimmed')
+      })
+      cy.edges().forEach((e) => {
+        const onPath =
+          ids.has(e.source().id()) &&
+          ids.has(e.target().id()) &&
+          Math.abs(path.indexOf(e.source().id()) - path.indexOf(e.target().id())) === 1
+        e.addClass(onPath ? 'on-path' : 'dimmed')
+      })
+    })
+    // Marching dashes along the traced chain, so direction of travel is obvious.
+    let offset = 0
+    const timer = window.setInterval(() => {
+      if (cy.destroyed()) return
+      offset = (offset - 1) % 28
+      cy.edges('.on-path').style('line-dash-offset', offset)
+    }, 45)
+    return () => window.clearInterval(timer)
+  }, [tracing, traceTarget, focusId, graph, shown])
 
   useEffect(() => {
     const cy = cyRef.current
@@ -512,7 +605,9 @@ export function Web() {
         step(-1)
         break
       case 'Escape':
-        select(null)
+        if (traceTarget) setTraceTarget(null)
+        else if (tracing) setTracing(false)
+        else select(null)
         break
       case '+':
       case '=':
@@ -575,6 +670,19 @@ export function Web() {
             <button type="button" className={`tb-btn${legend ? ' active' : ''}`} aria-pressed={legend} title="Toggle legend" onClick={() => setLegend((on) => !on)}>
               <Info size={15} aria-hidden />
               <span>Legend</span>
+            </button>
+            <button
+              type="button"
+              className={`tb-btn${tracing ? ' active' : ''}`}
+              aria-pressed={tracing}
+              title={tracing ? 'Stop tracing' : 'Trace a path from the focus'}
+              onClick={() => {
+                setTracing((on) => !on)
+                setTraceTarget(null)
+              }}
+            >
+              <Route size={15} aria-hidden />
+              <span>Trace</span>
             </button>
             <button
               type="button"
