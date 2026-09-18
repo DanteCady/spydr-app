@@ -10,6 +10,7 @@ import { DirectoryTree } from '../components/DirectoryTree'
 import { StatusBadges } from '../components/StatusBadges'
 import { TypeGlyph, webNodeIcon } from '../components/TypeGlyph'
 import { WebMinimap } from '../components/WebMinimap'
+import { isSystemContainer } from '../lib/tree'
 import { useMenuCommand } from '../lib/useMenuCommand'
 import { useApp } from '../state'
 
@@ -354,14 +355,26 @@ function containmentElements(
   const root = snapshot.nodes.find((n) => n.id === rootId)
   if (!root) return { nodes: [], edges: [], trimmed: 0 }
   const suffix = `,${root.dn.toLowerCase()}`
-  const under = snapshot.nodes.filter((n) => n.id === root.id || n.dn.toLowerCase().endsWith(suffix))
+  const under = snapshot.nodes.filter(
+    (n) =>
+      (n.id === root.id || n.dn.toLowerCase().endsWith(suffix)) &&
+      // The same plumbing the Directory tree hides: a domain root would otherwise be a hundred
+      // GUID-named config containers rather than the structure an admin recognises.
+      !isSystemContainer(n, snapshot.baseDn)
+  )
   const isContainer = (n: DirectoryNode): boolean => n.type === 'ou' || n.type === 'container'
   // Drawing every user would make one column per person and turn a flow chart into a vertical
   // strip. Show the skeleton of containers, with the objects of the focused container itself so a
   // leaf OU still resolves to its members; clicking a container re-roots the view onto it.
-  const within = under.filter(
-    (n) => isContainer(n) || n.parentDn?.toLowerCase() === root.dn.toLowerCase()
-  )
+  // Root first, then the skeleton, then leaves: when the cap bites it must never drop the root the
+  // whole tree hangs from.
+  const within = under
+    .filter((n) => isContainer(n) || n.parentDn?.toLowerCase() === root.dn.toLowerCase())
+    .sort(
+      (a, b) =>
+        Number(b.id === root.id) - Number(a.id === root.id) ||
+        Number(isContainer(b)) - Number(isContainer(a))
+    )
   const heldBy = new Map<string, number>()
   for (const n of under) {
     if (isContainer(n)) continue
@@ -409,8 +422,15 @@ function containmentElements(
  * blocks unusable, however compact it was.
  */
 function layoutTidyTree(cy: cytoscape.Core, gap: { node: number; rank: number }, rootId: string): void {
-  const root = cy.$id(rootId)
-  if (root.empty()) return
+  // Falling back to the shallowest node keeps the tree drawn even if the root was trimmed; an early
+  // return here leaves every node sitting on the origin, which reads as one giant overlap.
+  const byId = cy.$id(rootId)
+  const shallowest = cy
+    .nodes()
+    .toArray()
+    .sort((a, b) => ((a.data('depth') as number) ?? 0) - ((b.data('depth') as number) ?? 0))[0]
+  const root: cytoscape.NodeSingular | undefined = byId.nonempty() ? byId[0] : shallowest
+  if (!root) return
 
   const children = new Map<string, cytoscape.NodeSingular[]>()
   cy.edges().forEach((e) => {
