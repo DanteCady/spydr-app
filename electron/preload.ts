@@ -15,7 +15,13 @@ const api = {
     profile: SessionProfile | null
     view: SessionView
   }): Promise<void> => ipcRenderer.invoke('spydr:session:save', payload),
-  sessionClear: (): Promise<void> => ipcRenderer.invoke('spydr:session:clear')
+  sessionClear: (): Promise<void> => ipcRenderer.invoke('spydr:session:clear'),
+  /** Subscribe to menu commands; returns an unsubscribe. */
+  onMenuCommand: (handler: (command: string) => void): (() => void) => {
+    const listener = (_evt: unknown, command: string): void => handler(command)
+    ipcRenderer.on('spydr:menu', listener)
+    return () => { ipcRenderer.removeListener('spydr:menu', listener) }
+  }
 }
 
 contextBridge.exposeInMainWorld('spydr', api)
