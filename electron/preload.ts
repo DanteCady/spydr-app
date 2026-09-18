@@ -17,6 +17,10 @@ const api = {
   }): Promise<void> => ipcRenderer.invoke('spydr:session:save', payload),
   sessionClear: (): Promise<void> => ipcRenderer.invoke('spydr:session:clear'),
   /** Subscribe to menu commands; returns an unsubscribe. */
+  /** Chrome the renderer must draw itself, and the editing actions the OS performs for us. */
+  chrome: (): { custom: boolean; platform: string; titleBarHeight: number } =>
+    ipcRenderer.sendSync('spydr:chrome'),
+  execRole: (role: string): Promise<void> => ipcRenderer.invoke('spydr:role', role),
   onMenuCommand: (handler: (command: string) => void): (() => void) => {
     const listener = (_evt: unknown, command: string): void => handler(command)
     ipcRenderer.on('spydr:menu', listener)

@@ -15,6 +15,8 @@ export interface SpydrApi {
   }) => Promise<void>
   sessionClear: () => Promise<void>
   onMenuCommand: (handler: (command: string) => void) => () => void
+  chrome: () => { custom: boolean; platform: string; titleBarHeight: number }
+  execRole: (role: string) => Promise<void>
 }
 
 export type { SessionMeta, SessionProfile, SessionView }
