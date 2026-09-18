@@ -1102,3 +1102,72 @@ table.grid tr.selected td { background: var(--sel); }
 /* Keep the focus line to one row; a narrow panel should ellipsize it, not stack it. */
 .web-title-focus, .web-title-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .web-title { max-width: 100%; }
+
+/* ── In-window title bar (Windows and Linux; macOS uses the system menu bar) ── */
+.app-body { height: calc(100% - var(--titlebar, 0px)); }
+.titlebar {
+  height: var(--titlebar, 36px);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  background: var(--sidebar);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 40;
+  /* The strip is a drag handle, but the controls inside it must stay clickable. */
+  -webkit-app-region: drag;
+}
+.titlebar-mark { display: inline-flex; color: var(--text); -webkit-app-region: no-drag; }
+.titlebar-menu { display: flex; gap: 1px; -webkit-app-region: no-drag; }
+.titlebar-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.menu-section { position: relative; }
+.menu-title {
+  background: transparent;
+  border: none;
+  color: var(--sidebar-foreground);
+  font-size: 12px;
+  padding: 4px 9px;
+  border-radius: var(--radius-sm);
+}
+.menu-title:hover, .menu-title.active { background: var(--hover); color: var(--text); }
+.menu-drop {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 232px;
+  padding: 4px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-pop);
+  z-index: 50;
+}
+.menu-drop.nested { top: -5px; left: 100%; }
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 12.5px;
+  text-align: left;
+  padding: 5px 9px;
+  border-radius: 4px;
+  position: relative;
+}
+.menu-item:hover { background: var(--brand-muted); color: var(--brand); }
+.menu-item.has-sub { cursor: default; }
+.menu-accel, .menu-arrow { margin-left: auto; color: var(--muted); font-size: 11px; }
+.menu-item:hover .menu-accel, .menu-item:hover .menu-arrow { color: var(--brand); }
+.menu-sep { height: 1px; margin: 4px 6px; background: var(--border); }

@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { discoverDcs, windowsPrefill } from './directory/discoverDc'
 import { ingestDirectory, testConnection } from './directory/ldapProvider'
-import { buildMenu } from './menu'
+import { buildMenu, usesCustomTitleBar } from './menu'
 import {
   clearSession,
   loadSession,
@@ -15,6 +15,8 @@ import {
 import type { ConnectionInput, DirectorySnapshot } from '../shared/types'
 
 app.setName('Spydr')
+
+const TITLE_BAR_HEIGHT = 36
 
 function preloadPath(): string {
   const js = join(__dirname, '../preload/preload.js')
@@ -31,6 +33,7 @@ function appIcon(): Electron.NativeImage | undefined {
 
 function createWindow(): void {
   const icon = appIcon()
+  const custom = usesCustomTitleBar()
   const win = new BrowserWindow({
     width: 1440,
     height: 920,
@@ -39,6 +42,13 @@ function createWindow(): void {
     backgroundColor: '#101216',
     title: 'Spydr',
     show: false,
+    // Where the renderer draws the bar, the OS still paints the window buttons over it.
+    ...(custom
+      ? {
+          titleBarStyle: 'hidden' as const,
+          titleBarOverlay: { color: '#00000000', symbolColor: '#8b9bb0', height: TITLE_BAR_HEIGHT }
+        }
+      : {}),
     ...(icon ? { icon } : {}),
     webPreferences: {
       preload: preloadPath(),
@@ -48,6 +58,11 @@ function createWindow(): void {
     }
   })
 
+  // The accelerators live on the native menu, so it stays in place; the strip is just hidden.
+  if (custom) {
+    win.setMenuBarVisibility(false)
+    win.autoHideMenuBar = true
+  }
   win.on('ready-to-show', () => win.show())
   win.webContents.setWindowOpenHandler((details) => {
     void shell.openExternal(details.url)
@@ -74,6 +89,18 @@ function registerIpc(): void {
       saveSession(payload.snapshot, payload.profile, payload.view)
   )
   ipcMain.handle('spydr:session:clear', () => clearSession())
+  ipcMain.on('spydr:chrome', (evt) => {
+    evt.returnValue = {
+      custom: usesCustomTitleBar(),
+      platform: process.platform,
+      titleBarHeight: TITLE_BAR_HEIGHT
+    }
+  })
+  ipcMain.handle('spydr:role', (evt, role: string) => {
+    const wc = BrowserWindow.fromWebContents(evt.sender)?.webContents
+    const fn = (wc as unknown as Record<string, () => void> | undefined)?.[role]
+    if (typeof fn === 'function') fn.call(wc)
+  })
 }
 
 void app.whenReady().then(() => {
