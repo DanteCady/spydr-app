@@ -81,12 +81,14 @@ function buildWebStyle(labels: boolean, mode: LayoutMode): cytoscape.StylesheetJ
         'text-halign': 'center',
         'text-margin-y': 13,
         'text-wrap': 'wrap',
-        'text-max-width': `${LABEL_WIDTH}px`,
+        'text-max-width': `${mode === 'structure' ? 128 : LABEL_WIDTH}px`,
         'text-overflow-wrap': 'whitespace',
         'min-zoomed-font-size': 7,
         'transition-property': 'opacity',
         'transition-duration': 120,
-        width: labels ? 'label' : 44,
+        // Uniform boxes in the flow chart; membership views size to the label so long group names
+        // do not force every box wide.
+        width: !labels ? 44 : mode === 'structure' ? 150 : 'label',
         height: labels ? 62 : 44,
         padding: labels ? '12px' : '0px'
       }
@@ -130,18 +132,11 @@ function buildWebStyle(labels: boolean, mode: LayoutMode): cytoscape.StylesheetJ
       selector: 'edge',
       style: {
         width: 'mapData(w, 1, 10, 1.6, 4)',
-        ...(mode === 'tree'
-          ? {
-              'curve-style': 'taxi' as const,
-              'taxi-direction': 'upward' as const,
-              'taxi-turn': '38%',
-              'taxi-turn-min-distance': '8px'
-            }
-          : {
-              'curve-style': 'unbundled-bezier' as const,
-              'control-point-distances': [38],
-              'control-point-weights': [0.5]
-            }),
+        // Both views are flow charts: right angles read as structure, curves read as decoration.
+        'curve-style': 'taxi' as const,
+        'taxi-direction': (mode === 'tree' ? 'upward' : 'rightward') as 'upward' | 'rightward',
+        'taxi-turn': '50%',
+        'taxi-turn-min-distance': '10px',
         'line-color': member,
         'target-arrow-color': member,
         'target-arrow-shape': 'triangle',
@@ -358,9 +353,20 @@ function containmentElements(
   const root = snapshot.nodes.find((n) => n.id === rootId)
   if (!root) return { nodes: [], edges: [], trimmed: 0 }
   const suffix = `,${root.dn.toLowerCase()}`
-  const within = snapshot.nodes.filter(
-    (n) => n.id === root.id || n.dn.toLowerCase().endsWith(suffix)
+  const under = snapshot.nodes.filter((n) => n.id === root.id || n.dn.toLowerCase().endsWith(suffix))
+  const isContainer = (n: DirectoryNode): boolean => n.type === 'ou' || n.type === 'container'
+  // Drawing every user would make one column per person and turn a flow chart into a vertical
+  // strip. Show the skeleton of containers, with the objects of the focused container itself so a
+  // leaf OU still resolves to its members; clicking a container re-roots the view onto it.
+  const within = under.filter(
+    (n) => isContainer(n) || n.parentDn?.toLowerCase() === root.dn.toLowerCase()
   )
+  const heldBy = new Map<string, number>()
+  for (const n of under) {
+    if (isContainer(n)) continue
+    const parent = n.parentDn?.toLowerCase()
+    if (parent) heldBy.set(parent, (heldBy.get(parent) ?? 0) + 1)
+  }
   const byDn = new Map(within.map((n) => [n.dn.toLowerCase(), n]))
   const depthOf = (n: DirectoryNode): number =>
     n.id === root.id ? 0 : n.dn.slice(0, n.dn.length - root.dn.length).split(',').filter(Boolean).length
@@ -373,9 +379,11 @@ function containmentElements(
       trimmed++
       continue
     }
+    const held = heldBy.get(n.dn.toLowerCase()) ?? 0
     nodes.push({
       id: n.id,
-      label: n.displayName,
+      // A container says how many objects it holds, since they are not drawn individually here.
+      label: isContainer(n) && held > 0 ? `${n.displayName}  (${held})` : n.displayName,
       kind: n.type,
       privileged: n.privileged ? 1 : 0,
       cycle: cycles.has(n.id) ? 1 : 0,
@@ -457,8 +465,10 @@ function runLayout(cy: cytoscape.Core, density: Density, mode: LayoutMode = 'tre
   const gap = spacingFor(density, cy.nodes().length)
   if (mode === 'structure') {
     // A tidy tree is as tall as it has leaves, so it must be allowed to fit however far out that
-    // takes; clamping the zoom here would push most of the tree off screen.
-    layoutTidyTree(cy, gap, focusId)
+    // takes; clamping the zoom here would push most of the tree off screen. Rows can sit much
+    // closer than in a ranked graph because nothing has to route between them.
+    // Columns sit well apart so the flow reads across, and rows keep enough air to follow a branch.
+    layoutTidyTree(cy, { node: Math.round(gap.node * 0.9), rank: Math.round(gap.rank * 2.2) }, focusId)
     cy.fit(undefined, 44)
     return
   }
