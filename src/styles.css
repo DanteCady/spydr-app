@@ -111,57 +111,69 @@
 }
 
 /*
- * Vivid: a light theme that leans on colour rather than grey. Indigo brand on a faintly violet
- * canvas, and each object type gets a hue of its own so the directory reads by colour as well as
- * by icon. Contrast against --card is kept at WCAG AA for text-sized glyphs.
+ * Vivid: a light theme that gets its colour from the directory rather than from a tint. The chrome
+ * stays neutral — white cards, grey borders, near-black text — so the object hues carry the page:
+ * blue users, amber groups, violet OUs, slate machines, and a severity ramp from rose to emerald.
  */
 [data-theme='vivid'] {
   color-scheme: light;
-  --canvas: #f4f2fd;
-  --background: #f8f6ff;
-  --foreground: #1e1b3a;
+  --canvas: #fbfcfd;
+  --background: #f6f8fa;
+  --foreground: #101828;
   --card: #ffffff;
-  --panel: #f1eefc;
-  --muted-bg: #e7e2f8;
-  --muted: #5d5680;
-  --border: #d9d2f0;
-  --border-subtle: #e8e3f8;
-  --ring: #6d28d9;
-  --brand: #6d28d9;
+  --panel: #f2f4f7;
+  --muted-bg: #eaecf0;
+  --muted: #667085;
+  --border: #d0d5dd;
+  --border-subtle: #e4e7ec;
+  --ring: #2563eb;
+  --brand: #2563eb;
   --brand-foreground: #ffffff;
-  --brand-muted: rgba(109, 40, 217, 0.12);
-  --secondary: #e9e3fb;
-  --destructive: #d81e5b;
+  --brand-muted: rgba(37, 99, 235, 0.1);
+  --secondary: #eaecf0;
+  --destructive: #e11d48;
   --sidebar: #ffffff;
-  --sidebar-foreground: #3c3563;
-  --sidebar-active: rgba(109, 40, 217, 0.12);
-  /* severity: warm and saturated, still ordered by urgency */
-  --crit: #d81e5b;
-  --high: #e4610a;
-  --med: #c68a00;
-  --low: #0f9d76;
-  /* object types get genuinely different hues, not shades of one */
-  --user: #2563eb;
-  --group: #d97706;
+  --sidebar-foreground: #344054;
+  --sidebar-active: rgba(37, 99, 235, 0.1);
+  /* a real ramp, not shades of one hue */
+  --crit: #e11d48;
+  --high: #ea580c;
+  --med: #ca8a04;
+  --low: #059669;
+  /* every object type is a different colour */
+  --user: #0891b2;
+  --group: #f59e0b;
   --ou: #7c3aed;
-  --computer: #0891b2;
-  --web-user-bg: #c9dcfb;
-  --web-group-bg: #fbe3bd;
-  --web-priv-bg: #fbcfdd;
-  --web-cluster-bg: #e2d7fb;
-  --web-edge: #a99cd0;
-  --edge-member: #6d28d9;
-  --edge-primary: #d97706;
+  --computer: #475569;
+  --web-user-bg: #cbeef6;
+  --web-group-bg: #fdeac4;
+  --web-priv-bg: #fbd2dd;
+  --web-cluster-bg: #e4d9fb;
+  --web-edge: #98a2b3;
+  --edge-member: #2563eb;
+  --edge-primary: #f59e0b;
   --graph-node-bg: #ffffff;
-  --graph-focus-bg: #ede4ff;
-  --node-user-bg: #dde9fd;
-  --node-group-bg: #fdeed4;
-  --node-priv-bg: #fde0e9;
-  --node-focus-bg: #e9dcff;
-  --minimap-mask: rgba(244, 242, 253, 0.62);
-  --shadow-card: 0 1px 2px rgba(76, 47, 145, 0.07), 0 8px 24px rgba(76, 47, 145, 0.08);
-  --shadow-pop: 0 10px 28px rgba(76, 47, 145, 0.22);
+  --graph-focus-bg: #dbeafe;
+  --node-user-bg: #d8f1f8;
+  --node-group-bg: #fdf0d5;
+  --node-priv-bg: #fcdde5;
+  --node-focus-bg: #dbeafe;
+  --minimap-mask: rgba(251, 252, 253, 0.62);
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.07);
+  --shadow-pop: 0 10px 28px rgba(16, 24, 40, 0.18);
 }
+
+/* Each workspace keeps its own colour in the rail, so the nav is part of the palette. */
+[data-theme='vivid'] .nav button[data-workspace='directory'] .nav-glyph { color: #2563eb; }
+[data-theme='vivid'] .nav button[data-workspace='web'] .nav-glyph { color: #7c3aed; }
+[data-theme='vivid'] .nav button[data-workspace='pathfinder'] .nav-glyph { color: #ea580c; }
+[data-theme='vivid'] .nav button[data-workspace='hygiene'] .nav-glyph { color: #059669; }
+[data-theme='vivid'] .nav button.active[data-workspace='web'] { background: rgba(124, 58, 237, 0.1); color: #7c3aed; }
+[data-theme='vivid'] .nav button.active[data-workspace='web']::before { background: #7c3aed; }
+[data-theme='vivid'] .nav button.active[data-workspace='pathfinder'] { background: rgba(234, 88, 12, 0.1); color: #ea580c; }
+[data-theme='vivid'] .nav button.active[data-workspace='pathfinder']::before { background: #ea580c; }
+[data-theme='vivid'] .nav button.active[data-workspace='hygiene'] { background: rgba(5, 150, 105, 0.1); color: #059669; }
+[data-theme='vivid'] .nav button.active[data-workspace='hygiene']::before { background: #059669; }
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }

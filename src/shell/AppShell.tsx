@@ -40,6 +40,7 @@ export function AppShell() {
             <button
               key={item.id}
               type="button"
+              data-workspace={item.id}
               className={workspace === item.id ? 'active' : ''}
               onClick={() => setWorkspace(item.id)}
             >
