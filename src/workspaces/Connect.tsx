@@ -21,6 +21,7 @@ export function Connect() {
   const [busy, setBusy] = useState<'test' | 'ingest' | 'discover' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [ok, setOk] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(false)
 
   const desktop = Boolean(window.spydr?.ingest)
 
@@ -113,106 +114,145 @@ export function Connect() {
     }
   }
 
+  const canBind = Boolean(host && bindUsername)
+
   return (
-    <div className="connect">
-      <div className="connect-card">
-        <div className="connect-brand">
-          <WidowMark size={40} />
-          <h1>Spydr</h1>
+    <div className="welcome">
+      <div className="welcome-inner">
+        <header className="welcome-head">
+          <span className="welcome-mark" aria-hidden>
+            <WidowMark size={34} />
+          </span>
+          <div>
+            <h1>Spydr</h1>
+            <p>Read-only Active Directory explorer</p>
+          </div>
+        </header>
+
+        <div className="welcome-cols">
+          <section className="welcome-col">
+            <h2>Start</h2>
+            <button type="button" className="welcome-action" onClick={() => setShowForm((on) => !on)} aria-expanded={showForm}>
+              <Plug size={16} aria-hidden />
+              <span>
+                <strong>Connect to a domain</strong>
+                <em>Bind to a live domain controller over LDAPS</em>
+              </span>
+            </button>
+            <button type="button" className="welcome-action" onClick={openSample}>
+              <FolderOpen size={16} aria-hidden />
+              <span>
+                <strong>Open sample directory</strong>
+                <em>contoso.lab — nested groups, a cycle, a path into Domain Admins</em>
+              </span>
+            </button>
+            {savedSession ? (
+              <button type="button" className="welcome-action" onClick={() => void restoreSession()}>
+                <History size={16} aria-hidden />
+                <span>
+                  <strong>Restore last session</strong>
+                  <em>Reopen {savedSession.domain} without binding again</em>
+                </span>
+              </button>
+            ) : null}
+          </section>
+
+          <section className="welcome-col">
+            <h2>Recent</h2>
+            {savedSession ? (
+              <div className="recent-item">
+                <button type="button" className="recent-open" onClick={() => void restoreSession()}>
+                  <strong>{savedSession.domain}</strong>
+                  <span className="muted">
+                    {savedSession.stats.users} users · {savedSession.stats.groups} groups · {savedSession.stats.findings} findings
+                  </span>
+                  <span className="muted">
+                    {savedSession.source === 'fixture' ? 'Sample directory' : savedSession.dcHost} ·{' '}
+                    {new Date(savedSession.savedAt).toLocaleString()}
+                  </span>
+                </button>
+                <button type="button" className="recent-forget" title="Forget this session" onClick={() => void forgetSession()}>
+                  <X size={14} aria-hidden />
+                </button>
+              </div>
+            ) : (
+              <p className="welcome-empty">Nothing yet. A directory you open is offered back here.</p>
+            )}
+          </section>
         </div>
-        <p className="lede">Read-only explorer for messy on-prem Active Directory. Sample forest always works. Bind with a normal domain user — not Domain Admin.</p>
-        {savedSession ? (
-          <div className="restore-card">
-            <div className="restore-head">
-              <History size={15} aria-hidden />
-              <strong>Restore last session</strong>
-              <button type="button" className="restore-forget" title="Forget this session" onClick={() => void forgetSession()}>
-                <X size={13} aria-hidden />
+
+        {showForm ? (
+          <section className="welcome-form">
+            <h2>Connect to Active Directory</h2>
+            <div className="row">
+              <label>
+                Domain FQDN
+                <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="corp.example.com" />
+              </label>
+              <label>
+                Domain controller
+                <input value={host} onChange={(e) => setHost(e.target.value)} placeholder="dc01.corp.example.com" />
+              </label>
+            </div>
+            <div className="row">
+              <label>
+                Protocol
+                <select
+                  value={protocol}
+                  onChange={(e) => {
+                    const next = e.target.value as Protocol
+                    setProtocol(next)
+                    setPort(defaultPort(next))
+                  }}
+                >
+                  <option value="ldaps">LDAPS (636)</option>
+                  <option value="ldap">LDAP (389)</option>
+                  <option value="starttls">StartTLS (389)</option>
+                </select>
+              </label>
+              <label>
+                Port
+                <input type="number" value={port} onChange={(e) => setPort(Number(e.target.value))} />
+              </label>
+            </div>
+            <div className="row">
+              <label>
+                User (UPN or DOMAIN\user)
+                <input value={bindUsername} onChange={(e) => setBindUsername(e.target.value)} placeholder="lee@corp.example.com" />
+              </label>
+              <label>
+                Password
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="off" />
+              </label>
+            </div>
+            <div className="row">
+              <label>
+                Base DN (blank = rootDSE)
+                <input value={baseDn} onChange={(e) => setBaseDn(e.target.value)} placeholder="DC=corp,DC=example,DC=com" />
+              </label>
+              <label className="check">
+                <input type="checkbox" checked={trustServerCert} onChange={(e) => setTrustServerCert(e.target.checked)} />
+                Trust this server’s certificate (lab / self-signed)
+              </label>
+            </div>
+            <div className="welcome-form-actions">
+              <button type="button" className="ghost" disabled={busy !== null || !domain} onClick={() => void discover()}>
+                <Radar size={14} aria-hidden /> {busy === 'discover' ? 'Discovering…' : 'Find DCs'}
+              </button>
+              <button type="button" className="ghost" disabled={busy !== null || !canBind} onClick={() => void test()}>
+                <Plug size={14} aria-hidden /> {busy === 'test' ? 'Testing…' : 'Test connection'}
+              </button>
+              <button type="button" className="primary" disabled={busy !== null || !canBind} onClick={() => void ingest()}>
+                <DatabaseZap size={14} aria-hidden /> {busy === 'ingest' ? 'Ingesting…' : 'Ingest directory'}
               </button>
             </div>
-            <p className="restore-detail">
-              {savedSession.domain} · {savedSession.stats.users} users · {savedSession.stats.groups} groups ·{' '}
-              {savedSession.stats.findings} findings
-            </p>
-            <p className="restore-detail muted">
-              {savedSession.source === 'fixture' ? 'Sample directory' : savedSession.dcHost} · saved{' '}
-              {new Date(savedSession.savedAt).toLocaleString()}
-            </p>
-            <button className="primary" type="button" onClick={() => void restoreSession()}>
-              <History size={15} aria-hidden /> Reopen {savedSession.domain}
-            </button>
-          </div>
+            {!desktop ? <p className="note">Bind and ingest run in the Electron app. This browser preview can still open the sample directory.</p> : null}
+            {ok ? <p className="ok">{ok}</p> : null}
+            {error ? <p className="error">{error}</p> : null}
+          </section>
         ) : null}
-        <button className={savedSession ? 'ghost' : 'primary'} type="button" onClick={openSample}>
-          <FolderOpen size={15} aria-hidden /> Open sample directory
-        </button>
-        <p className="note">contoso.lab — nested groups, a membership cycle, stale and disabled users, a path into Domain Admins.</p>
-        <fieldset>
-          <legend>Connect to Active Directory</legend>
-          <div className="row">
-            <label>
-              Domain FQDN
-              <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="corp.example.com" />
-            </label>
-            <label>
-              Domain controller
-              <input value={host} onChange={(e) => setHost(e.target.value)} placeholder="dc01.corp.example.com" />
-            </label>
-          </div>
-          <div className="row">
-            <label>
-              Protocol
-              <select
-                value={protocol}
-                onChange={(e) => {
-                  const next = e.target.value as Protocol
-                  setProtocol(next)
-                  setPort(defaultPort(next))
-                }}
-              >
-                <option value="ldaps">LDAPS (636)</option>
-                <option value="ldap">LDAP (389)</option>
-                <option value="starttls">StartTLS (389)</option>
-              </select>
-            </label>
-            <label>
-              Port
-              <input type="number" value={port} onChange={(e) => setPort(Number(e.target.value))} />
-            </label>
-          </div>
-          <div className="row">
-            <label>
-              User (UPN or DOMAIN\user)
-              <input value={bindUsername} onChange={(e) => setBindUsername(e.target.value)} placeholder="lee@corp.example.com" />
-            </label>
-            <label>
-              Password
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="off" />
-            </label>
-          </div>
-          <div className="row">
-            <label>
-              Base DN (blank = rootDSE)
-              <input value={baseDn} onChange={(e) => setBaseDn(e.target.value)} placeholder="DC=corp,DC=example,DC=com" />
-            </label>
-            <label className="check">
-              <input type="checkbox" checked={trustServerCert} onChange={(e) => setTrustServerCert(e.target.checked)} />
-              Trust this server’s certificate (lab / self-signed)
-            </label>
-          </div>
-          <button className="ghost" type="button" disabled={busy !== null || !domain} onClick={() => void discover()}>
-            <Radar size={14} aria-hidden /> {busy === 'discover' ? 'Discovering…' : 'Find DCs from domain'}
-          </button>
-          <button className="ghost" type="button" disabled={busy !== null || !host || !bindUsername} onClick={() => void test()}>
-            <Plug size={14} aria-hidden /> {busy === 'test' ? 'Testing…' : 'Test connection'}
-          </button>
-          <button className="ghost" type="button" disabled={busy !== null || !host || !bindUsername} onClick={() => void ingest()}>
-            <DatabaseZap size={14} aria-hidden /> {busy === 'ingest' ? 'Ingesting…' : 'Ingest directory'}
-          </button>
-          {!desktop ? <p className="note">Bind and ingest run in the Electron app. This browser preview can still open the sample directory.</p> : null}
-          {ok ? <p className="ok">{ok}</p> : null}
-          {error ? <p className="error">{error}</p> : null}
-        </fieldset>
+
+        <p className="welcome-foot">Bind with a normal domain user — not Domain Admin. Spydr never writes to the directory.</p>
       </div>
     </div>
   )
