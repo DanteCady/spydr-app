@@ -1,18 +1,36 @@
-import { Box, Folder, Monitor, User, Users, type LucideIcon } from 'lucide-react'
 import {
-  Box as BoxSvg,
-  Folder as FolderSvg,
+  AtSign,
+  Box,
+  Cog,
+  FolderTree,
+  Globe,
+  Laptop,
+  Monitor,
+  Server,
+  ShieldAlert,
+  ShieldCheck,
+  User,
+  UserRoundX,
+  Users,
+  UsersRound,
+  type LucideIcon
+} from 'lucide-react'
+import {
   Monitor as MonitorSvg,
   User as UserSvg,
-  Users as UsersSvg
+  Users as UsersSvg,
+  Box as BoxSvg,
+  FolderTree as FolderTreeSvg
 } from 'lucide-static'
-import type { DirectoryObjectType } from '@shared/types'
+import { isDisabled, isSecurityGroup } from '@shared/adFlags'
+import type { DirectoryNode, DirectoryObjectType } from '@shared/types'
 
-const ICON: Record<DirectoryObjectType, LucideIcon> = {
+/** Fallback when only the bare type is known. */
+const BY_TYPE: Record<DirectoryObjectType, LucideIcon> = {
   user: User,
   group: Users,
   computer: Monitor,
-  ou: Folder,
+  ou: FolderTree,
   container: Box
 }
 
@@ -20,8 +38,39 @@ const SVG: Record<DirectoryObjectType, string> = {
   user: UserSvg,
   group: UsersSvg,
   computer: MonitorSvg,
-  ou: FolderSvg,
+  ou: FolderTreeSvg,
   container: BoxSvg
+}
+
+/** Well-known containers get the icon an admin expects, the way ADUC distinguishes them. */
+function containerIcon(node: DirectoryNode): LucideIcon {
+  const rdn = node.dn.split(',')[0]?.replace(/^(CN|OU|DC)=/i, '').toLowerCase() ?? ''
+  if (/^DC=/i.test(node.dn.split(',')[0] ?? '')) return Globe // the domain root itself
+  if (rdn === 'builtin') return ShieldCheck
+  if (rdn === 'users') return UsersRound
+  if (rdn === 'computers') return Server
+  if (rdn === 'domain controllers') return Server
+  if (rdn === 'managed service accounts') return Cog
+  return node.type === 'ou' ? FolderTree : Box
+}
+
+/**
+ * The icon for an object, chosen from what it actually is rather than its bare type: a disabled
+ * account, a distribution list, a privileged group and a plain user should not look alike.
+ */
+export function iconFor(node: DirectoryNode): LucideIcon {
+  switch (node.type) {
+    case 'user':
+      return isDisabled(node.userAccountControl) ? UserRoundX : User
+    case 'group':
+      if (node.privileged) return ShieldAlert
+      return node.groupType !== undefined && !isSecurityGroup(node.groupType) ? AtSign : Users
+    case 'computer':
+      return /server/i.test(node.operatingSystem ?? '') ? Server : Laptop
+    case 'ou':
+    case 'container':
+      return containerIcon(node)
+  }
 }
 
 /** Lucide icon as a data URI for Cytoscape node images. `color` strokes the glyph. */
@@ -33,8 +82,9 @@ export function webNodeIcon(type: DirectoryObjectType, color = '#f6f8fb'): strin
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
 
-export function TypeGlyph({ type }: { type: DirectoryObjectType }) {
-  const Icon = ICON[type]
+/** Pass `node` for the specific icon; `type` alone falls back to the generic one. */
+export function TypeGlyph({ type, node }: { type: DirectoryObjectType; node?: DirectoryNode }) {
+  const Icon = node ? iconFor(node) : BY_TYPE[type]
   return (
     <span className={`glyph glyph-${type}`} aria-hidden>
       <Icon size={16} strokeWidth={1.9} />
