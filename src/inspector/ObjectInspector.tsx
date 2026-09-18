@@ -42,7 +42,7 @@ export function ObjectInspector() {
     { id: 'memberof', label: 'Member Of', show: node.type === 'user' || node.type === 'group' },
     { id: 'members', label: 'Members', show: node.type === 'group' },
     { id: 'object', label: 'Object', show: true },
-    { id: 'spydr', label: 'Spydr', show: true }
+    { id: 'spydr', label: 'SPYDR', show: true }
   ]
 
   const resolve = (id: string): DirectoryNode | undefined => snapshot.nodes.find((n) => n.id === id)

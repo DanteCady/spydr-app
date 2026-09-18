@@ -48,7 +48,7 @@ export function AppShell() {
             <WidowMark />
           </span>
           <div>
-            <h1>Spydr</h1>
+            <h1>SPYDR</h1>
             <p>Read-only directory</p>
           </div>
         </div>

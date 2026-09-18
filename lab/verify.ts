@@ -1,4 +1,4 @@
-// Ingest the lab through Spydr's own LDAP provider and print what the engine finds.
+// Ingest the lab through SPYDR's own LDAP provider and print what the engine finds.
 import { ingestDirectory } from '../electron/directory/ldapProvider'
 
 const snap = await ingestDirectory({

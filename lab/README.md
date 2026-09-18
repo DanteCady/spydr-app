@@ -1,18 +1,18 @@
-# Spydr AD lab
+# SPYDR AD lab
 
 A throwaway Samba Active Directory domain controller in Docker, seeded as **Harborview Logistics**:
 a plausible mid-size company directory with the kind of accumulated mess real domains have. Use it
-to exercise Spydr without touching a production domain. Works on Apple silicon and x86.
+to exercise SPYDR without touching a production domain. Works on Apple silicon and x86.
 
 ```bash
 npm run lab:up      # build the image and start the DC (first provision takes ~1 min)
 npm run lab:seed    # create the Harborview OUs, people, groups, nesting, and leftovers
-npm run lab:verify  # ingest through Spydr's LDAP provider and print findings + hygiene score
+npm run lab:verify  # ingest through SPYDR's LDAP provider and print findings + hygiene score
 npm run lab:logs    # follow the DC log
 npm run lab:down    # stop (data persists)   ·   npm run lab:reset  # stop and wipe
 ```
 
-## Connect from Spydr
+## Connect from SPYDR
 
 | Field | Value |
 | --- | --- |

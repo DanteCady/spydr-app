@@ -14,7 +14,7 @@ import {
 } from './directory/session'
 import type { ConnectionInput, DirectorySnapshot } from '../shared/types'
 
-app.setName('Spydr')
+app.setName('SPYDR')
 
 const TITLE_BAR_HEIGHT = 36
 
@@ -40,7 +40,7 @@ function createWindow(): void {
     minWidth: 1100,
     minHeight: 720,
     backgroundColor: '#101216',
-    title: 'Spydr',
+    title: 'SPYDR',
     show: false,
     // Where the renderer draws the bar, the OS still paints the window buttons over it.
     ...(custom
