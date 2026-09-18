@@ -3,6 +3,7 @@ import {
   Box,
   Cog,
   Folder,
+  FolderTree,
   Globe,
   Laptop,
   Monitor,
@@ -51,7 +52,9 @@ function containerIcon(node: DirectoryNode): LucideIcon {
   if (rdn === 'computers') return Server
   if (rdn === 'domain controllers') return Server
   if (rdn === 'managed service accounts') return Cog
-  return node.type === 'ou' ? Folder : Box
+  if (node.type !== 'ou') return Box
+  // A nested OU gets the stacked folder; one sitting directly under the domain gets a plain one.
+  return /^OU=/i.test(node.parentDn ?? '') ? FolderTree : Folder
 }
 
 /**
