@@ -1,4 +1,4 @@
-import { Moon, Search, Sun } from 'lucide-react'
+import { Moon, Palette, Search, Sun } from 'lucide-react'
 import type { WorkspaceId } from '@shared/types'
 import { NavGlyph } from '../components/NavGlyph'
 import { WidowMark } from '../components/WidowMark'
@@ -15,6 +15,9 @@ const NAV: { id: WorkspaceId; label: string; hint: string }[] = [
   { id: 'pathfinder', label: 'Pathfinder', hint: 'How' },
   { id: 'hygiene', label: 'Hygiene', hint: 'Cleanup' }
 ]
+
+/** The theme each button press moves to, so the control can say where it is going. */
+const NEXT_THEME: Record<string, string> = { dark: 'light', light: 'vivid', vivid: 'dark' }
 
 export function AppShell() {
   const { snapshot, workspace, setWorkspace, search, setSearch, disconnect, theme, toggleTheme } = useApp()
@@ -81,11 +84,17 @@ export function AppShell() {
           <button
             type="button"
             className="icon-btn"
-            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-            title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            aria-label={`Theme: ${theme}. Switch to ${NEXT_THEME[theme]}.`}
+            title={`Theme: ${theme} — switch to ${NEXT_THEME[theme]}`}
             onClick={toggleTheme}
           >
-            {theme === 'dark' ? <Sun size={14} aria-hidden /> : <Moon size={14} aria-hidden />}
+            {theme === 'dark' ? (
+              <Sun size={14} aria-hidden />
+            ) : theme === 'light' ? (
+              <Palette size={14} aria-hidden />
+            ) : (
+              <Moon size={14} aria-hidden />
+            )}
           </button>
         </header>
         <div className="workspace">
