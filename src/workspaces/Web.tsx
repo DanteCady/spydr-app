@@ -20,8 +20,11 @@ const ZOOM_MAX = 4
 const ZOOM_STEP = 1.28
 const GRID_STEP = 28
 const FOCUS_CAP = 48
-const RANK_SEP: Record<Density, number> = { compact: 52, spread: 84 }
-const NODE_SEP: Record<Density, number> = { compact: 26, spread: 44 }
+// Labels sit under the node and are wider than it, so siblings must be separated by more than
+// LABEL_WIDTH or their names collide. Ranks leave room for a wrapped label plus the next node.
+const LABEL_WIDTH = 116
+const RANK_SEP: Record<Density, number> = { compact: 74, spread: 104 }
+const NODE_SEP: Record<Density, number> = { compact: LABEL_WIDTH - 24, spread: LABEL_WIDTH + 24 }
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
@@ -60,8 +63,13 @@ function buildWebStyle(): cytoscape.StylesheetJson {
         'font-family': 'IBM Plex Sans, system-ui, sans-serif',
         'text-valign': 'bottom',
         'text-margin-y': 4,
-        'text-wrap': 'ellipsis',
-        'text-max-width': '124px',
+        // Wrap rather than truncate: a name like "Denied RODC Password Replication Group" is
+        // unreadable cut to "Denied RODC Passwor…".
+        'text-wrap': 'wrap',
+        'text-max-width': `${LABEL_WIDTH}px`,
+        // Break at spaces only. 'anywhere' splits mid-word ("Passw / ord Replication Grou / p");
+        // a name with no spaces just runs a little wide, which the node separation absorbs.
+        'text-overflow-wrap': 'whitespace',
         'text-background-color': canvas,
         'text-background-opacity': 0.85,
         'text-background-padding': '3px',
