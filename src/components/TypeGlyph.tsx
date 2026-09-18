@@ -5,6 +5,7 @@ import {
   Folder,
   FolderTree,
   Globe,
+  Layers,
   Laptop,
   Monitor,
   Server,
@@ -53,8 +54,12 @@ function containerIcon(node: DirectoryNode): LucideIcon {
   if (rdn === 'domain controllers') return Server
   if (rdn === 'managed service accounts') return Cog
   if (node.type !== 'ou') return Box
-  // A nested OU gets the stacked folder; one sitting directly under the domain gets a plain one.
-  return /^OU=/i.test(node.parentDn ?? '') ? FolderTree : Folder
+  // One icon per level of nesting, so depth is legible from the glyph and not only indentation:
+  // a top-level OU is a plain folder, one inside it stacked folders, anything deeper layers.
+  const depth = (node.dn.match(/(^|,)OU=/gi) ?? []).length
+  if (depth <= 1) return Folder
+  if (depth === 2) return FolderTree
+  return Layers
 }
 
 /**
