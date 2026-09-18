@@ -1,4 +1,4 @@
-# Releasing Spydr
+# Releasing SPYDR
 
 ## Building installers locally
 
@@ -36,7 +36,7 @@ To ship, set these as CI secrets:
 | Windows | `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD` | code-signing certificate (EV recommended) |
 
 Then set `notarize: true` under `mac:` in `electron-builder.yml`. macOS entitlements live in
-`build/entitlements.mac.plist`; Spydr only needs the network *client* entitlement, since it makes
+`build/entitlements.mac.plist`; SPYDR only needs the network *client* entitlement, since it makes
 outbound LDAP connections and never listens.
 
 ## Version and branch flow

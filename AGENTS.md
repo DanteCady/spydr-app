@@ -1,6 +1,6 @@
-# Spydr
+# SPYDR
 
-Read-only Active Directory explorer for messy on-prem directories. Electron + React. Product name is **Spydr**; repo folder is `spyder`.
+Read-only Active Directory explorer for messy on-prem directories. Electron + React. Product name is **SPYDR**; repo folder is `spyder`.
 
 ## Run
 

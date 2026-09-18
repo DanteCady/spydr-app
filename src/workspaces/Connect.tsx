@@ -63,7 +63,7 @@ export function Connect() {
 
   async function discover(): Promise<void> {
     if (!window.spydr?.discoverDcs) {
-      setError('Run Spydr as the desktop app to discover DCs.')
+      setError('Run SPYDR as the desktop app to discover DCs.')
       return
     }
     setBusy('discover')
@@ -86,7 +86,7 @@ export function Connect() {
 
   async function test(): Promise<void> {
     if (!window.spydr?.testConnection) {
-      setError('Run Spydr as the desktop app to bind to Active Directory.')
+      setError('Run SPYDR as the desktop app to bind to Active Directory.')
       return
     }
     setBusy('test')
@@ -124,7 +124,7 @@ export function Connect() {
             <WidowMark size={34} />
           </span>
           <div>
-            <h1>Spydr</h1>
+            <h1>SPYDR</h1>
             <p>Read-only Active Directory explorer</p>
           </div>
         </header>
@@ -252,7 +252,7 @@ export function Connect() {
           </section>
         ) : null}
 
-        <p className="welcome-foot">Bind with a normal domain user — not Domain Admin. Spydr never writes to the directory.</p>
+        <p className="welcome-foot">Bind with a normal domain user — not Domain Admin. SPYDR never writes to the directory.</p>
       </div>
     </div>
   )

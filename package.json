@@ -1,6 +1,6 @@
 {
   "name": "spydr",
-  "productName": "Spydr",
+  "productName": "SPYDR",
   "version": "0.1.0",
   "description": "Read-only Active Directory explorer for messy on-prem directories",
   "main": "./out/main/main.js",

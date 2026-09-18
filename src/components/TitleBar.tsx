@@ -107,7 +107,7 @@ export function TitleBar({ platform }: { platform: string }) {
           </div>
         ))}
       </nav>
-      <span className="titlebar-title">Spydr</span>
+      <span className="titlebar-title">SPYDR</span>
     </div>
   )
 }

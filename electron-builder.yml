@@ -1,6 +1,6 @@
 appId: com.spydr.directory
-productName: Spydr
-copyright: Spydr
+productName: SPYDR
+copyright: SPYDR
 
 directories:
   output: release
@@ -44,7 +44,7 @@ nsis:
   perMachine: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
-  shortcutName: Spydr
+  shortcutName: SPYDR
 
 linux:
   icon: resources/icon.png

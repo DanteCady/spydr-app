@@ -97,7 +97,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const ingestLdap = useCallback(
     async (input: ConnectionInput) => {
       if (!window.spydr?.ingest) {
-        throw new Error('Run Spydr as the desktop app to bind to Active Directory.')
+        throw new Error('Run SPYDR as the desktop app to bind to Active Directory.')
       }
       const s = await window.spydr.ingest(input)
       lastInput.current = input

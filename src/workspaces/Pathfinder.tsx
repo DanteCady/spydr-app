@@ -36,7 +36,7 @@ export function Pathfinder() {
         {!pathSource || !pathTarget ? (
           <EmptyState
             title="Pick a source and a target"
-            hint="Spydr walks nested membership to show every path in. Sample: Alice Chen → Domain Admins."
+            hint="SPYDR walks nested membership to show every path in. Sample: Alice Chen → Domain Admins."
           />
         ) : paths.length === 0 ? (
           <EmptyState title="No nested path" hint="The source never reaches that group through any membership chain." />

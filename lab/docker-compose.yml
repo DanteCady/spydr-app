@@ -1,4 +1,4 @@
-# Local Samba AD DC to point Spydr at. `npm run lab:up`, then `npm run lab:seed`.
+# Local Samba AD DC to point SPYDR at. `npm run lab:up`, then `npm run lab:seed`.
 services:
   dc:
     build: .
