@@ -381,11 +381,22 @@ export function Settings() {
                 <button
                   type="button"
                   onClick={() => {
+                    // A running app whose background process predates the feature has no handler to
+                    // call; saying so beats a button that silently does nothing.
+                    if (!window.spydr?.timelineSample) {
+                      setSampleNote('Unavailable in this running build — restart SPYDR.')
+                      return
+                    }
                     setSampleNote('Generating…')
-                    void window.spydr?.timelineSample().then((r) => {
-                      setSampleNote(r ? `${r.created} entries created${r.replaced ? `, ${r.replaced} replaced` : ''}` : null)
-                      void window.spydr?.timelineStats().then(setHistoryStats)
-                    })
+                    window.spydr
+                      .timelineSample()
+                      .then((r) => {
+                        setSampleNote(`${r.created} entries created${r.replaced ? `, ${r.replaced} replaced` : ''}`)
+                        void window.spydr?.timelineStats().then(setHistoryStats)
+                      })
+                      .catch((err: unknown) => {
+                        setSampleNote(err instanceof Error ? err.message : 'Could not generate the sample timeline.')
+                      })
                   }}
                 >
                   <Sparkles size={13} aria-hidden /> Generate

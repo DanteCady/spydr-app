@@ -2,7 +2,7 @@ import { loadContosoFixture } from '../fixtures/contoso-lab'
 import { diffSnapshots } from '../shared/diff'
 import { rescoreSnapshot } from '../shared/enrich'
 import { DEFAULT_SETTINGS } from '../shared/settings'
-import { readScope } from '../shared/timeline'
+import { readScope, type ReadScope } from '../shared/timeline'
 import type { DirectoryNode, DirectorySnapshot } from '../shared/types'
 import { clearSampleEntries, recordRead } from './timeline'
 
@@ -109,6 +109,27 @@ export interface SampleResult {
   replaced: number
 }
 
+/**
+ * A read of one OU rather than the whole domain. It is not comparable with the reads above it, so
+ * it opens its own track — which is what the graph draws as a second lane.
+ */
+function narrowScopeRead(source: DirectorySnapshot, now: Date): { snapshot: DirectorySnapshot; scope: ReadScope } {
+  const baseDn = 'OU=Corp,DC=contoso,DC=lab'
+  const inside = source.nodes.filter((n) => n.dn.toLowerCase().endsWith(baseDn.toLowerCase()))
+  const ids = new Set(inside.map((n) => n.id))
+  const snapshot = rescoreSnapshot(
+    {
+      ...source,
+      baseDn,
+      nodes: inside,
+      edges: source.edges.filter((e) => ids.has(e.from) && ids.has(e.to)),
+      ingestedAt: now.toISOString()
+    },
+    DEFAULT_SETTINGS.hygiene
+  )
+  return { snapshot, scope: { baseDn, includeComputers: true, includeContainers: true } }
+}
+
 export function generateSampleTimeline(now = new Date()): SampleResult {
   const replaced = clearSampleEntries()
   const hygiene = DEFAULT_SETTINGS.hygiene
@@ -133,6 +154,13 @@ export function generateSampleTimeline(now = new Date()): SampleResult {
     const diff = diffSnapshots(previous, next)
     if (recordRead({ snapshot: next, diff, scope, source: 'sample', at })) created += 1
     previous = next
+  }
+
+  // One read of a single OU, to show what a second track looks like.
+  const narrowAt = new Date(now.getTime() - 2 * DAY)
+  const narrow = narrowScopeRead(previous, narrowAt)
+  if (recordRead({ snapshot: narrow.snapshot, diff: null, scope: narrow.scope, source: 'sample', at: narrowAt })) {
+    created += 1
   }
 
   return { created, replaced }

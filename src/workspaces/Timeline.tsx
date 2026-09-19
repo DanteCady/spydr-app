@@ -1,7 +1,8 @@
-import { AlertTriangle, ArrowRight, History, Minus, Plus, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowRight, GitBranch, History, List, Minus, Plus, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { describeChanges } from '@shared/diff'
 import type { TimelineEntry } from '@shared/timeline'
+import { buildTimelineGraph, laneCount, scoreDirection, trackKey, type GraphRow } from '@shared/timelineGraph'
 import { EmptyState } from '../components/EmptyState'
 import { relativeTime } from '../lib/format'
 import { useApp } from '../state'
@@ -18,10 +19,50 @@ function Group({ title, icon: Icon, tone, children }: { title: string; icon: typ
   )
 }
 
+const LANE_W = 15
+
+/**
+ * The rail beside each row. Drawn with elements rather than a fixed-size SVG so it stretches with
+ * the row — rows are as tall as their summary, and a fixed rail left gaps between them.
+ */
+function Rail({ row, lanes, selected }: { row: GraphRow; lanes: number; selected: boolean }) {
+  const dir = scoreDirection(row.entry)
+  return (
+    <span className="tl-rail" style={{ width: Math.max(1, lanes) * LANE_W }} aria-hidden>
+      {row.active.map((lane) => {
+        // Rows run newest first, so a track's newest read has nothing above it and its oldest
+        // nothing below. Lanes belonging to other tracks simply pass straight through.
+        let top = '0'
+        let height = '100%'
+        if (lane === row.lane) {
+          if (row.start && row.end) height = '0'
+          else if (row.end) {
+            top = '50%'
+            height = '50%'
+          } else if (row.start) height = '50%'
+        }
+        if (height === '0') return null
+        return (
+          <span
+            key={lane}
+            className={`tl-line lane-${lane % 5}`}
+            style={{ left: lane * LANE_W + LANE_W / 2 - 1, top, height }}
+          />
+        )
+      })}
+      <span
+        className={`tl-node ${dir}${row.start ? ' start' : ''}${selected ? ' selected' : ''} lane-${row.lane % 5}`}
+        style={{ left: row.lane * LANE_W + LANE_W / 2 - 5 }}
+      />
+    </span>
+  )
+}
+
 export function Timeline() {
   const { snapshot, settings, select, goTo, setWorkspace } = useApp()
   const [entries, setEntries] = useState<TimelineEntry[] | null>(null)
   const [currentId, setCurrentId] = useState<string | null>(null)
+  const [view, setView] = useState<'graph' | 'list'>('graph')
   const [detail, setDetail] = useState<TimelineEntry | null>(null)
 
   const domain = snapshot?.source === 'ldap' ? snapshot.domain : undefined
@@ -70,24 +111,66 @@ export function Timeline() {
     )
   }
 
+  const rows = useMemo(() => buildTimelineGraph(entries ?? []), [entries])
+  const lanes = laneCount(rows)
+  const tracks = useMemo(() => {
+    const seen = new Map<string, { lane: number; entry: TimelineEntry }>()
+    for (const row of [...rows].reverse()) {
+      const key = trackKey(row.entry)
+      if (!seen.has(key)) seen.set(key, { lane: row.lane, entry: row.entry })
+    }
+    return [...seen.values()].sort((a, b) => a.lane - b.lane)
+  }, [rows])
+
   const entry = detail ?? entries?.find((e) => e.id === currentId) ?? null
 
   return (
     <div className="timeline">
-      <div className="tl-list scroll">
+      <div className={view === 'graph' ? 'tl-list graph scroll' : 'tl-list scroll'}>
+        <div className="tl-views">
+          <button
+            type="button"
+            className={view === 'graph' ? 'active' : ''}
+            aria-pressed={view === 'graph'}
+            onClick={() => setView('graph')}
+          >
+            <GitBranch size={13} aria-hidden /> Graph
+          </button>
+          <button
+            type="button"
+            className={view === 'list' ? 'active' : ''}
+            aria-pressed={view === 'list'}
+            onClick={() => setView('list')}
+          >
+            <List size={13} aria-hidden /> List
+          </button>
+        </div>
+        {view === 'graph' && tracks.length > 1 ? (
+          <ul className="tl-tracks">
+            {tracks.map((t) => (
+              <li key={t.lane}>
+                <span className={`tl-swatch lane-${t.lane % 5}`} aria-hidden />
+                {t.entry.domain}
+                <em>{t.entry.scope.baseDn}</em>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {!recording ? (
           <p className="tl-notice">
             Recording is off, so nothing new is being added. These entries were recorded earlier or generated as a
             sample.
           </p>
         ) : null}
-        {(entries ?? []).map((e) => (
+        {rows.map(({ entry: e, ...row }) => (
           <button
             key={e.id}
             type="button"
             className={e.id === currentId ? 'tl-row active' : 'tl-row'}
             onClick={() => setCurrentId(e.id)}
           >
+            {view === 'graph' ? <Rail row={{ entry: e, ...row }} lanes={lanes} selected={e.id === currentId} /> : null}
+            <span className="tl-body">
             <span className="tl-when">
               <strong>{new Date(e.readAt).toLocaleString()}</strong>
               <em>{relativeTime(e.readAt)}</em>
@@ -102,6 +185,7 @@ export function Timeline() {
                   <AlertTriangle size={10} aria-hidden /> {e.dcHost}
                 </span>
               ) : null}
+            </span>
             </span>
           </button>
         ))}
