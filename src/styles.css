@@ -1552,3 +1552,8 @@ table.grid tr.selected td { background: var(--sel); }
 }
 
 .tb-btn:disabled { opacity: 0.45; cursor: default; }
+
+.tree-head { flex-wrap: wrap; }
+.tb-btn.icon { padding-left: 7px; padding-right: 7px; }
+.tree-head .tb-btn { min-width: 0; }
+.tree-head .tb-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
