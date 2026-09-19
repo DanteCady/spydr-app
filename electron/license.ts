@@ -3,6 +3,7 @@ import { createHash, createPublicKey, verify as edVerify } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { hostname } from 'node:os'
 import { join } from 'node:path'
+import { apiBase } from './endpoints'
 import { appVersion } from './version'
 import {
   keyHint,
@@ -26,10 +27,6 @@ interface Stored {
   payload: string
   signature: string
   checkedAt: string
-}
-
-function apiBase(): string {
-  return process.env.SPYDR_LICENSE_API ?? 'https://getspydr.com'
 }
 
 function file(): string {

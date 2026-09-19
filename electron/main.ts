@@ -7,6 +7,7 @@ import { buildMenu, usesCustomTitleBar } from './menu'
 import { getSettings, resetSettings, settingsPath, updateSettings } from './settings'
 import { checkForUpdate, type UpdateCheck } from './updates'
 import { activate, canVerify, deactivate, licenceState, refreshLicence } from './license'
+import { siteBase } from './endpoints'
 import { appVersion } from './version'
 import { currentPayload, maybeSend, noteReport, noteSnapshot, noteWorkspace, sendNow } from './telemetry'
 import {
@@ -236,7 +237,8 @@ function registerIpc(): void {
     settingsPath: settingsPath(),
     userData: app.getPath('userData'),
     packaged: app.isPackaged,
-    licenceVerifiable: canVerify()
+    licenceVerifiable: canVerify(),
+    site: siteBase()
   }))
   ipcMain.on('spydr:chrome', (evt) => {
     evt.returnValue = {

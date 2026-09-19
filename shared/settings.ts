@@ -11,6 +11,8 @@ import type { FindingType, Protocol } from './types'
 export interface AboutInfo {
   /** Whether this build carries the key needed to verify a cached activation. */
   licenceVerifiable?: boolean
+  /** Where this build gets keys from: production, or the site running next door in development. */
+  site?: string
   version: string
   electron: string
   chrome: string
