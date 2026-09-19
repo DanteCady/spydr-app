@@ -27,6 +27,13 @@ const TITLE_BAR_HEIGHT = 36
 /** Connection details of the live bind, minus the password. Memory only; never leaves main. */
 let lastProfile: SessionProfile | null = null
 
+/**
+ * The credentials of the live bind, password included, so the directory can be read again without
+ * asking for it. Memory only, in main only: it is never sent to the renderer, never written to the
+ * session file, and dropped on disconnect or quit.
+ */
+let liveBind: ConnectionInput | null = null
+
 function preloadPath(): string {
   const js = join(__dirname, '../preload/preload.js')
   const mjs = join(__dirname, '../preload/preload.mjs')
@@ -122,20 +129,38 @@ function registerIpc(): void {
   ipcMain.handle('spydr:prefill', () => windowsPrefill())
   ipcMain.handle('spydr:discover', async (_evt, domain: string) => discoverDcs(domain))
   ipcMain.handle('spydr:test', async (_evt, input: ConnectionInput) => testConnection(input))
-  ipcMain.handle('spydr:ingest', async (_evt, input: ConnectionInput) => {
+  const tuning = () => {
     const { connection, hygiene } = getSettings()
-    const snapshot = await ingestDirectory(input, {
+    return {
       pageSize: connection.pageSize,
       searchTimeout: connection.searchTimeout,
       connectTimeout: connection.connectTimeout,
       includeComputers: connection.includeComputers,
       includeContainers: connection.includeContainers,
       hygiene
-    })
+    }
+  }
+
+  ipcMain.handle('spydr:ingest', async (_evt, input: ConnectionInput) => {
+    const snapshot = await ingestDirectory(input, tuning())
     // toProfile strips the password. Deriving the profile here, rather than accepting one over
     // IPC, means the renderer never has to be trusted to do that stripping.
     lastProfile = toProfile(input)
+    liveBind = input
     return snapshot
+  })
+  // Read the same directory again with the credentials already in memory. The renderer asks; it
+  // never holds the password to ask with.
+  ipcMain.handle('spydr:refresh', async () => {
+    if (!liveBind) throw new Error('No live connection to refresh. Connect to the directory again.')
+    return ingestDirectory(liveBind, tuning())
+  })
+  ipcMain.on('spydr:can-refresh', (evt) => {
+    evt.returnValue = liveBind !== null
+  })
+  ipcMain.handle('spydr:forget-bind', () => {
+    liveBind = null
+    lastProfile = null
   })
   ipcMain.handle('spydr:session:peek', () => loadSessionMeta())
   ipcMain.handle('spydr:session:restore', () => loadSession())
@@ -214,6 +239,7 @@ void app.whenReady().then(() => {
 })
 
 app.on('will-quit', () => {
+  liveBind = null
   if (getSettings().privacy.forgetOnQuit) clearSession()
 })
 

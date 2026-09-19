@@ -49,3 +49,17 @@ export function groupScope(groupType?: number): string {
   const scope = kind === 2 ? 'Global' : kind === 4 ? 'Domain local' : kind === 8 ? 'Universal' : 'Unknown'
   return `${scope} ${security ? 'security' : 'distribution'}`
 }
+
+/** "just now", "4 minutes ago", "2 hours ago" — how stale the open snapshot is, at a glance. */
+export function relativeTime(iso: string, now = Date.now()): string {
+  const then = new Date(iso).getTime()
+  if (!Number.isFinite(then)) return ''
+  const seconds = Math.max(0, Math.round((now - then) / 1000))
+  if (seconds < 45) return 'just now'
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
+  const days = Math.round(hours / 24)
+  return `${days} day${days === 1 ? '' : 's'} ago`
+}

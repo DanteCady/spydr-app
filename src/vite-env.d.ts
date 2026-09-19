@@ -9,6 +9,9 @@ export interface SpydrApi {
   discoverDcs: (domain: string) => Promise<DcRecord[]>
   testConnection: (input: ConnectionInput) => Promise<TestConnectionResult>
   ingest: (input: ConnectionInput) => Promise<DirectorySnapshot>
+  refresh: () => Promise<DirectorySnapshot>
+  canRefresh: () => boolean
+  forgetBind: () => Promise<void>
   sessionPeek: () => Promise<SessionMeta | null>
   sessionRestore: () => Promise<{ snapshot: DirectorySnapshot; view: SessionView } | null>
   sessionSave: (payload: { snapshot: DirectorySnapshot; view: SessionView }) => Promise<void>

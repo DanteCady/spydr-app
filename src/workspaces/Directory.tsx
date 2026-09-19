@@ -1,8 +1,8 @@
-import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Eye, EyeOff } from 'lucide-react'
+import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Eye, EyeOff, RefreshCw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { TypeGlyph } from '../components/TypeGlyph'
 import { StatusBadges } from '../components/StatusBadges'
-import { typeLabel } from '../lib/format'
+import { relativeTime, typeLabel } from '../lib/format'
 import {
   buildOuTree,
   dominantChildType,
@@ -74,7 +74,18 @@ function TreeRows({
 }
 
 export function Directory() {
-  const { snapshot, selectedId, containerDn, search, select, setContainerDn } = useApp()
+  const {
+    snapshot,
+    selectedId,
+    containerDn,
+    search,
+    select,
+    setContainerDn,
+    refreshDirectory,
+    canRefresh,
+    refreshing,
+    refreshStatus
+  } = useApp()
   const [showSystem, setShowSystem] = useState(false)
   // undefined = follow the default (expanded); a boolean is an explicit user choice.
   const [open, setOpen] = useState<Record<string, boolean>>({})
@@ -146,8 +157,28 @@ export function Directory() {
       <div className="split-list">
         <div className="list-head">
           <span>{search.trim() ? `Search results (${rows.length})` : containerName}</span>
-          <span>{rows.length} objects</span>
+          <span className="head-right">
+            <span className="muted">Read {relativeTime(snapshot.ingestedAt)}</span>
+            {snapshot.source === 'ldap' ? (
+              <button
+                type="button"
+                className="tb-btn"
+                onClick={() => void refreshDirectory()}
+                disabled={!canRefresh || refreshing}
+                title={
+                  canRefresh
+                    ? 'Read the directory again and show what changed'
+                    : 'Connect to the directory again to re-crawl — the credentials are not kept between runs'
+                }
+              >
+                <RefreshCw size={13} className={refreshing ? 'spin' : undefined} aria-hidden />
+                {refreshing ? 'Reading…' : 'Re-crawl'}
+              </button>
+            ) : null}
+            <span>{rows.length} objects</span>
+          </span>
         </div>
+        {refreshStatus ? <div className="refresh-status">{refreshStatus}</div> : null}
         <div className="scroll">
           <table className="grid">
             <thead>

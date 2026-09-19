@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { loadContosoFixture } from '../fixtures/contoso-lab'
 import { buildMembershipGraph, enumeratePaths } from '@shared/graph'
+import { describeDiff, diffSnapshots } from '@shared/diff'
 import { rescoreSnapshot } from '@shared/enrich'
 import { applyPatch, DEFAULT_SETTINGS, type AppSettings, type SettingsPatch } from '@shared/settings'
 import type { ConnectionInput, DirectorySnapshot, Finding, PathResult, WorkspaceId } from '@shared/types'
@@ -54,6 +55,12 @@ interface AppState {
   resetSettings: () => void
   /** True while a live directory is open and the question has not been answered yet. */
   needsSessionConsent: boolean
+  /** Read the directory again with the credentials main still holds. */
+  refreshDirectory: () => Promise<void>
+  canRefresh: boolean
+  refreshing: boolean
+  /** What the last re-crawl changed, or why it failed. */
+  refreshStatus: string | null
   /** PDF report of the current findings. Status doubles as the error channel. */
   generateReport: () => Promise<void>
   reportBusy: boolean
@@ -73,6 +80,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeFinding, setActiveFinding] = useState<Finding | null>(null)
   const [savedSession, setSavedSession] = useState<SessionMeta | null>(null)
   const [traceRequest, setTraceRequest] = useState<{ sourceId: string; targetId: string } | null>(null)
+  const [canRefresh, setCanRefresh] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshStatus, setRefreshStatus] = useState<string | null>(null)
   const [reportBusy, setReportBusy] = useState(false)
   const [reportStatus, setReportStatus] = useState<string | null>(null)
   // Read synchronously, so the first paint is already in the right theme. Outside the desktop app
@@ -138,13 +148,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       const s = await window.spydr.ingest(input)
       applySnapshot(s)
+      setCanRefresh(window.spydr.canRefresh?.() ?? false)
+      setRefreshStatus(null)
     },
     [applySnapshot]
   )
 
+  /**
+   * Re-read the same directory. The view stays where it is — an admin re-crawls to see whether a
+   * change landed, and being thrown back to the domain root would defeat that.
+   */
+  const refreshDirectory = useCallback(async () => {
+    if (!window.spydr?.refresh || !snapshot) return
+    setRefreshing(true)
+    setRefreshStatus(null)
+    try {
+      const next = await window.spydr.refresh()
+      setRefreshStatus(describeDiff(diffSnapshots(snapshot, next)))
+      applySnapshot(next, { workspace, selectedId, containerDn })
+    } catch (err) {
+      setRefreshStatus(err instanceof Error ? err.message : 'Could not read the directory again.')
+    } finally {
+      setRefreshing(false)
+    }
+  }, [applySnapshot, snapshot, workspace, selectedId, containerDn])
+
   // Disconnecting clears the view but deliberately leaves the saved session in place, so it can
   // still be restored. Forgetting it is a separate, explicit action.
   const disconnect = useCallback(() => {
+    // The password in main goes with the connection.
+    void window.spydr?.forgetBind?.()
+    setCanRefresh(false)
+    setRefreshStatus(null)
     setSnapshot(null)
     setSelectedId(null)
     setSearch('')
@@ -325,6 +360,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateSettings,
     resetSettings,
     needsSessionConsent: !!snapshot && snapshot.source === 'ldap' && sessionConsent === 'unset',
+    refreshDirectory,
+    canRefresh,
+    refreshing,
+    refreshStatus,
     generateReport,
     reportBusy,
     reportStatus
