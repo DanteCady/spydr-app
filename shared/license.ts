@@ -53,8 +53,28 @@ export const UNLICENSED: LicenceState = { status: 'none', tier: 'free', features
 /** How long after the check is due the app keeps quiet about it. */
 export const GRACE_DAYS = 21
 
+/**
+ * The canonical form of a typed or pasted key.
+ *
+ * Keys are read off a screen, out of an email, or out of a PDF, and arrive with line breaks in the
+ * middle, non-breaking spaces, or no dashes at all. Everything that is not a key character is
+ * dropped and the groups are rebuilt, so all of those become the same string — which is also the
+ * string the server hashes, so the two sides cannot disagree about what a key is.
+ */
+export function normalizeKey(raw: string): string {
+  const characters = raw.toUpperCase().replace(/[^0-9A-Z]/g, '')
+  const body = characters.startsWith('SPYDR') ? characters.slice(5) : characters
+  const groups = body.slice(0, 20).match(/.{1,5}/g)
+  return groups ? `SPYDR-${groups.join('-')}` : 'SPYDR-'
+}
+
+/** Whitespace out, case up — safe to run on every keystroke without fighting the cursor. */
+export function tidyKeyInput(raw: string): string {
+  return raw.replace(/[\s\u00A0\u200B-\u200D\uFEFF]/g, '').toUpperCase()
+}
+
 export function keyHint(key: string): string {
-  const groups = key.trim().toUpperCase().split('-')
+  const groups = normalizeKey(key).split('-')
   const last = groups.at(-1) ?? ''
   return `SPYDR-•••••-•••••-•••••-${last}`
 }
@@ -62,7 +82,7 @@ export function keyHint(key: string): string {
 /** Shape check only — the server decides whether a key is real. */
 export function keyLooksValid(key: string): boolean {
   return /^SPYDR-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/.test(
-    key.trim().toUpperCase()
+    normalizeKey(key)
   )
 }
 

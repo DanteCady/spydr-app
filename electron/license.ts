@@ -8,6 +8,7 @@ import { appVersion } from './version'
 import {
   keyHint,
   keyLooksValid,
+  normalizeKey,
   statusOf,
   UNLICENSED,
   type LicenceState,
@@ -132,7 +133,7 @@ async function callActivate(key: string): Promise<{ ok: true; stored: Stored } |
 }
 
 export async function activate(rawKey: string): Promise<LicenceState> {
-  const key = rawKey.trim().toUpperCase()
+  const key = normalizeKey(rawKey)
   if (!keyLooksValid(key)) {
     return { ...UNLICENSED, message: 'That key is not in the right shape. It looks like SPYDR-XXXXX-XXXXX-XXXXX-XXXXX.' }
   }

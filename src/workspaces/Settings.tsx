@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { RULES } from '@shared/engine/registry'
-import { describeLicence, keyLooksValid } from '@shared/license'
+import { describeLicence, keyLooksValid, normalizeKey, tidyKeyInput } from '@shared/license'
 import { LIMITS, type AboutInfo } from '@shared/settings'
 import type { TelemetryPayload } from '@shared/telemetry'
 import type { FindingType } from '@shared/types'
@@ -566,7 +566,8 @@ export function Settings() {
                     value={keyDraft}
                     placeholder="SPYDR-XXXXX-XXXXX-XXXXX-XXXXX"
                     spellCheck={false}
-                    onChange={(e) => setKeyDraft(e.target.value.toUpperCase())}
+                    onChange={(e) => setKeyDraft(tidyKeyInput(e.target.value))}
+                    onBlur={() => setKeyDraft((current) => (current ? normalizeKey(current) : current))}
                   />
                   <button
                     type="button"

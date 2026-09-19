@@ -17,8 +17,15 @@ export function newKey(): string {
   return `SPYDR-${out.slice(0, 5)}-${out.slice(5, 10)}-${out.slice(10, 15)}-${out.slice(15, 20)}`
 }
 
+/**
+ * The canonical form, matching the desktop app's normaliser exactly — a key pasted with line
+ * breaks, odd spaces or missing dashes has to hash to the same value as the one we issued.
+ */
 export function normalizeKey(raw: string): string {
-  return raw.trim().toUpperCase().replace(/\s+/g, '')
+  const characters = raw.toUpperCase().replace(/[^0-9A-Z]/g, '')
+  const body = characters.startsWith('SPYDR') ? characters.slice(5) : characters
+  const groups = body.slice(0, 20).match(/.{1,5}/g)
+  return groups ? `SPYDR-${groups.join('-')}` : 'SPYDR-'
 }
 
 /** Keys are stored hashed, so a copy of the database is not a pile of working licences. */

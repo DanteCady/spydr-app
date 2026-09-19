@@ -1,6 +1,6 @@
 import { ExternalLink, KeyRound, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { keyLooksValid } from '@shared/license'
+import { keyLooksValid, normalizeKey, tidyKeyInput } from '@shared/license'
 import { WidowMark } from '../components/WidowMark'
 import { useApp } from '../state'
 
@@ -60,7 +60,8 @@ export function Activate() {
               <span className="mono">Licence key</span>
               <input
                 value={key}
-                onChange={(e) => setKey(e.target.value.toUpperCase())}
+                onChange={(e) => setKey(tidyKeyInput(e.target.value))}
+                onBlur={() => setKey((current) => (current ? normalizeKey(current) : current))}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') void submit()
                 }}
