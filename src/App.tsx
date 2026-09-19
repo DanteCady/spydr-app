@@ -4,6 +4,7 @@ import { TitleBar } from './components/TitleBar'
 import { useMenuCommand } from './lib/useMenuCommand'
 import { AppProvider, useApp } from './state'
 import { AppShell } from './shell/AppShell'
+import { Activate } from './workspaces/Activate'
 import { Connect } from './workspaces/Connect'
 import { Help } from './workspaces/Help'
 import { Settings } from './workspaces/Settings'
@@ -29,7 +30,7 @@ function Standalone({ view }: { view: 'settings' | 'help' }) {
 }
 
 function Gate() {
-  const { snapshot, workspace, setWorkspace, openSample, restoreSession, disconnect, openHelp } = useApp()
+  const { snapshot, workspace, setWorkspace, openSample, restoreSession, disconnect, openHelp, licence } = useApp()
 
   // Commands that apply whether or not a directory is open.
   useMenuCommand((command) => {
@@ -42,6 +43,8 @@ function Gate() {
 
   if (snapshot) return <AppShell />
   if (workspace === 'settings' || workspace === 'help') return <Standalone view={workspace} />
+  // Activation comes first on a fresh install, but never stands between anyone and the sample.
+  if (licence.status === 'none') return <Activate />
   return <Connect />
 }
 

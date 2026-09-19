@@ -1,5 +1,6 @@
 import {
   Download,
+  KeyRound,
   Sparkles,
   Eye,
   FileText,
@@ -11,13 +12,14 @@ import {
 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { RULES } from '@shared/engine/registry'
+import { describeLicence, keyLooksValid } from '@shared/license'
 import { LIMITS, type AboutInfo } from '@shared/settings'
 import type { FindingType } from '@shared/types'
 import type { UpdateCheck } from '../vite-env'
 import { ThemeMenu } from '../components/ThemeMenu'
 import { useApp } from '../state'
 
-type SectionId = 'hygiene' | 'connection' | 'reports' | 'privacy' | 'appearance' | 'about'
+type SectionId = 'hygiene' | 'connection' | 'reports' | 'privacy' | 'appearance' | 'licence' | 'about'
 
 const SECTIONS: { id: SectionId; label: string; Icon: typeof Info }[] = [
   { id: 'hygiene', label: 'Hygiene rules', Icon: SlidersHorizontal },
@@ -25,6 +27,7 @@ const SECTIONS: { id: SectionId; label: string; Icon: typeof Info }[] = [
   { id: 'reports', label: 'Reports', Icon: FileText },
   { id: 'privacy', label: 'Privacy & session', Icon: ShieldCheck },
   { id: 'appearance', label: 'Appearance', Icon: Eye },
+  { id: 'licence', label: 'Licence', Icon: KeyRound },
   { id: 'about', label: 'About & updates', Icon: Info }
 ]
 
@@ -78,7 +81,8 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 }
 
 export function Settings() {
-  const { settings, updateSettings, resetSettings, snapshot, forgetSession, savedSession } = useApp()
+  const { settings, updateSettings, resetSettings, snapshot, forgetSession, savedSession, licence, activate, deactivate } =
+    useApp()
   const [section, setSection] = useState<SectionId>('hygiene')
   const [about, setAbout] = useState<AboutInfo | null>(null)
   const [update, setUpdate] = useState<UpdateCheck | null>(null)
@@ -86,6 +90,8 @@ export function Settings() {
   const [groupDraft, setGroupDraft] = useState('')
   const [historyStats, setHistoryStats] = useState<{ entries: number; path: string } | null>(null)
   const [sampleNote, setSampleNote] = useState<string | null>(null)
+  const [keyDraft, setKeyDraft] = useState('')
+  const [licenceBusy, setLicenceBusy] = useState(false)
 
   useEffect(() => {
     void window.spydr?.about().then(setAbout)
@@ -462,6 +468,71 @@ export function Settings() {
                 />
               </div>
             </Row>
+          </>
+        ) : null}
+
+        {section === 'licence' ? (
+          <>
+            <h2>Licence</h2>
+            <p className="set-intro">
+              SPYDR is free. The key exists so there is a count of who is using it, and somewhere for paid capability
+              to attach later. It is checked when you enter it and about once a month after that — and if that check
+              falls due while you are offline, SPYDR keeps working and says so rather than locking you out mid-incident.
+            </p>
+            <Row label="Status">
+              <span className="muted">{describeLicence(licence)}</span>
+            </Row>
+            {licence.status !== 'none' ? (
+              <>
+                <Row label="Key">
+                  <span className="muted mono-hint">{licence.keyHint}</span>
+                </Row>
+                <Row label="Tier" hint="Free carries every feature SPYDR has today.">
+                  <span className="muted">{licence.tier}</span>
+                </Row>
+                <Row label="Checked" hint={licence.notAfter ? `Next check due ${new Date(licence.notAfter).toLocaleDateString()}` : undefined}>
+                  <span className="muted">
+                    {licence.checkedAt ? new Date(licence.checkedAt).toLocaleString() : '—'}
+                  </span>
+                </Row>
+                <Row label="Remove this licence" hint="The key is deleted from this machine. Nothing is sent.">
+                  <button
+                    type="button"
+                    className="danger"
+                    disabled={licenceBusy}
+                    onClick={() => {
+                      setLicenceBusy(true)
+                      void deactivate().finally(() => setLicenceBusy(false))
+                    }}
+                  >
+                    Deactivate
+                  </button>
+                </Row>
+              </>
+            ) : (
+              <Row label="Licence key" hint="Issued when you sign up at getspydr.com.">
+                <span className="stack">
+                  <input
+                    className="wide"
+                    value={keyDraft}
+                    placeholder="SPYDR-XXXXX-XXXXX-XXXXX-XXXXX"
+                    spellCheck={false}
+                    onChange={(e) => setKeyDraft(e.target.value.toUpperCase())}
+                  />
+                  <button
+                    type="button"
+                    disabled={licenceBusy || !keyLooksValid(keyDraft)}
+                    onClick={() => {
+                      setLicenceBusy(true)
+                      void activate(keyDraft).finally(() => setLicenceBusy(false))
+                    }}
+                  >
+                    {licenceBusy ? 'Checking…' : 'Activate'}
+                  </button>
+                </span>
+              </Row>
+            )}
+            {licence.message ? <p className="set-intro danger-text">{licence.message}</p> : null}
           </>
         ) : null}
 

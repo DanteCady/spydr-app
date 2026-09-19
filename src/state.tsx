@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { loadContosoFixture } from '../fixtures/contoso-lab'
 import { buildMembershipGraph, enumeratePaths } from '@shared/graph'
 import { describeDiff, diffSnapshots } from '@shared/diff'
+import { UNLICENSED, type LicenceState } from '@shared/license'
 import { rescoreSnapshot } from '@shared/enrich'
 import { applyPatch, DEFAULT_SETTINGS, type AppSettings, type SettingsPatch } from '@shared/settings'
 import type { ConnectionInput, DirectorySnapshot, Finding, PathResult, WorkspaceId } from '@shared/types'
@@ -49,6 +50,10 @@ interface AppState {
   forgetSession: () => Promise<void>
   sessionConsent: SessionConsent
   setSessionConsent: (consent: 'yes' | 'no') => void
+  /** Activation state, and the two ways it changes. */
+  licence: LicenceState
+  activate: (key: string) => Promise<void>
+  deactivate: () => Promise<void>
   /** Open the guide, optionally at a given article. */
   openHelp: (topic?: string) => void
   helpTopic: string | null
@@ -83,6 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeFinding, setActiveFinding] = useState<Finding | null>(null)
   const [savedSession, setSavedSession] = useState<SessionMeta | null>(null)
   const [traceRequest, setTraceRequest] = useState<{ sourceId: string; targetId: string } | null>(null)
+  const [licence, setLicence] = useState<LicenceState>(UNLICENSED)
   const [helpTopic, setHelpTopic] = useState<string | null>(null)
   const [canRefresh, setCanRefresh] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -116,6 +122,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void window.spydr?.sessionPeek().then(setSavedSession)
+    void window.spydr?.licence().then(setLicence)
+  }, [])
+
+  const activate = useCallback(async (key: string) => {
+    const next = await window.spydr?.activate(key)
+    if (next) setLicence(next)
+  }, [])
+
+  const deactivate = useCallback(async () => {
+    const next = await window.spydr?.deactivate()
+    if (next) setLicence(next)
   }, [])
 
   const graph = useMemo(
@@ -365,6 +382,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     forgetSession,
     sessionConsent,
     setSessionConsent,
+    licence,
+    activate,
+    deactivate,
     openHelp,
     helpTopic,
     settings,

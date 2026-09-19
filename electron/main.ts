@@ -6,6 +6,7 @@ import { ingestDirectory, testConnection } from './directory/ldapProvider'
 import { buildMenu, usesCustomTitleBar } from './menu'
 import { getSettings, resetSettings, settingsPath, updateSettings } from './settings'
 import { checkForUpdate, type UpdateCheck } from './updates'
+import { activate, canVerify, deactivate, licenceState, refreshLicence } from './license'
 import {
   clearTimeline,
   closeTimeline,
@@ -233,6 +234,9 @@ function registerIpc(): void {
   ipcMain.handle('spydr:timeline:clear', () => clearTimeline())
   ipcMain.handle('spydr:timeline:sample', () => generateSampleTimeline())
   ipcMain.handle('spydr:timeline:stats', () => ({ entries: countEntries(), path: timelinePath() }))
+  ipcMain.handle('spydr:licence:state', () => licenceState())
+  ipcMain.handle('spydr:licence:activate', (_evt, key: string) => activate(key))
+  ipcMain.handle('spydr:licence:deactivate', () => deactivate())
   ipcMain.handle('spydr:about', () => ({
     version: appVersion(),
     electron: process.versions.electron,
@@ -241,7 +245,8 @@ function registerIpc(): void {
     platform: `${process.platform} ${process.arch}`,
     settingsPath: settingsPath(),
     userData: app.getPath('userData'),
-    packaged: app.isPackaged
+    packaged: app.isPackaged,
+    licenceVerifiable: canVerify()
   }))
   ipcMain.on('spydr:chrome', (evt) => {
     evt.returnValue = {
@@ -275,6 +280,8 @@ void app.whenReady().then(() => {
   })
   registerIpc()
   pruneEntries(getSettings().privacy.historyRetentionDays)
+  // The monthly re-check, once the window is up and out of the way of first paint.
+  setTimeout(() => void refreshLicence(), 8_000)
   buildMenu()
   createWindow()
   app.on('activate', () => {
