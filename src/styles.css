@@ -1988,6 +1988,9 @@ table.grid tr.selected td { background: var(--sel); }
   padding-top: 14px;
   border-top: 1px solid var(--border);
 }
+/* Shown when a licence has been removed with a directory already read: the data did not go. */
+.activate-kept { font-size: 11.5px; line-height: 1.55; color: var(--muted); margin: 12px 0 0; }
+.activate-kept strong { color: var(--text); font-weight: 500; }
 .activate-sample { display: flex; flex-direction: column; gap: 4px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
 .activate-sample .muted { font-size: 11.5px; line-height: 1.5; }
 

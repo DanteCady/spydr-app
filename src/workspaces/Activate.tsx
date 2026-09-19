@@ -22,10 +22,8 @@ import { useApp } from '../state'
  */
 const MIN_SPIN_MS = Number(import.meta.env.VITE_SPYDR_MIN_SPIN ?? 2600)
 
-const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
-
 export function Activate() {
-  const { activate, licence, openSample } = useApp()
+  const { activate, licence, openSample, savedSession } = useApp()
   const [key, setKey] = useState('')
   const [busy, setBusy] = useState(false)
   // A development build points at the site running next door, so the link lands somewhere real.
@@ -40,12 +38,10 @@ export function Activate() {
   const submit = async (): Promise<void> => {
     if (!shaped || busy) return
     setBusy(true)
-    const started = Date.now()
     try {
-      await activate(key)
+      await activate(key, MIN_SPIN_MS)
     } finally {
-      // Hold the web until it has had a whole turn, counting the time the check itself took.
-      await wait(Math.max(0, MIN_SPIN_MS - (Date.now() - started)))
+      // Only reached when the key was refused: a good one has already replaced this screen.
       setBusy(false)
     }
   }
@@ -123,6 +119,12 @@ export function Activate() {
             <p className="activate-never">
               Never a domain, an account, a group or anything else read from your directory.
             </p>
+            {savedSession ? (
+              <p className="activate-kept">
+                Your last read of <strong>{savedSession.domain}</strong> is still on this machine, along with its
+                timeline. Removing a licence closes the session — it does not delete anything.
+              </p>
+            ) : null}
             <div className="activate-sample">
               <button type="button" className="linkish" onClick={openSample}>
                 Look around the sample directory first

@@ -42,10 +42,15 @@ function Gate() {
     else if (command === 'help:docs') openHelp()
   })
 
-  if (snapshot) return <AppShell />
+  // Activation comes first on a fresh install, and removing a licence puts the key screen back up
+  // even with a directory open — deactivating ends the session, not the data. Nothing on disk is
+  // touched, so the saved session and the timeline are still waiting when a key comes back. The
+  // sample is the exception throughout: it needs no key.
+  const locked = licence.status === 'none' && snapshot?.source !== 'fixture'
+
+  if (snapshot && !locked) return <AppShell />
   if (workspace === 'settings' || workspace === 'help') return <Standalone view={workspace} />
-  // Activation comes first on a fresh install, but never stands between anyone and the sample.
-  if (licence.status === 'none') return <Activate />
+  if (locked) return <Activate />
   return <Connect />
 }
 

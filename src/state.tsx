@@ -52,7 +52,8 @@ interface AppState {
   setSessionConsent: (consent: 'yes' | 'no') => void
   /** Activation state, and the two ways it changes. */
   licence: LicenceState
-  activate: (key: string) => Promise<void>
+  /** `minMs` holds the result back so a waiting animation gets its full turn. */
+  activate: (key: string, minMs?: number) => Promise<void>
   deactivate: () => Promise<void>
   /** Open the guide, optionally at a given article. */
   openHelp: (topic?: string) => void
@@ -130,14 +131,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void window.spydr?.licence().then(setLicence)
   }, [])
 
-  const activate = useCallback(async (key: string) => {
+  /**
+   * The wait lives here rather than in the screen that shows it: a successful activation unmounts
+   * that screen the instant the licence lands, so an animation held on the far side of this call
+   * never gets a frame.
+   */
+  const activate = useCallback(async (key: string, minMs = 0) => {
+    const started = Date.now()
     const next = await window.spydr?.activate(key)
+    const left = minMs - (Date.now() - started)
+    if (left > 0) await new Promise((resolve) => setTimeout(resolve, left))
     if (next) setLicence(next)
   }, [])
 
+  /**
+   * Removing the key ends the session and nothing else. The snapshot, the saved session and the
+   * timeline all stay where they are — this is a licence coming off a machine, not a wipe. Leaving
+   * settings is what sends the window back to the key screen, since the request usually comes from
+   * inside settings.
+   */
   const deactivate = useCallback(async () => {
     const next = await window.spydr?.deactivate()
     if (next) setLicence(next)
+    setWorkspace('directory')
   }, [])
 
   const graph = useMemo(
