@@ -1,8 +1,7 @@
 import { RULES } from '@shared/engine/registry'
 import { DEFAULT_CONFIG } from '@shared/engine/rule'
 import { MENU, type MenuEntry } from '@shared/menu'
-import { prettyAccelerator } from '../lib/accelerator'
-import { Term, type Article } from './kit'
+import { Keys, Term, type Article } from './kit'
 
 function shortcutRows(): { section: string; label: string; accelerator: string }[] {
   const rows: { section: string; label: string; accelerator: string }[] = []
@@ -325,7 +324,7 @@ export const CONCEPTS: Article[] = [
                 <td className="muted">{row.section}</td>
                 <td>{row.label}</td>
                 <td>
-                  <kbd>{prettyAccelerator(row.accelerator)}</kbd>
+                  <Keys accelerator={row.accelerator} />
                 </td>
               </tr>
             ))}

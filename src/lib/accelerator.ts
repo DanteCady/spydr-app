@@ -8,6 +8,8 @@ let cached: string | null = null
 /** 'darwin', 'win32', 'linux' — from the main process, which actually knows. */
 export function hostPlatform(): string {
   if (cached) return cached
+  // Rendered on a server too — the website publishes these same articles as its documentation.
+  if (typeof window === 'undefined') return 'other'
   const fromMain = window.spydr?.chrome?.().platform
   cached = fromMain ?? (/mac/i.test(navigator.userAgent) ? 'darwin' : 'other')
   return cached
