@@ -257,11 +257,21 @@ export const CONCEPTS: Article[] = [
           encrypted with the OS keychain where one exists. SPYDR asks once, and declining removes anything already
           written. Reports go where you choose to save them.
         </p>
-        <h3>Nothing leaves the machine</h3>
+        <h3>What does leave the machine, and when</h3>
         <p>
-          No telemetry, no analytics, no crash reporting, no licence check. The only connection SPYDR opens is to the
-          domain controller you name — and to an update feed if you configure one, which is off by default and
-          contacts nothing until you fill it in.
+          Two things, both narrow. The <strong>licence check</strong> runs when you enter a key and roughly monthly
+          after that, carrying the key, a hashed installation identifier, the version and the platform. And{' '}
+          <strong>usage telemetry</strong>, which is off until you switch it on in Settings ▸ Privacy.
+        </p>
+        <p>
+          Telemetry carries counts, never contents: which workspaces were opened, how many directories are open, and
+          sizes rounded into ranges — <code>1k-10k</code> rather than 4,312, because an exact object count is close to
+          an organisation's fingerprint. No domain, no account, no group, no distinguished name. The same page has a
+          button that prints the exact payload, built by the same code that sends it, so you can check rather than
+          take our word for it.
+        </p>
+        <p>
+          There is no analytics, no crash reporting and no account. Everything else stays where it was read.
         </p>
       </>
     )

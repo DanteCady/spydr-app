@@ -73,6 +73,11 @@ export interface PrivacySettings {
   forgetOnQuit: boolean
   /** Days of change history to keep. Zero keeps everything. */
   historyRetentionDays: number
+  /** Anonymous usage reporting. Off unless switched on, and never inferred from anything else. */
+  telemetry: boolean
+  /** Random per installation, created on first send. Clearing settings resets it. */
+  telemetryInstallId?: string
+  telemetryLastSent?: string
 }
 
 export interface AppearanceSettings {
@@ -132,7 +137,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   privacy: {
     sessionConsent: 'unset',
     forgetOnQuit: false,
-    historyRetentionDays: 90
+    historyRetentionDays: 90,
+    telemetry: false
   },
   appearance: {
     theme: 'dark',
@@ -251,7 +257,10 @@ export function normalizeSettings(raw: unknown): AppSettings {
     privacy: {
       sessionConsent: pick(p.sessionConsent, ['yes', 'no', 'unset'] as const, d.privacy.sessionConsent),
       forgetOnQuit: bool(p.forgetOnQuit, d.privacy.forgetOnQuit),
-      historyRetentionDays: clamp(p.historyRetentionDays, d.privacy.historyRetentionDays, LIMITS.historyRetentionDays)
+      historyRetentionDays: clamp(p.historyRetentionDays, d.privacy.historyRetentionDays, LIMITS.historyRetentionDays),
+      telemetry: bool(p.telemetry, d.privacy.telemetry),
+      telemetryInstallId: typeof p.telemetryInstallId === 'string' ? p.telemetryInstallId : undefined,
+      telemetryLastSent: typeof p.telemetryLastSent === 'string' ? p.telemetryLastSent : undefined
     },
     appearance: {
       theme: pick(a.theme, ['dark', 'light', 'vivid', 'minimal', 'minimal-dark'] as const, d.appearance.theme),

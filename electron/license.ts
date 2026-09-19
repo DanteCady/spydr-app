@@ -3,6 +3,7 @@ import { createHash, createPublicKey, verify as edVerify } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { hostname } from 'node:os'
 import { join } from 'node:path'
+import { appVersion } from './version'
 import {
   keyHint,
   keyLooksValid,
@@ -116,7 +117,7 @@ async function callActivate(key: string): Promise<{ ok: true; stored: Stored } |
     const res = await net.fetch(`${apiBase()}/api/activate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, machine: machineId(), version: app.getVersion(), os: process.platform })
+      body: JSON.stringify({ key, machine: machineId(), version: appVersion(), os: process.platform })
     })
     if (res.status === 404) return { ok: false, error: 'That key is not recognised. Check it and try again.' }
     if (res.status === 403) return { ok: false, error: 'That key is no longer valid. Sign up again for a new one.' }

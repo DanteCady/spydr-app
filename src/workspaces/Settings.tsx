@@ -14,6 +14,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { RULES } from '@shared/engine/registry'
 import { describeLicence, keyLooksValid } from '@shared/license'
 import { LIMITS, type AboutInfo } from '@shared/settings'
+import type { TelemetryPayload } from '@shared/telemetry'
 import type { FindingType } from '@shared/types'
 import type { UpdateCheck } from '../vite-env'
 import { ThemeMenu } from '../components/ThemeMenu'
@@ -92,6 +93,8 @@ export function Settings() {
   const [sampleNote, setSampleNote] = useState<string | null>(null)
   const [keyDraft, setKeyDraft] = useState('')
   const [licenceBusy, setLicenceBusy] = useState(false)
+  const [payload, setPayload] = useState<TelemetryPayload | null>(null)
+  const [sendNote, setSendNote] = useState<string | null>(null)
 
   useEffect(() => {
     void window.spydr?.about().then(setAbout)
@@ -356,6 +359,52 @@ export function Settings() {
                 onChange={(v) => updateSettings({ privacy: { forgetOnQuit: v } })}
               />
             </Row>
+            <Row
+              label="Usage telemetry"
+              hint="Off by default. Anonymous counts only — never a domain, an object or a name."
+            >
+              <Toggle
+                checked={privacy.telemetry}
+                label={privacy.telemetry ? 'On' : 'Off'}
+                onChange={(v) => updateSettings({ privacy: { telemetry: v } })}
+              />
+            </Row>
+            <Row
+              label="What would be sent"
+              hint={
+                privacy.telemetryLastSent
+                  ? `Last sent ${new Date(privacy.telemetryLastSent).toLocaleString()}`
+                  : 'Nothing has been sent from this machine.'
+              }
+            >
+              <span className="stack">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (payload) {
+                      setPayload(null)
+                      return
+                    }
+                    void window.spydr?.telemetryPreview().then(setPayload)
+                  }}
+                >
+                  {payload ? 'Hide payload' : 'Show payload'}
+                </button>
+                {privacy.telemetry ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSendNote('Sending…')
+                      void window.spydr?.telemetrySend().then((r) => setSendNote(r.message))
+                    }}
+                  >
+                    Send one now
+                  </button>
+                ) : null}
+                {sendNote ? <span className="muted">{sendNote}</span> : null}
+              </span>
+            </Row>
+            {payload ? <pre className="payload">{JSON.stringify(payload, null, 2)}</pre> : null}
             <Row label="Change history" hint="How long the timeline keeps entries. Zero keeps everything.">
               <NumberField
                 value={privacy.historyRetentionDays}

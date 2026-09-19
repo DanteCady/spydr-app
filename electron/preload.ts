@@ -5,6 +5,7 @@ import type { ReportResult } from './report'
 import type { AboutInfo, AppSettings, SettingsPatch } from '../shared/settings'
 import type { TimelineEntry } from '../shared/timeline'
 import type { LicenceState } from '../shared/license'
+import type { TelemetryPayload } from '../shared/telemetry'
 import type { UpdateCheck } from './updates'
 
 const api = {
@@ -35,6 +36,10 @@ const api = {
   },
   about: (): Promise<AboutInfo> => ipcRenderer.invoke('spydr:about'),
   /** Activation. The key never reaches the renderer again once it is stored. */
+  /** Exactly what a usage report would contain, built by the same code that sends one. */
+  telemetryPreview: (): Promise<TelemetryPayload> => ipcRenderer.invoke('spydr:telemetry:preview'),
+  telemetrySend: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('spydr:telemetry:send'),
+  noteWorkspace: (workspace: string): void => ipcRenderer.send('spydr:telemetry:workspace', workspace),
   licence: (): Promise<LicenceState> => ipcRenderer.invoke('spydr:licence:state'),
   activate: (key: string): Promise<LicenceState> => ipcRenderer.invoke('spydr:licence:activate', key),
   deactivate: (): Promise<LicenceState> => ipcRenderer.invoke('spydr:licence:deactivate'),

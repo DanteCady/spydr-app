@@ -4,6 +4,7 @@ import type { ReportResult } from '../electron/report'
 import type { AboutInfo, AppSettings, SettingsPatch } from '@shared/settings'
 import type { TimelineEntry } from '@shared/timeline'
 import type { LicenceState } from '@shared/license'
+import type { TelemetryPayload } from '@shared/telemetry'
 import type { UpdateCheck } from '../electron/updates'
 
 export interface SpydrApi {
@@ -24,6 +25,9 @@ export interface SpydrApi {
   resetSettings: () => Promise<AppSettings>
   onSettings: (handler: (settings: AppSettings) => void) => () => void
   about: () => Promise<AboutInfo>
+  telemetryPreview: () => Promise<TelemetryPayload>
+  telemetrySend: () => Promise<{ ok: boolean; message: string }>
+  noteWorkspace: (workspace: string) => void
   licence: () => Promise<LicenceState>
   activate: (key: string) => Promise<LicenceState>
   deactivate: () => Promise<LicenceState>
