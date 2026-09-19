@@ -91,6 +91,11 @@ export function Directory() {
   const [open, setOpen] = useState<Record<string, boolean>>({})
 
   const contains = useMemo(() => (snapshot ? dominantChildType(snapshot.nodes) : new Map()), [snapshot])
+  // What the toggle hides. The sample has none at all, which made the control look broken.
+  const systemCount = useMemo(
+    () => (snapshot ? snapshot.nodes.filter((n) => isSystemContainer(n, snapshot.baseDn)).length : 0),
+    [snapshot]
+  )
   const tree = useMemo(
     () => (snapshot ? buildOuTree(snapshot.nodes, snapshot.baseDn, { includeSystem: showSystem }) : []),
     [snapshot, showSystem]
@@ -136,10 +141,18 @@ export function Directory() {
             type="button"
             className={showSystem ? 'tb-btn active' : 'tb-btn'}
             aria-pressed={showSystem}
-            title={showSystem ? 'Hide Active Directory system containers' : 'Show Active Directory system containers'}
+            disabled={systemCount === 0}
+            title={
+              systemCount === 0
+                ? 'This directory has no system containers to show — nothing is being hidden'
+                : showSystem
+                  ? `Hide the ${systemCount} container${systemCount === 1 ? '' : 's'} Active Directory maintains itself`
+                  : `Show the ${systemCount} container${systemCount === 1 ? '' : 's'} Active Directory maintains itself, such as Configuration and System`
+            }
             onClick={() => setShowSystem((on) => !on)}
           >
             {showSystem ? <Eye size={14} aria-hidden /> : <EyeOff size={14} aria-hidden />}
+            <span>System{systemCount > 0 ? ` (${systemCount})` : ''}</span>
           </button>
         </div>
         <div className="tree">

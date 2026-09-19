@@ -1550,3 +1550,5 @@ table.grid tr.selected td { background: var(--sel); }
   border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--brand) 4%, var(--card));
 }
+
+.tb-btn:disabled { opacity: 0.45; cursor: default; }
