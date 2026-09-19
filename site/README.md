@@ -28,6 +28,21 @@ Adding an article to the app adds a page here. Nothing needs to be written twice
 filenames, byte sizes and download URLs. Without it the page falls back to the 0.1.0 artefacts and
 says so under the cards, rather than pretending to link to something.
 
+## The update list
+
+The hero carries an email field. Where the address goes is up to you — set one of these and the
+form starts working:
+
+```sh
+SUBSCRIBE_WEBHOOK=https://…      # any endpoint accepting POST { email, source }
+BUTTONDOWN_API_KEY=…             # posts straight to Buttondown
+```
+
+With neither set the form tells the visitor that the list is not wired up yet and that nothing was
+sent or stored, rather than thanking them for an address it quietly dropped. Validation and a
+honeypot field run server-side in `app/actions/subscribe.ts`; there is no client-side tracking on
+the page at all.
+
 ## Screenshots
 
 `public/assets/*.png` are captures of the app in its dark theme, cropped to the workspace column
