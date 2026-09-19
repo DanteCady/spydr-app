@@ -129,13 +129,11 @@ export function Directory() {
     <>
       <div className="split-tree">
         <div className="tree-head">
-          <button type="button" className="tb-btn" title="Expand all" onClick={() => setAll(true)}>
+          <button type="button" className="tb-btn icon" title="Expand all" aria-label="Expand all" onClick={() => setAll(true)}>
             <ChevronsUpDown size={14} aria-hidden />
-            <span>Expand</span>
           </button>
-          <button type="button" className="tb-btn" title="Collapse all" onClick={() => setAll(false)}>
+          <button type="button" className="tb-btn icon" title="Collapse all" aria-label="Collapse all" onClick={() => setAll(false)}>
             <ChevronsDownUp size={14} aria-hidden />
-            <span>Collapse</span>
           </button>
           <button
             type="button"
