@@ -10,7 +10,11 @@ import type { DirectorySnapshot } from './types'
  * exactly when. The domain controller's event log is the authority on both.
  */
 
-export type EntrySource = 'observed' | 'applied'
+/**
+ * 'observed' is a real read. 'applied' is reserved for changes SPYDR makes itself. 'sample' is
+ * invented data for the fictional domain, so it can never be mistaken for a record of anything.
+ */
+export type EntrySource = 'observed' | 'applied' | 'sample'
 
 /**
  * What a read covered. Two reads are only comparable when these match — narrow the base DN or turn

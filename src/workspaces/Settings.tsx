@@ -1,5 +1,6 @@
 import {
   Download,
+  Sparkles,
   Eye,
   FileText,
   Info,
@@ -84,6 +85,7 @@ export function Settings() {
   const [checking, setChecking] = useState(false)
   const [groupDraft, setGroupDraft] = useState('')
   const [historyStats, setHistoryStats] = useState<{ entries: number; path: string } | null>(null)
+  const [sampleNote, setSampleNote] = useState<string | null>(null)
 
   useEffect(() => {
     void window.spydr?.about().then(setAbout)
@@ -369,6 +371,26 @@ export function Settings() {
                 >
                   Clear history
                 </button>
+              </span>
+            </Row>
+            <Row
+              label="Sample timeline"
+              hint="Six weeks of invented changes to contoso.lab, computed by the same rules a real read uses. Marked as sample, and removed by Clear history."
+            >
+              <span className="stack">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSampleNote('Generating…')
+                    void window.spydr?.timelineSample().then((r) => {
+                      setSampleNote(r ? `${r.created} entries created${r.replaced ? `, ${r.replaced} replaced` : ''}` : null)
+                      void window.spydr?.timelineStats().then(setHistoryStats)
+                    })
+                  }}
+                >
+                  <Sparkles size={13} aria-hidden /> Generate
+                </button>
+                {sampleNote ? <span className="muted">{sampleNote}</span> : null}
               </span>
             </Row>
             <Row label="Saved session" hint={savedSession ? `${savedSession.domain}, saved ${new Date(savedSession.savedAt).toLocaleString()}` : 'Nothing saved.'}>

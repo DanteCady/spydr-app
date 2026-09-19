@@ -39,6 +39,8 @@ const api = {
   timelineObject: (objectGuid: string): Promise<{ entry: TimelineEntry; kinds: string[] }[]> =>
     ipcRenderer.invoke('spydr:timeline:object', objectGuid),
   timelineClear: (): Promise<void> => ipcRenderer.invoke('spydr:timeline:clear'),
+  /** Invented history for the sample domain, so the Timeline has something to demonstrate. */
+  timelineSample: (): Promise<{ created: number; replaced: number }> => ipcRenderer.invoke('spydr:timeline:sample'),
   timelineStats: (): Promise<{ entries: number; path: string }> => ipcRenderer.invoke('spydr:timeline:stats'),
   checkForUpdate: (): Promise<UpdateCheck> => ipcRenderer.invoke('spydr:updates:check'),
   /** Subscribe to menu commands; returns an unsubscribe. */

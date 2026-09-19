@@ -1,5 +1,6 @@
 import { AlertTriangle, ArrowRight, History, Minus, Plus, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { describeChanges } from '@shared/diff'
 import type { TimelineEntry } from '@shared/timeline'
 import { EmptyState } from '../components/EmptyState'
 import { relativeTime } from '../lib/format'
@@ -50,26 +51,19 @@ export function Timeline() {
     return flagged
   }, [entries])
 
-  if (settings.privacy.sessionConsent !== 'yes') {
-    return (
-      <div className="split-list">
-        <EmptyState
-          title="The timeline is not recording"
-          hint="Recording what changed means keeping a small record of this directory on disk, so it is behind the same permission as session restore. Turn on “Keep directories on this computer” in Settings ▸ Privacy and the next read starts the history."
-        />
-      </div>
-    )
-  }
+  const recording = settings.privacy.sessionConsent === 'yes'
 
+  // Entries already recorded — including a generated sample — are shown whether or not recording is
+  // currently on. Hiding what is already there would only be confusing.
   if (entries && entries.length === 0) {
     return (
       <div className="split-list">
         <EmptyState
-          title="Nothing recorded yet"
+          title={recording ? 'Nothing recorded yet' : 'The timeline is not recording'}
           hint={
-            snapshot?.source === 'fixture'
-              ? 'The sample directory is a fixture and never changes, so it is never recorded. Connect to a domain and the first read becomes the baseline.'
-              : 'The first read of a domain becomes the baseline. Re-crawl after a change and it appears here.'
+            recording
+              ? 'The first read of a domain becomes the baseline; re-crawl after a change and it appears here. To see what this looks like, Settings ▸ Privacy can generate a sample timeline for contoso.lab.'
+              : 'Recording keeps a small record of a directory on disk, so it sits behind the same permission as session restore — turn on “Keep directories on this computer” in Settings ▸ Privacy. To see what it looks like first, the same page can generate a sample timeline for contoso.lab.'
           }
         />
       </div>
@@ -81,6 +75,12 @@ export function Timeline() {
   return (
     <div className="timeline">
       <div className="tl-list scroll">
+        {!recording ? (
+          <p className="tl-notice">
+            Recording is off, so nothing new is being added. These entries were recorded earlier or generated as a
+            sample.
+          </p>
+        ) : null}
         {(entries ?? []).map((e) => (
           <button
             key={e.id}
@@ -95,6 +95,7 @@ export function Timeline() {
             <span className="tl-summary">{e.summary}</span>
             <span className="tl-tags">
               {e.baseline ? <span className="tl-tag">baseline</span> : null}
+              {e.source === 'sample' ? <span className="tl-tag sample">sample</span> : null}
               {e.source === 'applied' ? <span className="tl-tag applied">applied</span> : null}
               {dcChanged.has(e.id) ? (
                 <span className="tl-tag warn" title="Read from a different controller than the entry before it">
@@ -118,7 +119,7 @@ export function Timeline() {
                 {entry.scope.includeComputers ? '' : ' · computers excluded'}
               </p>
               <p className="tl-score">
-                {entry.summary}
+                {entry.detail ? describeChanges(entry.detail) : entry.summary}
                 {entry.scoreBefore !== entry.scoreAfter ? (
                   <span className={entry.scoreAfter > entry.scoreBefore ? 'up' : 'down'}>
                     {' '}

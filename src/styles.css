@@ -1831,6 +1831,16 @@ table.grid tr.selected td { background: var(--sel); }
   color: var(--muted);
 }
 .tl-tag.applied { background: var(--brand-muted); color: var(--brand); }
+.tl-tag.sample { background: color-mix(in srgb, var(--med) 18%, transparent); color: var(--med); }
+.tl-notice {
+  padding: 9px 11px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+  background: var(--muted-bg);
+}
 .tl-tag.warn { background: color-mix(in srgb, var(--high) 16%, transparent); color: var(--high); }
 
 .tl-detail { padding: 22px 28px 40px; }
