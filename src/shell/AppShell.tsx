@@ -21,7 +21,8 @@ const NAV: { id: WorkspaceId; label: string; hint: string }[] = [
 const NEXT_THEME: Record<string, string> = { dark: 'light', light: 'vivid', vivid: 'dark' }
 
 export function AppShell() {
-  const { snapshot, workspace, setWorkspace, search, setSearch, disconnect, theme, toggleTheme, setTheme } = useApp()
+  const { snapshot, workspace, setWorkspace, search, setSearch, disconnect, theme, toggleTheme, setTheme, generateReport } =
+    useApp()
 
   // Menu commands that belong to the shell; the canvas handles its own.
   useMenuCommand((command) => {
@@ -33,6 +34,7 @@ export function AppShell() {
     else if (command === 'view:theme:light') setTheme('light')
     else if (command === 'view:theme:vivid') setTheme('vivid')
     else if (command === 'file:disconnect') disconnect()
+    else if (command === 'file:report') void generateReport()
     else if (command === 'edit:find') {
       document.querySelector<HTMLInputElement>('.topbar input[type="search"]')?.focus()
     }

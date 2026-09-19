@@ -1298,3 +1298,23 @@ table.grid tr.selected td { background: var(--sel); }
 .welcome-form-actions { display: flex; gap: 8px; margin-top: 6px; }
 .welcome-form-actions .ghost, .welcome-form-actions .primary { width: auto; margin-top: 0; padding: 9px 14px; }
 .welcome-foot { margin: 36px 0 0; color: var(--muted); font-size: 12px; }
+
+/* ---- hygiene report button ---- */
+.report-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--brand) 40%, transparent);
+  background: var(--brand-muted);
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 600;
+}
+.report-btn:hover:not(:disabled) { background: color-mix(in srgb, var(--brand) 18%, transparent); }
+.report-btn:disabled { opacity: 0.7; }
+.report-status { font-size: 11px; color: var(--muted); max-width: 46ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-gap { flex: 1 1 auto; min-width: 12px; }
+.spin { animation: spydr-spin 900ms linear infinite; }
+@keyframes spydr-spin { to { transform: rotate(360deg); } }

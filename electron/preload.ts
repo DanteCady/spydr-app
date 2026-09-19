@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { ConnectionInput, DcRecord, DirectorySnapshot, TestConnectionResult, WindowsPrefill } from '../shared/types'
 import type { SessionMeta, SessionProfile, SessionView } from './directory/session'
+import type { ReportResult } from './report'
 
 const api = {
   windowsPrefill: (): Promise<WindowsPrefill> => ipcRenderer.invoke('spydr:prefill'),
@@ -16,6 +17,8 @@ const api = {
     view: SessionView
   }): Promise<void> => ipcRenderer.invoke('spydr:session:save', payload),
   sessionClear: (): Promise<void> => ipcRenderer.invoke('spydr:session:clear'),
+  /** Writes a PDF of the current findings; resolves null when the user cancels the save dialog. */
+  report: (snapshot: DirectorySnapshot): Promise<ReportResult | null> => ipcRenderer.invoke('spydr:report', snapshot),
   /** Subscribe to menu commands; returns an unsubscribe. */
   /** Chrome the renderer must draw itself, and the editing actions the OS performs for us. */
   chrome: (): { custom: boolean; platform: string; titleBarHeight: number } =>
