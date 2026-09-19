@@ -17,10 +17,11 @@ import { useApp } from '../state'
  * How long the web stays up, at least.
  *
  * A local server answers in under a second, which reads as a flicker rather than as work — and a
- * flicker is worse than no animation at all. 2.6s is one full turn of the web: spun, held, gone.
+ * flicker is worse than no animation at all. The keyframes run on a 2.6s loop, so this is two whole
+ * turns: it lands on a boundary, with the web faded out, rather than cutting a half-drawn one.
  * Set VITE_SPYDR_MIN_SPIN to watch a longer one while working on it.
  */
-const MIN_SPIN_MS = Number(import.meta.env.VITE_SPYDR_MIN_SPIN ?? 2600)
+const MIN_SPIN_MS = Number(import.meta.env.VITE_SPYDR_MIN_SPIN ?? 5200)
 
 export function Activate() {
   const { activate, licence, openSample, savedSession } = useApp()
