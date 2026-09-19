@@ -1,19 +1,18 @@
 'use server'
 
-import { randomUUID } from 'node:crypto'
-import { hashKey, newKey } from '@/lib/server/keys'
-import { rateLimit, store } from '@/lib/server/store'
+import { issueKey } from '@/lib/server/licences'
+import { rateLimit } from '@/lib/server/store'
 
 /**
  * Signing up does two things at once: it puts you on the release-notes list and it issues the
- * licence key SPYDR is activated with. One form, because asking twice for the same address would
- * be silly.
+ * licence key SPYDR is activated with. One key per address: asking again neither issues a second
+ * nor revokes the first, because revoking would break the machine already using it.
  *
  * Where the address goes beyond the licence database is up to you — SUBSCRIBE_WEBHOOK or
  * BUTTONDOWN_API_KEY. Neither is required for a key to be issued.
  */
 
-export type SignupStatus = 'idle' | 'ok' | 'invalid' | 'error' | 'throttled'
+export type SignupStatus = 'idle' | 'ok' | 'invalid' | 'error' | 'throttled' | 'exists'
 
 export interface SignupState {
   status: SignupStatus
@@ -58,23 +57,20 @@ export async function requestKey(_previous: SignupState, form: FormData): Promis
   }
 
   try {
-    const db = store()
-    const existing = db.prepare('SELECT id FROM licence WHERE email = ? AND revoked = 0').get(email) as
-      | { id: string }
-      | undefined
-    if (existing) {
-      // Only the hash is stored, so an old key cannot be read back — retire it and issue another.
-      db.prepare('UPDATE licence SET revoked = 1, note = ? WHERE id = ?').run('reissued', existing.id)
+    const issued = issueKey(email)
+    if (issued.status === 'exists') {
+      return {
+        status: 'exists',
+        message:
+          'That address already has a key. It is not shown twice — use the one you were given, or get in touch if it is lost.'
+      }
+    }
+    if (issued.status === 'error') {
+      return { status: 'error', message: 'Could not issue a key. Try again in a minute.' }
     }
 
-    const key = newKey()
-    db.prepare(
-      `INSERT INTO licence (id, email, key_hash, tier, features, created_at)
-       VALUES (?, ?, ?, 'free', '[]', ?)`
-    ).run(randomUUID(), email, hashKey(key), new Date().toISOString())
-
     await alsoSubscribe(email)
-    return { status: 'ok', key }
+    return { status: 'ok', key: issued.key }
   } catch {
     return { status: 'error', message: 'Something went wrong issuing that key. Try again in a minute.' }
   }

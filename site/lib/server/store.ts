@@ -35,6 +35,8 @@ export function store(): Database {
       note TEXT
     );
     CREATE INDEX IF NOT EXISTS licence_email ON licence (email);
+    -- One live key per address, enforced by the database rather than by remembering to check.
+    CREATE UNIQUE INDEX IF NOT EXISTS licence_email_live ON licence (email) WHERE revoked = 0;
     CREATE TABLE IF NOT EXISTS activation (
       licence_id TEXT NOT NULL REFERENCES licence (id),
       machine TEXT NOT NULL,
@@ -55,6 +57,12 @@ export function store(): Database {
     );
     CREATE INDEX IF NOT EXISTS telemetry_install ON telemetry (install, received_at);
   `)
+  // Added after the first release: keys are kept encrypted so a lost one can be re-sent.
+  const columns = db.prepare('PRAGMA table_info(licence)').all() as { name: string }[]
+  if (!columns.some((c) => c.name === 'key_enc')) {
+    db.exec('ALTER TABLE licence ADD COLUMN key_enc TEXT')
+  }
+
   return db
 }
 

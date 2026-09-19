@@ -38,12 +38,17 @@ on first run and roughly monthly after that.
 | `POST /api/signup` | `{ email }` → `{ key, tier }`. One live key per address; asking again retires the old one. |
 | `POST /api/activate` | `{ key, machine, version, os }` → a signed licence the app caches for 30 days. |
 | `POST /api/telemetry` | Anonymous usage, only from installs that switched it on. Unknown fields are rejected. |
+| `POST /api/recover` | Sends an existing key to the address that owns it. Always answers the same, whether or not that address has one. |
 | `GET /api/pubkey` | The public half of the signing key, for building the app against this server. |
 
-Keys are stored hashed, so a copy of the database is not a pile of working licences — which also
-means a lost key is reissued rather than recovered. The machine identifier arrives already hashed
-by the client and is hashed again with `LICENSE_PEPPER`: enough to count installs, not enough to
-identify a computer.
+One live key per address, enforced by a partial unique index rather than by remembering to check.
+Asking again neither issues a second key nor revokes the first — revoking in that moment would
+break the installation someone is trying to get working — so recovery is a separate route that
+emails the existing key to the address that owns it, and never returns it in the response.
+
+Keys are stored encrypted rather than hashed, which is what makes that recovery possible. The
+machine identifier arrives already hashed by the client and is hashed again with `LICENSE_PEPPER`:
+enough to count installs, not enough to identify a computer.
 
 ### Generating the signing pair
 
@@ -56,14 +61,35 @@ The private half goes in `LICENSE_PRIVATE_KEY`; the public half belongs in the d
 `LICENSE_PRIVATE_KEY` the server generates an ephemeral pair at boot and says so on `/api/pubkey` —
 fine locally, useless in production.
 
+### Reserved keys
+
+Ten developer keys and twenty beta keys live in the database alongside issued ones, distinguished
+by a `reserved:` note and by carrying a tier above free.
+
+```sh
+KEYS_PASSPHRASE=… npm run keys:seed    # creates any that do not exist yet
+KEYS_PASSPHRASE=… npm run keys:read    # prints them
+```
+
+The keys are written to `keys/reserved-keys.enc`, encrypted with AES-256-GCM over a scrypt-derived
+key. The passphrase is never stored — not in the file, not in the database, not in this repository
+— so losing it means reseeding. `keys/` is ignored by git: an encrypted blob in version control is
+an offline cracking target, and a password manager is a better home for it.
+
+Seeding is idempotent. A key that already exists is left alone rather than rotated, because
+rotating one would break whoever is already using it.
+
 ### Environment
 
 ```sh
 NEXT_PUBLIC_SITE_URL=https://getspydr.com
 LICENSE_DB=/var/lib/spydr/spydr.db     # SQLite, needs a writable directory
 LICENSE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n…"
-LICENSE_PEPPER=<random string>
+LICENSE_PEPPER=<random string>         # hashes machine ids
+LICENSE_SECRET=<random string>         # encrypts stored keys so a lost one can be re-sent
 SUBSCRIBE_WEBHOOK=…                    # optional, mailing list
+MAIL_WEBHOOK=… | RESEND_API_KEY=…      # optional, needed for key recovery
+MAIL_FROM="SPYDR <keys@getspydr.com>"
 ```
 
 ### On Lightsail
