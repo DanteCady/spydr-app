@@ -1,30 +1,41 @@
 # SPYDR — product site
 
-A static page. No build step, no framework, no dependencies: `index.html`, `styles.css`, and four
-screenshots taken from the real application.
-
-## Running it
+A Next.js app. The landing page is hand-written; the documentation is not — it is the desktop
+app's own guide, imported from `src/help/` and rendered here, so the help inside SPYDR and the docs
+on this site are the same words and cannot drift apart.
 
 ```sh
-cd site && python3 -m http.server 8000
+npm install
+npm run dev     # http://localhost:4200
+npm run build
+npm start
 ```
 
-## Deploying it
+## How the docs work
 
-Any static host serves it as-is — GitHub Pages, Cloudflare Pages, Netlify, Vercel, or a directory
-behind nginx. Publish the `site/` folder; there is nothing to compile.
+`src/help/articles.tsx` exports every article: id, section, title, blurb, and a React body.
+`lib/docs.ts` reads that for navigation and metadata, `app/docs/[slug]/page.tsx` generates one
+static page per article, and `components/DocBody.tsx` renders the body on the client — a couple of
+articles use hooks, and the About page asks the desktop app for build information, which on the web
+correctly reports that there is no desktop app to ask.
 
-## Before it goes live
+Adding an article to the app adds a page here. Nothing needs to be written twice.
 
-- **Download links.** `window.SPYDR_RELEASES` near the top of `index.html` is the one place a
-  release URL belongs; every card reads it. It currently points at `#downloads`, which is a
-  deliberate dead end rather than a broken link to a page that does not exist yet.
-- **Version.** `0.1.0` appears in the nav button, the download heading, and four filenames.
-- **Sizes.** The download cards quote real artefact sizes from the 0.1.0 build. Re-check them when
-  the build changes.
+## Release links
 
-## Refreshing the screenshots
+`lib/releases.ts` builds the download cards. Set `GITHUB_REPO` (for example
+`GITHUB_REPO=owner/spydr`) and the build asks GitHub for the latest release, using the real
+filenames, byte sizes and download URLs. Without it the page falls back to the 0.1.0 artefacts and
+says so under the cards, rather than pretending to link to something.
 
-They are captures of the app in its dark theme, cropped to the workspace column and saved at 2×, so
-they stay sharp at the width the page renders them. The regions are `x: 214–1136` with the top edge
-chosen per workspace. If the UI moves, retake them at 1440×900 and crop to the same left edge.
+## Screenshots
+
+`public/assets/*.png` are captures of the app in its dark theme, cropped to the workspace column
+(`x: 214–1136`) and saved at 2× so they stay sharp at the width the page renders them. `next/image`
+serves AVIF and WebP from them. Retake at 1440×900 if the interface moves.
+
+## Deploying
+
+Vercel needs no configuration. Anywhere else, `npm run build && npm start` behind a proxy works; if
+you want a purely static drop, add `output: 'export'` to `next.config.ts` and set
+`images.unoptimized`.

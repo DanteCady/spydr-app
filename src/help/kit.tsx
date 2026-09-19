@@ -1,6 +1,9 @@
+'use client'
+
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import type { AboutInfo } from '@shared/settings'
+import { prettyAccelerator } from '../lib/accelerator'
 
 /** Shared pieces for the knowledge base articles. */
 
@@ -33,6 +36,19 @@ export function Control({ name, children }: { name: string; children: ReactNode 
       <dd>{children}</dd>
     </div>
   )
+}
+
+/**
+ * An accelerator written the way this platform writes it. The first render matches whatever the
+ * server produced — the website publishes these same articles — and the platform-correct form
+ * appears once mounted, so there is no hydration mismatch.
+ */
+export function Keys({ accelerator }: { accelerator: string }) {
+  const [text, setText] = useState(() => prettyAccelerator(accelerator, 'other'))
+  useEffect(() => {
+    setText(prettyAccelerator(accelerator))
+  }, [accelerator])
+  return <kbd>{text}</kbd>
 }
 
 export function BuildInfo() {
