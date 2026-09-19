@@ -9,6 +9,7 @@ export type MenuCommand =
   | 'file:restore'
   | 'file:disconnect'
   | 'file:export'
+  | 'file:report'
   | 'edit:find'
   | 'view:directory'
   | 'view:web'
@@ -56,6 +57,7 @@ export const MENU: MenuSection[] = [
       { label: 'Restore Last Session', command: 'file:restore', accelerator: 'CmdOrCtrl+Shift+R' },
       { separator: true },
       { label: 'Export Canvas as PNG…', command: 'file:export', accelerator: 'CmdOrCtrl+E' },
+      { label: 'Generate Hygiene Report (PDF)…', command: 'file:report', accelerator: 'CmdOrCtrl+P' },
       { separator: true },
       { label: 'Disconnect', command: 'file:disconnect', accelerator: 'CmdOrCtrl+Shift+D' }
     ]

@@ -1,3 +1,4 @@
+import { FileDown, Loader2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { FindingSeverity, FindingType } from '@shared/types'
 import { SeverityBadge } from '../components/SeverityBadge'
@@ -16,7 +17,7 @@ const TYPES: { id: FindingType | 'all'; label: string }[] = [
 ]
 
 export function Hygiene() {
-  const { snapshot, goToFinding } = useApp()
+  const { snapshot, goToFinding, generateReport, reportBusy, reportStatus } = useApp()
   const [type, setType] = useState<FindingType | 'all'>('all')
 
   const findings = snapshot?.findings ?? []
@@ -69,6 +70,12 @@ export function Hygiene() {
             </button>
           )
         })}
+        <span className="chip-gap" />
+        {reportStatus ? <span className="report-status">{reportStatus}</span> : null}
+        <button type="button" className="report-btn" onClick={() => void generateReport()} disabled={reportBusy}>
+          {reportBusy ? <Loader2 size={13} className="spin" aria-hidden /> : <FileDown size={13} aria-hidden />}
+          {reportBusy ? 'Building report…' : 'Generate PDF report'}
+        </button>
       </div>
       <div className="scroll">
         <table className="grid">

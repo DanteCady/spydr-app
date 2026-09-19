@@ -1,9 +1,10 @@
-import { app, BrowserWindow, ipcMain, nativeImage, session, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, nativeImage, session, shell } from 'electron'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { discoverDcs, windowsPrefill } from './directory/discoverDc'
 import { ingestDirectory, testConnection } from './directory/ldapProvider'
 import { buildMenu, usesCustomTitleBar } from './menu'
+import { reportFileName, writeReportPdf, type ReportResult } from './report'
 import {
   clearSession,
   loadSession,
@@ -89,6 +90,21 @@ function registerIpc(): void {
       saveSession(payload.snapshot, payload.profile, payload.view)
   )
   ipcMain.handle('spydr:session:clear', () => clearSession())
+  ipcMain.handle('spydr:report', async (evt, snapshot: DirectorySnapshot): Promise<ReportResult | null> => {
+    const win = BrowserWindow.fromWebContents(evt.sender)
+    const options = {
+      title: 'Save hygiene report',
+      defaultPath: join(app.getPath('downloads'), reportFileName(snapshot)),
+      filters: [{ name: 'PDF document', extensions: ['pdf'] }]
+    }
+    const { canceled, filePath } = win
+      ? await dialog.showSaveDialog(win, options)
+      : await dialog.showSaveDialog(options)
+    if (canceled || !filePath) return null
+    const result = await writeReportPdf(snapshot, filePath)
+    void shell.openPath(result.path)
+    return result
+  })
   ipcMain.on('spydr:chrome', (evt) => {
     evt.returnValue = {
       custom: usesCustomTitleBar(),

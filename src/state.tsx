@@ -37,6 +37,10 @@ interface AppState {
   savedSession: SessionMeta | null
   restoreSession: () => Promise<void>
   forgetSession: () => Promise<void>
+  /** PDF report of the current findings. Status doubles as the error channel. */
+  generateReport: () => Promise<void>
+  reportBusy: boolean
+  reportStatus: string | null
 }
 
 const Ctx = createContext<AppState | null>(null)
@@ -51,6 +55,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pathTarget, setPathTarget] = useState('')
   const [activeFinding, setActiveFinding] = useState<Finding | null>(null)
   const [savedSession, setSavedSession] = useState<SessionMeta | null>(null)
+  const [reportBusy, setReportBusy] = useState(false)
+  const [reportStatus, setReportStatus] = useState<string | null>(null)
   // Kept out of the snapshot so the password never travels with it.
   const lastInput = useRef<ConnectionInput | null>(null)
   const [theme, setTheme] = useState<Theme>(() => {
@@ -129,6 +135,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await window.spydr?.sessionClear()
     setSavedSession(null)
   }, [])
+
+  const generateReport = useCallback(async () => {
+    if (!snapshot) return
+    if (!window.spydr?.report) {
+      setReportStatus('Run SPYDR as the desktop app to generate a report.')
+      return
+    }
+    setReportBusy(true)
+    setReportStatus(null)
+    try {
+      const result = await window.spydr.report(snapshot)
+      setReportStatus(result ? `Saved ${result.pages} pages to ${result.path}` : null)
+    } catch (err) {
+      setReportStatus(err instanceof Error ? err.message : 'Could not write the report.')
+    } finally {
+      setReportBusy(false)
+    }
+  }, [snapshot])
 
   const goTo = useCallback((w: WorkspaceId, objectId?: string) => {
     if (objectId) {
@@ -240,7 +264,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     paths,
     savedSession,
     restoreSession,
-    forgetSession
+    forgetSession,
+    generateReport,
+    reportBusy,
+    reportStatus
   }
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
