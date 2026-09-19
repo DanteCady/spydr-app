@@ -13,12 +13,12 @@ import { Help } from '../workspaces/Help'
 import { Settings } from '../workspaces/Settings'
 import { Web } from '../workspaces/Web'
 
-const NAV: { id: WorkspaceId; label: string; hint: string }[] = [
-  { id: 'directory', label: 'Directory', hint: 'ADUC' },
-  { id: 'web', label: 'Web', hint: 'Nesting' },
-  { id: 'pathfinder', label: 'Pathfinder', hint: 'How' },
-  { id: 'hygiene', label: 'Hygiene', hint: 'Cleanup' },
-  { id: 'settings', label: 'Settings', hint: 'Prefs' }
+const NAV: { id: WorkspaceId; label: string }[] = [
+  { id: 'directory', label: 'Directory' },
+  { id: 'web', label: 'Web' },
+  { id: 'pathfinder', label: 'Pathfinder' },
+  { id: 'hygiene', label: 'Hygiene' },
+  { id: 'settings', label: 'Settings' }
 ]
 
 export function AppShell() {
@@ -83,7 +83,6 @@ export function AppShell() {
             >
               <NavGlyph id={item.id} />
               {item.label}
-              <span className="hint">{item.hint}</span>
             </button>
           ))}
         </div>

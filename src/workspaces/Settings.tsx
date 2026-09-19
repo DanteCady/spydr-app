@@ -357,7 +357,7 @@ export function Settings() {
         {section === 'appearance' ? (
           <>
             <h2>Appearance</h2>
-            <Row label="Theme" hint="The same control as the palette button in the header.">
+            <Row label="Theme" hint="Also on View ▸ Theme, with a shortcut-free entry per theme.">
               <ThemeMenu variant="inline" />
             </Row>
             <h3>Canvas defaults</h3>

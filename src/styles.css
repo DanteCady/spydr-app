@@ -412,14 +412,7 @@ input:focus-visible, select:focus-visible { outline: none; border-color: var(--r
   background: var(--brand);
   border-radius: 0 2px 2px 0;
 }
-.nav .hint {
-  margin-left: auto;
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 9.5px;
-  color: var(--muted);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
+
 .nav-glyph { width: 15px; height: 15px; display: inline-flex; flex-shrink: 0; }
 .nav-glyph svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; }
 
