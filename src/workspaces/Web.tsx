@@ -541,7 +541,8 @@ function syncGrid(cy: cytoscape.Core, el: HTMLElement | null): void {
 }
 
 export function Web() {
-  const { snapshot, selectedId, select, activeFinding, clearFinding, theme, settings } = useApp()
+  const { snapshot, selectedId, select, activeFinding, clearFinding, theme, settings, traceRequest, clearTraceRequest } =
+    useApp()
   // The canvas opens the way Settings says it should; changes made here are for this visit only.
   const canvas = useRef(settings.appearance).current
   const host = useRef<HTMLDivElement>(null)
@@ -735,6 +736,15 @@ export function Web() {
     const cy = cyRef.current
     if (cy) syncGrid(cy, wrap.current)
   }, [grid])
+
+  // A trace asked for from Pathfinder: the source is already selected, so only the target and the
+  // mode are missing.
+  useEffect(() => {
+    if (!traceRequest) return
+    setTracing(true)
+    setTraceTarget(traceRequest.targetId)
+    clearTraceRequest()
+  }, [traceRequest, clearTraceRequest])
 
   useEffect(() => {
     const cy = cyRef.current
