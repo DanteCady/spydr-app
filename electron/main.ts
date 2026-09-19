@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, nativeImage, session, shell } from 'electron'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { discoverDcs, windowsPrefill } from './directory/discoverDc'
 import { ingestDirectory, testConnection } from './directory/ldapProvider'
@@ -7,6 +7,8 @@ import { buildMenu, usesCustomTitleBar } from './menu'
 import { getSettings, resetSettings, settingsPath, updateSettings } from './settings'
 import { checkForUpdate, type UpdateCheck } from './updates'
 import { activate, canVerify, deactivate, licenceState, refreshLicence } from './license'
+import { appVersion } from './version'
+import { currentPayload, maybeSend, noteReport, noteSnapshot, noteWorkspace, sendNow } from './telemetry'
 import {
   clearTimeline,
   closeTimeline,
@@ -74,23 +76,6 @@ function preloadPath(): string {
   return existsSync(js) ? js : mjs
 }
 
-/**
- * app.getVersion() answers with Electron's own version when it cannot find our package.json, which
- * happens whenever main is launched by file path rather than by project directory. Read it directly
- * in development so the About section never reports the runtime as the product.
- */
-function appVersion(): string {
-  if (app.isPackaged) return app.getVersion()
-  for (const dir of [app.getAppPath(), process.cwd(), join(__dirname, '../..')]) {
-    try {
-      const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as { name?: string; version?: string }
-      if (pkg.name === 'spydr' && pkg.version) return pkg.version
-    } catch {
-      /* try the next candidate */
-    }
-  }
-  return app.getVersion()
-}
 
 function appIcon(): Electron.NativeImage | undefined {
   const png = [join(__dirname, '../../resources/icon.png'), join(process.cwd(), 'resources/icon.png')].find(existsSync)
@@ -181,6 +166,7 @@ function registerIpc(): void {
     // IPC, means the renderer never has to be trusted to do that stripping.
     lastProfile = toProfile(input)
     liveBind = input
+    noteSnapshot(snapshot.domain, snapshot.stats)
     noteRead(snapshot)
     return snapshot
   })
@@ -217,6 +203,7 @@ function registerIpc(): void {
       ? await dialog.showSaveDialog(win, options)
       : await dialog.showSaveDialog(options)
     if (canceled || !filePath) return null
+    noteReport()
     const result = await writeReportPdf(snapshot, filePath, getSettings().report)
     if (getSettings().report.openAfterSave) void shell.openPath(result.path)
     return result
@@ -234,6 +221,9 @@ function registerIpc(): void {
   ipcMain.handle('spydr:timeline:clear', () => clearTimeline())
   ipcMain.handle('spydr:timeline:sample', () => generateSampleTimeline())
   ipcMain.handle('spydr:timeline:stats', () => ({ entries: countEntries(), path: timelinePath() }))
+  ipcMain.handle('spydr:telemetry:preview', () => currentPayload())
+  ipcMain.handle('spydr:telemetry:send', () => sendNow())
+  ipcMain.on('spydr:telemetry:workspace', (_evt, workspace: string) => noteWorkspace(workspace as never))
   ipcMain.handle('spydr:licence:state', () => licenceState())
   ipcMain.handle('spydr:licence:activate', (_evt, key: string) => activate(key))
   ipcMain.handle('spydr:licence:deactivate', () => deactivate())
@@ -282,6 +272,7 @@ void app.whenReady().then(() => {
   pruneEntries(getSettings().privacy.historyRetentionDays)
   // The monthly re-check, once the window is up and out of the way of first paint.
   setTimeout(() => void refreshLicence(), 8_000)
+  setTimeout(() => void maybeSend(), 20_000)
   buildMenu()
   createWindow()
   app.on('activate', () => {

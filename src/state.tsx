@@ -120,6 +120,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.theme = theme
   }, [theme])
 
+  // Which workspaces get used, by name. Collected always, sent only if telemetry is on.
+  useEffect(() => {
+    window.spydr?.noteWorkspace?.(workspace)
+  }, [workspace])
+
   useEffect(() => {
     void window.spydr?.sessionPeek().then(setSavedSession)
     void window.spydr?.licence().then(setLicence)

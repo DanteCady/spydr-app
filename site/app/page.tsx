@@ -211,8 +211,9 @@ export default function Home() {
           <div>
             <dt>Network</dt>
             <dd>
-              the domain controller you name, and a licence check on first run that repeats monthly. No analytics, no
-              account, and telemetry only if you switch it on
+              the domain controller you name, and a licence check on first run that repeats monthly — the key, a
+              hashed install id, the version. Telemetry is off unless you switch it on, and carries counts rather
+              than contents. No analytics, no account
             </dd>
           </div>
           <div>
