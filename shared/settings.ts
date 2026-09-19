@@ -19,7 +19,7 @@ export interface AboutInfo {
   packaged: boolean
 }
 
-export type ThemeName = 'dark' | 'light' | 'vivid'
+export type ThemeName = 'dark' | 'light' | 'vivid' | 'minimal'
 export type LayoutMode = 'tree' | 'structure'
 export type Density = 'auto' | 'compact' | 'spread'
 export type PaperSize = 'Letter' | 'A4'
@@ -247,7 +247,7 @@ export function normalizeSettings(raw: unknown): AppSettings {
       forgetOnQuit: bool(p.forgetOnQuit, d.privacy.forgetOnQuit)
     },
     appearance: {
-      theme: pick(a.theme, ['dark', 'light', 'vivid'] as const, d.appearance.theme),
+      theme: pick(a.theme, ['dark', 'light', 'vivid', 'minimal'] as const, d.appearance.theme),
       canvasGrid: bool(a.canvasGrid, d.appearance.canvasGrid),
       canvasLegend: bool(a.canvasLegend, d.appearance.canvasLegend),
       canvasLabels: bool(a.canvasLabels, d.appearance.canvasLabels),

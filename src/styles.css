@@ -163,6 +163,103 @@
   --shadow-pop: 0 10px 28px rgba(16, 24, 40, 0.18);
 }
 
+
+/*
+ * Minimal: black, white, and the greys between them. Chrome carries no colour at all — the accent
+ * is black, borders are hairlines, surfaces are white on white. Severity keeps a red and an amber
+ * because ranking by weight alone is not a ranking anyone can read at a glance.
+ */
+[data-theme='minimal'] {
+  color-scheme: light;
+  --canvas: #ffffff;
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --panel: #fafafa;
+  --muted-bg: #f5f5f5;
+  --muted: #666666;
+  --border: #eaeaea;
+  --border-subtle: #f2f2f2;
+  --ring: #000000;
+  --brand: #000000;
+  --brand-foreground: #ffffff;
+  --brand-muted: rgba(0, 0, 0, 0.05);
+  --secondary: #f5f5f5;
+  --destructive: #e00000;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #444444;
+  --sidebar-active: rgba(0, 0, 0, 0.05);
+  --crit: #e00000;
+  --high: #f5a623;
+  --med: #71717a;
+  --low: #a1a1aa;
+  --user: #171717;
+  --group: #525252;
+  --ou: #737373;
+  --computer: #a3a3a3;
+  --web-user-bg: #f5f5f5;
+  --web-group-bg: #ebebeb;
+  --web-priv-bg: #e0e0e0;
+  --web-cluster-bg: #fafafa;
+  --web-edge: #d4d4d4;
+  --edge-member: #000000;
+  --edge-primary: #a3a3a3;
+  --graph-node-bg: #ffffff;
+  --graph-focus-bg: #f5f5f5;
+  --node-user-bg: #fafafa;
+  --node-group-bg: #f5f5f5;
+  --node-priv-bg: #ededed;
+  --node-focus-bg: #eaeaea;
+  --minimap-mask: rgba(255, 255, 255, 0.6);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Nothing in the rail is coloured either. */
+[data-theme='minimal'] .nav button .nav-glyph { color: #171717; }
+[data-theme='minimal'] .nav button.active { color: #000000; }
+
+/* ---- theme menu ---- */
+.theme-wrap { position: relative; display: inline-flex; }
+.theme-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  width: 232px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: var(--shadow-pop);
+}
+.theme-pop button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 9px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  text-align: left;
+  color: var(--text);
+}
+.theme-pop button:hover { background: var(--hover); }
+.theme-pop button.active { background: var(--sel); }
+.theme-swatch { display: inline-flex; gap: 3px; flex: none; }
+.theme-swatch span {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+}
+.theme-pop .theme-name { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.theme-pop .theme-name strong { font-size: 12.5px; font-weight: 600; }
+.theme-pop .theme-name em { font-style: normal; font-size: 10.5px; color: var(--muted); }
+.theme-pop .theme-check { flex: none; color: var(--brand); }
+.set-control .theme-wrap .theme-pop { right: 0; }
+
 /* Each workspace keeps its own colour in the rail, so the nav is part of the palette. */
 [data-theme='vivid'] .nav button[data-workspace='directory'] .nav-glyph { color: #2563eb; }
 [data-theme='vivid'] .nav button[data-workspace='web'] .nav-glyph { color: #7c3aed; }
