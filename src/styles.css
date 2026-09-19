@@ -2033,3 +2033,63 @@ table.grid tr.selected td { background: var(--sel); }
 .bridge-warning strong { font-size: 12.5px; }
 .bridge-warning span { font-size: 11.5px; line-height: 1.55; color: var(--muted); }
 .bridge-warning code { font-size: 11px; padding: 1px 5px; border-radius: 4px; background: var(--hover); }
+
+/* ---- spinning a web: the waiting state ---- */
+.spinning-web { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.spinning-web svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.spinning-web path {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+  animation: web-strand 2.6s ease-in-out infinite;
+}
+.spinning-web .web-rings path { stroke-width: 0.9; stroke: color-mix(in srgb, var(--brand) 72%, transparent); }
+.web-widow {
+  position: absolute;
+  color: var(--brand);
+  display: inline-flex;
+  animation: web-widow 2.6s ease-in-out infinite;
+}
+
+/* Each strand draws, holds while the rest of the web is laid, then fades with the whole thing. */
+@keyframes web-strand {
+  0% { stroke-dashoffset: 1; opacity: 0; }
+  14% { opacity: 1; }
+  38% { stroke-dashoffset: 0; opacity: 1; }
+  78% { stroke-dashoffset: 0; opacity: 1; }
+  96%, 100% { stroke-dashoffset: 0; opacity: 0; }
+}
+@keyframes web-widow {
+  0%, 40% { opacity: 0; transform: scale(0.8); }
+  58% { opacity: 1; transform: scale(1); }
+  78% { opacity: 1; transform: scale(1); }
+  96%, 100% { opacity: 0; transform: scale(1); }
+}
+
+/* An animation that redraws itself forever is exactly what motion sensitivity objects to. */
+@media (prefers-reduced-motion: reduce) {
+  .spinning-web path {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 0.55;
+  }
+  .web-widow { animation: web-widow-still 1.8s ease-in-out infinite; }
+  @keyframes web-widow-still {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 1; }
+  }
+}
+
+.activate-waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 26px 0 8px;
+  max-width: 420px;
+}
+.activate-waiting p { font-size: 12.5px; color: var(--muted); margin: 0; text-align: center; }

@@ -1,6 +1,7 @@
-import { ExternalLink, KeyRound, Loader2 } from 'lucide-react'
+import { ExternalLink, KeyRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { keyLooksValid, normalizeKey, tidyKeyInput } from '@shared/license'
+import { SpinningWeb } from '../components/SpinningWeb'
 import { WidowMark } from '../components/WidowMark'
 import { useApp } from '../state'
 
@@ -56,6 +57,14 @@ export function Activate() {
               month after that.
             </p>
 
+            {busy ? (
+              <div className="activate-waiting">
+                <SpinningWeb size={104} label="Checking your licence key" />
+                <p>Checking your key…</p>
+              </div>
+            ) : null}
+
+            {busy ? null : (
             <label className="activate-field">
               <span className="mono">Licence key</span>
               <input
@@ -70,18 +79,21 @@ export function Activate() {
                 autoFocus
               />
             </label>
+            )}
 
-            {licence.message ? <p className="activate-error">{licence.message}</p> : null}
+            {licence.message && !busy ? <p className="activate-error">{licence.message}</p> : null}
 
+            {busy ? null : (
             <div className="activate-actions">
-              <button type="button" className="primary" disabled={!shaped || busy} onClick={() => void submit()}>
-                {busy ? <Loader2 size={14} className="spin" aria-hidden /> : <KeyRound size={14} aria-hidden />}
-                {busy ? 'Checking…' : 'Activate'}
+              <button type="button" className="primary" disabled={!shaped} onClick={() => void submit()}>
+                <KeyRound size={14} aria-hidden />
+                Activate
               </button>
               <a className="linkish" href={site} target="_blank" rel="noreferrer">
                 Get a free key <ExternalLink size={12} aria-hidden />
               </a>
             </div>
+            )}
           </section>
 
           <aside className="activate-aside">
