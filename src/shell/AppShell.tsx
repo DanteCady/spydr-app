@@ -1,7 +1,6 @@
 import { CircleHelp, Search } from 'lucide-react'
 import type { WorkspaceId } from '@shared/types'
 import { NavGlyph } from '../components/NavGlyph'
-import { ThemeMenu } from '../components/ThemeMenu'
 import { useMenuCommand } from '../lib/useMenuCommand'
 import { WidowMark } from '../components/WidowMark'
 import { ObjectInspector } from '../inspector/ObjectInspector'
@@ -120,7 +119,6 @@ export function AppShell() {
             {snapshot.findings.length} finding{snapshot.findings.length === 1 ? '' : 's'}
           </button>
           <span className="muted">ingested {new Date(snapshot.ingestedAt).toLocaleString()}</span>
-          <ThemeMenu />
           <button
             type="button"
             className={workspace === 'help' ? 'icon-btn active' : 'icon-btn'}
