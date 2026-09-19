@@ -1893,3 +1893,46 @@ table.grid tr.selected td { background: var(--sel); }
   font-size: 11px;
 }
 .tl-foot .linkish { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+
+/* ---- timeline graph ---- */
+.tl-views { display: flex; gap: 4px; padding: 2px 2px 8px; }
+.tl-views button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.tl-views button.active { border-color: color-mix(in srgb, var(--brand) 40%, transparent); background: var(--brand-muted); color: var(--brand); }
+.tl-tracks { list-style: none; display: flex; flex-direction: column; gap: 4px; padding: 6px 4px 10px; }
+.tl-tracks li { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--muted); }
+.tl-tracks em { font-style: normal; font-size: 10px; opacity: 0.8; }
+.tl-swatch { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+
+.tl-list.graph .tl-row { flex-direction: row; align-items: stretch; gap: 10px; padding: 0 11px 0 4px; }
+.tl-body { display: flex; flex-direction: column; gap: 4px; padding: 10px 0; min-width: 0; flex: 1; }
+.tl-rail { position: relative; flex: none; align-self: stretch; }
+.tl-line { position: absolute; width: 2px; border-radius: 1px; opacity: 0.55; }
+.tl-node {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+.tl-node.start { background: var(--card) !important; }
+.tl-node.selected { box-shadow: 0 0 0 3px var(--sel); }
+.tl-node.up { background: var(--low); border-color: var(--low); }
+.tl-node.down { background: var(--high); border-color: var(--high); }
+.tl-node.flat { background: var(--muted); border-color: var(--muted); }
+.tl-line.lane-0, .tl-swatch.lane-0 { background: var(--brand); }
+.tl-line.lane-1, .tl-swatch.lane-1 { background: var(--ou); }
+.tl-line.lane-2, .tl-swatch.lane-2 { background: var(--group); }
+.tl-line.lane-3, .tl-swatch.lane-3 { background: var(--user); }
+.tl-line.lane-4, .tl-swatch.lane-4 { background: var(--computer); }

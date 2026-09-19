@@ -257,6 +257,19 @@ export const WORKSPACES: Article[] = [
           The first read of a domain is a <strong>baseline</strong>: nothing preceded it, so there is nothing to
           compare. Everything after is measured from there.
         </p>
+        <h3>Graph or list</h3>
+        <p>
+          The graph draws a rail beside the entries, in the manner of a commit graph. Nothing merges
+          and nothing is rewritten, so there is no branching in the git sense — what does run in
+          parallel is <em>tracks</em>. A track is one domain read under one scope, and reading a
+          second domain, or narrowing the base DN so reads stop being comparable, opens a lane beside
+          the first rather than pretending the two belong to the same history.
+        </p>
+        <p>
+          A hollow node is where a track begins. A filled one is coloured by where the score went:
+          green for up, amber for down, grey for a read that moved nothing. The list view is the same
+          entries without the rail, for when the lanes are not telling you anything.
+        </p>
         <h3>What it is not</h3>
         <p>
           It is not an audit log, and it should not be used as one. SPYDR sees the difference between two reads, which
