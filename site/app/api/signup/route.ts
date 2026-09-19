@@ -1,7 +1,6 @@
-import { randomUUID } from 'node:crypto'
 import { NextResponse } from 'next/server'
-import { hashKey, newKey } from '@/lib/server/keys'
-import { rateLimit, store } from '@/lib/server/store'
+import { issueKey } from '@/lib/server/licences'
+import { rateLimit } from '@/lib/server/store'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -9,10 +8,8 @@ export const dynamic = 'force-dynamic'
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 /**
- * Signup issues a free licence key.
- *
- * One key per email: asking twice returns the same key rather than littering the database, which
- * also means "I lost my key" is answered by signing up again.
+ * Signup issues a free licence key — one per address. Asking again neither issues a second nor
+ * revokes the first; it reports that the address already has one.
  */
 export async function POST(request: Request) {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
@@ -31,21 +28,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'That does not look like an email address.' }, { status: 400 })
   }
 
-  const db = store()
-  const existing = db.prepare('SELECT id FROM licence WHERE email = ? AND revoked = 0').get(email) as
-    | { id: string }
-    | undefined
-  if (existing) {
-    // The key itself is not recoverable — only its hash is kept — so issue a fresh one and retire
-    // the old record rather than pretending we can read it back.
-    db.prepare('UPDATE licence SET revoked = 1, note = ? WHERE id = ?').run('reissued', existing.id)
+  const issued = issueKey(email)
+  if (issued.status === 'exists') {
+    return NextResponse.json(
+      { error: 'That address already has a key.', recover: '/api/recover' },
+      { status: 409 }
+    )
+  }
+  if (issued.status === 'error') {
+    return NextResponse.json({ error: 'Could not issue a key. Try again.' }, { status: 500 })
   }
 
-  const key = newKey()
-  db.prepare(
-    `INSERT INTO licence (id, email, key_hash, tier, features, created_at)
-     VALUES (?, ?, ?, 'free', '[]', ?)`
-  ).run(randomUUID(), email, hashKey(key), new Date().toISOString())
-
-  return NextResponse.json({ key, tier: 'free' })
+  return NextResponse.json({ key: issued.key, tier: 'free' })
 }

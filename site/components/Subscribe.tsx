@@ -26,8 +26,8 @@ export function Subscribe() {
           </button>
         </div>
         <p className="subscribe-note">
-          Keep it somewhere you will find it again. SPYDR asks for it once, on first run, and you are on the list for
-          release notes.
+          Keep it somewhere you will find it again — one key per address, and it is not shown twice. You are also on
+          the list for release notes.
         </p>
       </div>
     )
@@ -57,7 +57,7 @@ export function Subscribe() {
         </button>
       </div>
       <p
-        className={`subscribe-note${state.status === 'invalid' || state.status === 'error' || state.status === 'throttled' ? ' bad' : ''}`}
+        className={`subscribe-note${state.status === 'idle' || state.status === 'ok' ? '' : ' bad'}`}
         aria-live="polite"
       >
         {state.status === 'idle'

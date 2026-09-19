@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start --port 4200",
     "lint": "next lint",
-    "keygen": "node scripts/keygen.mjs"
+    "keygen": "node scripts/keygen.mjs",
+    "keys:seed": "node scripts/reserved-keys.mjs seed",
+    "keys:read": "node scripts/reserved-keys.mjs read"
   },
   "dependencies": {
     "next": "^16.3.5",
