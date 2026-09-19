@@ -83,9 +83,11 @@ export function Settings() {
   const [update, setUpdate] = useState<UpdateCheck | null>(null)
   const [checking, setChecking] = useState(false)
   const [groupDraft, setGroupDraft] = useState('')
+  const [historyStats, setHistoryStats] = useState<{ entries: number; path: string } | null>(null)
 
   useEffect(() => {
     void window.spydr?.about().then(setAbout)
+    void window.spydr?.timelineStats().then(setHistoryStats)
   }, [])
 
   const { hygiene, connection, report, privacy, appearance, updates } = settings
@@ -345,6 +347,29 @@ export function Settings() {
                 label="Forget the saved session when SPYDR closes"
                 onChange={(v) => updateSettings({ privacy: { forgetOnQuit: v } })}
               />
+            </Row>
+            <Row label="Change history" hint="How long the timeline keeps entries. Zero keeps everything.">
+              <NumberField
+                value={privacy.historyRetentionDays}
+                bounds={LIMITS.historyRetentionDays}
+                suffix="days"
+                onChange={(n) => updateSettings({ privacy: { historyRetentionDays: n } })}
+              />
+            </Row>
+            <Row label="Timeline entries" hint={historyStats ? `Stored at ${historyStats.path}` : 'Counting…'}>
+              <span className="stack">
+                <span className="muted">{historyStats ? `${historyStats.entries} recorded` : '—'}</span>
+                <button
+                  type="button"
+                  className="danger"
+                  disabled={!historyStats?.entries}
+                  onClick={() => {
+                    void window.spydr?.timelineClear().then(() => window.spydr?.timelineStats().then(setHistoryStats))
+                  }}
+                >
+                  Clear history
+                </button>
+              </span>
             </Row>
             <Row label="Saved session" hint={savedSession ? `${savedSession.domain}, saved ${new Date(savedSession.savedAt).toLocaleString()}` : 'Nothing saved.'}>
               <button type="button" className="danger" disabled={!savedSession} onClick={() => void forgetSession()}>

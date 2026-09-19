@@ -15,8 +15,9 @@ export function SessionConsent() {
       <div className="consent-text">
         <strong>Keep this directory on this computer?</strong>
         <span className="muted">
-          Restoring later needs a copy of the snapshot on disk — compressed, and encrypted with the OS keychain where
-          one exists. Nothing is sent anywhere. Passwords are never written.
+          Session restore and the change timeline both need SPYDR to keep a record of this directory on disk —
+          compressed, and encrypted with the OS keychain where one exists. Nothing is sent anywhere. Passwords are
+          never written.
         </span>
       </div>
       <button type="button" className="linkish" onClick={() => setSessionConsent('no')}>

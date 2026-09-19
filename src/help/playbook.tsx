@@ -75,7 +75,8 @@ export const PLAYBOOK: Article[] = [
         </p>
         <p>
           Re-crawl reports the difference — memberships removed, findings moved — so "the ticket was closed" becomes
-          "the access is gone", which are not the same claim.
+          "the access is gone", which are not the same claim. The Timeline keeps that comparison, so the evidence is
+          still there a month later when someone asks.
         </p>
 
         <h3>A cleanup campaign</h3>

@@ -11,6 +11,7 @@ import { Hygiene } from '../workspaces/Hygiene'
 import { Pathfinder } from '../workspaces/Pathfinder'
 import { Help } from '../workspaces/Help'
 import { Settings } from '../workspaces/Settings'
+import { Timeline } from '../workspaces/Timeline'
 import { Web } from '../workspaces/Web'
 
 const NAV: { id: WorkspaceId; label: string }[] = [
@@ -18,6 +19,7 @@ const NAV: { id: WorkspaceId; label: string }[] = [
   { id: 'web', label: 'Web' },
   { id: 'pathfinder', label: 'Pathfinder' },
   { id: 'hygiene', label: 'Hygiene' },
+  { id: 'timeline', label: 'Timeline' },
   { id: 'settings', label: 'Settings' }
 ]
 
@@ -41,6 +43,7 @@ export function AppShell() {
     else if (command === 'view:web') setWorkspace('web')
     else if (command === 'view:pathfinder') setWorkspace('pathfinder')
     else if (command === 'view:hygiene') setWorkspace('hygiene')
+    else if (command === 'view:timeline') setWorkspace('timeline')
     else if (command === 'view:settings') setWorkspace('settings')
     else if (command === 'help:docs') openHelp()
     else if (command === 'help:about') setWorkspace('settings')
@@ -134,9 +137,10 @@ export function AppShell() {
           {workspace === 'web' ? <Web /> : null}
           {workspace === 'pathfinder' ? <Pathfinder /> : null}
           {workspace === 'hygiene' ? <Hygiene /> : null}
+          {workspace === 'timeline' ? <Timeline /> : null}
           {workspace === 'settings' ? <Settings /> : null}
           {workspace === 'help' ? <Help /> : null}
-          {workspace === 'settings' || workspace === 'help' ? null : <ObjectInspector />}
+          {workspace === 'settings' || workspace === 'help' || workspace === 'timeline' ? null : <ObjectInspector />}
         </div>
       </div>
     </div>

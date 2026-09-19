@@ -235,6 +235,62 @@ export const WORKSPACES: Article[] = [
     )
   },
   {
+    id: 'timeline',
+    section: 'Workspaces',
+    title: 'Timeline',
+    blurb: 'What changed in the directory, read by read.',
+    keywords: 'history changes changelog diff audit baseline recorded who when replication scope',
+    body: (
+      <>
+        <p>
+          Every read that differs from the one before it is recorded: objects added, removed and changed, memberships
+          gained and lost, findings opened and closed, and how the score moved. Reads that change nothing leave no
+          trace, so the timeline is a record of the directory rather than of your clicking.
+        </p>
+        <h3>Reading an entry</h3>
+        <p>
+          The list gives you the date, a one-line summary and the shape of the change. Opening one names every object
+          and every membership involved — <em>Irene Kim → Tier0</em>, not "1 membership added" — and objects that still
+          exist link through to the Directory.
+        </p>
+        <p>
+          The first read of a domain is a <strong>baseline</strong>: nothing preceded it, so there is nothing to
+          compare. Everything after is measured from there.
+        </p>
+        <h3>What it is not</h3>
+        <p>
+          It is not an audit log, and it should not be used as one. SPYDR sees the difference between two reads, which
+          means two changes that cancel out between them are invisible, and it can never tell you who made a change or
+          exactly when. Your domain controller's security event log is the authority on both. What the timeline gives
+          you is the thing the event log is bad at: a readable account of how the shape of the directory moved.
+        </p>
+        <h3>Two ways it could mislead, and what SPYDR does about them</h3>
+        <dl className="kb-terms">
+          <Term name="A different controller">
+            Read one DC on Monday and another on Tuesday and replication lag will look like change. Every entry records
+            which controller answered, and an entry read from a different one than its predecessor is flagged.
+          </Term>
+          <Term name="A different scope">
+            Narrow the base DN, or turn computers off in Settings, and a naive comparison would report a mass deletion.
+            Each entry records its scope, and reads taken under different scopes are not compared at all — the next
+            read simply becomes a new baseline.
+          </Term>
+        </dl>
+        <h3>Where it lives</h3>
+        <p>
+          In a SQLite database in the app's data folder, readable only by your user account. Structure — when, which
+          controller, which scope, how many of what — is stored plainly so the list can be queried; the names and
+          distinguished names are encrypted with the OS keychain, exactly as the session snapshot is, and decrypted one
+          entry at a time when you open it.
+        </p>
+        <p>
+          Recording is governed by the same permission as session restore, so a directory you have not agreed to keep
+          on disk is never recorded. Retention and a <strong>clear history</strong> button are in Settings ▸ Privacy.
+        </p>
+      </>
+    )
+  },
+  {
     id: 'settings-guide',
     section: 'Workspaces',
     title: 'Settings',
@@ -286,8 +342,9 @@ export const WORKSPACES: Article[] = [
         </p>
         <h3>Privacy &amp; session</h3>
         <p>
-          Whether snapshots may be kept on this computer, whether to forget them on quit, and a button to forget the
-          saved one now. Declining removes anything already written.
+          Whether SPYDR may keep a record of this directory on this computer — which governs both session restore and
+          the change timeline — whether to forget the session on quit, how many days of timeline history to keep, and
+          buttons to forget the saved session or clear the history now. Declining removes anything already written.
         </p>
         <h3>Appearance</h3>
         <p>

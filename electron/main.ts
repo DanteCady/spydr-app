@@ -6,6 +6,19 @@ import { ingestDirectory, testConnection } from './directory/ldapProvider'
 import { buildMenu, usesCustomTitleBar } from './menu'
 import { getSettings, resetSettings, settingsPath, updateSettings } from './settings'
 import { checkForUpdate, type UpdateCheck } from './updates'
+import {
+  clearTimeline,
+  closeTimeline,
+  countEntries,
+  getEntry,
+  listEntries,
+  objectHistory,
+  pruneEntries,
+  recordRead,
+  timelinePath
+} from './timeline'
+import { diffSnapshots } from '../shared/diff'
+import { readScope, sameScope, worthRecording } from '../shared/timeline'
 import type { SettingsPatch } from '../shared/settings'
 import { reportFileName, writeReportPdf, type ReportResult } from './report'
 import {
@@ -33,6 +46,25 @@ let lastProfile: SessionProfile | null = null
  * session file, and dropped on disconnect or quit.
  */
 let liveBind: ConnectionInput | null = null
+
+/** The previous read, kept to diff the next one against. Memory only. */
+let lastRead: { snapshot: DirectorySnapshot; scope: ReturnType<typeof readScope> } | null = null
+
+/**
+ * Records what a read changed. Only with consent — this is directory data on disk, and the same
+ * question that governs the session snapshot governs the timeline.
+ */
+function noteRead(snapshot: DirectorySnapshot): void {
+  const settings = getSettings()
+  const scope = readScope(snapshot, settings)
+  const comparable =
+    lastRead && lastRead.snapshot.domain === snapshot.domain && sameScope(lastRead.scope, scope) ? lastRead.snapshot : null
+  const diff = comparable ? diffSnapshots(comparable, snapshot) : null
+  lastRead = { snapshot, scope }
+  if (settings.privacy.sessionConsent !== 'yes') return
+  if (!worthRecording(diff)) return
+  recordRead({ snapshot, diff, scope })
+}
 
 function preloadPath(): string {
   const js = join(__dirname, '../preload/preload.js')
@@ -147,13 +179,16 @@ function registerIpc(): void {
     // IPC, means the renderer never has to be trusted to do that stripping.
     lastProfile = toProfile(input)
     liveBind = input
+    noteRead(snapshot)
     return snapshot
   })
   // Read the same directory again with the credentials already in memory. The renderer asks; it
   // never holds the password to ask with.
   ipcMain.handle('spydr:refresh', async () => {
     if (!liveBind) throw new Error('No live connection to refresh. Connect to the directory again.')
-    return ingestDirectory(liveBind, tuning())
+    const snapshot = await ingestDirectory(liveBind, tuning())
+    noteRead(snapshot)
+    return snapshot
   })
   ipcMain.on('spydr:can-refresh', (evt) => {
     evt.returnValue = liveBind !== null
@@ -161,6 +196,7 @@ function registerIpc(): void {
   ipcMain.handle('spydr:forget-bind', () => {
     liveBind = null
     lastProfile = null
+    lastRead = null
   })
   ipcMain.handle('spydr:session:peek', () => loadSessionMeta())
   ipcMain.handle('spydr:session:restore', () => loadSession())
@@ -190,6 +226,11 @@ function registerIpc(): void {
   ipcMain.handle('spydr:settings:set', (_evt, patch: SettingsPatch) => updateSettings(patch))
   ipcMain.handle('spydr:settings:reset', () => resetSettings())
   ipcMain.handle('spydr:updates:check', (): Promise<UpdateCheck> => checkForUpdate(getSettings().updates.feedUrl, appVersion()))
+  ipcMain.handle('spydr:timeline:list', (_evt, domain?: string) => listEntries(domain))
+  ipcMain.handle('spydr:timeline:get', (_evt, id: string) => getEntry(id))
+  ipcMain.handle('spydr:timeline:object', (_evt, objectGuid: string) => objectHistory(objectGuid))
+  ipcMain.handle('spydr:timeline:clear', () => clearTimeline())
+  ipcMain.handle('spydr:timeline:stats', () => ({ entries: countEntries(), path: timelinePath() }))
   ipcMain.handle('spydr:about', () => ({
     version: appVersion(),
     electron: process.versions.electron,
@@ -231,6 +272,7 @@ void app.whenReady().then(() => {
     item.setSavePath(join(app.getPath('downloads'), item.getFilename()))
   })
   registerIpc()
+  pruneEntries(getSettings().privacy.historyRetentionDays)
   buildMenu()
   createWindow()
   app.on('activate', () => {
@@ -240,6 +282,8 @@ void app.whenReady().then(() => {
 
 app.on('will-quit', () => {
   liveBind = null
+  lastRead = null
+  closeTimeline()
   if (getSettings().privacy.forgetOnQuit) clearSession()
 })
 
