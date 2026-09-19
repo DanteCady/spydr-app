@@ -1,10 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { loadContosoFixture } from '../fixtures/contoso-lab'
 import { buildMembershipGraph, enumeratePaths } from '@shared/graph'
 import type { ConnectionInput, DirectorySnapshot, Finding, PathResult, WorkspaceId } from '@shared/types'
 import type { SessionMeta } from './vite-env'
 
 export type Theme = 'dark' | 'light' | 'vivid'
+
+/** Whether the user has agreed to SPYDR keeping a copy of a live directory on this computer. */
+export type SessionConsent = 'yes' | 'no' | 'unset'
 
 export const THEMES: Theme[] = ['dark', 'light', 'vivid']
 
@@ -37,6 +40,10 @@ interface AppState {
   savedSession: SessionMeta | null
   restoreSession: () => Promise<void>
   forgetSession: () => Promise<void>
+  sessionConsent: SessionConsent
+  setSessionConsent: (consent: 'yes' | 'no') => void
+  /** True while a live directory is open and the question has not been answered yet. */
+  needsSessionConsent: boolean
   /** PDF report of the current findings. Status doubles as the error channel. */
   generateReport: () => Promise<void>
   reportBusy: boolean
@@ -55,10 +62,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pathTarget, setPathTarget] = useState('')
   const [activeFinding, setActiveFinding] = useState<Finding | null>(null)
   const [savedSession, setSavedSession] = useState<SessionMeta | null>(null)
+  const [sessionConsent, setConsent] = useState<SessionConsent>(() => {
+    const saved = window.localStorage.getItem('spydr-session-consent')
+    return saved === 'yes' || saved === 'no' ? saved : 'unset'
+  })
   const [reportBusy, setReportBusy] = useState(false)
   const [reportStatus, setReportStatus] = useState<string | null>(null)
-  // Kept out of the snapshot so the password never travels with it.
-  const lastInput = useRef<ConnectionInput | null>(null)
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = window.localStorage.getItem('spydr-theme')
     return THEMES.includes(saved as Theme) ? (saved as Theme) : 'dark'
@@ -106,7 +115,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         throw new Error('Run SPYDR as the desktop app to bind to Active Directory.')
       }
       const s = await window.spydr.ingest(input)
-      lastInput.current = input
       applySnapshot(s)
     },
     [applySnapshot]
@@ -135,6 +143,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await window.spydr?.sessionClear()
     setSavedSession(null)
   }, [])
+
+  const setSessionConsent = useCallback((consent: 'yes' | 'no') => {
+    setConsent(consent)
+    window.localStorage.setItem('spydr-session-consent', consent)
+    // Declining is retroactive: anything already written is removed, not just left in place.
+    if (consent === 'no') void forgetSession()
+  }, [forgetSession])
 
   const generateReport = useCallback(async () => {
     if (!snapshot) return
@@ -211,31 +226,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // Persist whenever the snapshot or the user's place in it changes. Debounced so that clicking
-  // through the tree does not rewrite a large directory on every selection.
+  // through the tree does not rewrite a large directory on every selection. A real directory is
+  // only written once the user has said it may be; the sample carries nobody's data, so it is
+  // always restorable.
   useEffect(() => {
     if (!snapshot || !window.spydr?.sessionSave) return
+    if (snapshot.source === 'ldap' && sessionConsent !== 'yes') return
     const id = window.setTimeout(() => {
       void window.spydr
-        ?.sessionSave({
-          snapshot,
-          profile:
-            snapshot.source === 'ldap' && lastInput.current
-              ? {
-                  domain: lastInput.current.domain,
-                  host: lastInput.current.host,
-                  port: lastInput.current.port,
-                  protocol: lastInput.current.protocol,
-                  bindUsername: lastInput.current.bindUsername,
-                  baseDn: lastInput.current.baseDn,
-                  trustServerCert: lastInput.current.trustServerCert
-                }
-              : null,
-          view: { workspace, selectedId, containerDn }
-        })
+        ?.sessionSave({ snapshot, view: { workspace, selectedId, containerDn } })
         .then(() => window.spydr?.sessionPeek().then(setSavedSession))
     }, 600)
     return () => window.clearTimeout(id)
-  }, [snapshot, workspace, selectedId, containerDn])
+  }, [snapshot, workspace, selectedId, containerDn, sessionConsent])
 
   const value: AppState = {
     theme,
@@ -265,6 +268,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     savedSession,
     restoreSession,
     forgetSession,
+    sessionConsent,
+    setSessionConsent,
+    needsSessionConsent: !!snapshot && snapshot.source === 'ldap' && sessionConsent === 'unset',
     generateReport,
     reportBusy,
     reportStatus

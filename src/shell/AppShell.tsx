@@ -4,6 +4,7 @@ import { NavGlyph } from '../components/NavGlyph'
 import { useMenuCommand } from '../lib/useMenuCommand'
 import { WidowMark } from '../components/WidowMark'
 import { ObjectInspector } from '../inspector/ObjectInspector'
+import { SessionConsent } from '../components/SessionConsent'
 import { useApp } from '../state'
 import { Directory } from '../workspaces/Directory'
 import { Hygiene } from '../workspaces/Hygiene'
@@ -21,8 +22,19 @@ const NAV: { id: WorkspaceId; label: string; hint: string }[] = [
 const NEXT_THEME: Record<string, string> = { dark: 'light', light: 'vivid', vivid: 'dark' }
 
 export function AppShell() {
-  const { snapshot, workspace, setWorkspace, search, setSearch, disconnect, theme, toggleTheme, setTheme, generateReport } =
-    useApp()
+  const {
+    snapshot,
+    workspace,
+    setWorkspace,
+    search,
+    setSearch,
+    disconnect,
+    theme,
+    toggleTheme,
+    setTheme,
+    generateReport,
+    setSessionConsent
+  } = useApp()
 
   // Menu commands that belong to the shell; the canvas handles its own.
   useMenuCommand((command) => {
@@ -35,6 +47,8 @@ export function AppShell() {
     else if (command === 'view:theme:vivid') setTheme('vivid')
     else if (command === 'file:disconnect') disconnect()
     else if (command === 'file:report') void generateReport()
+    else if (command === 'file:remember') setSessionConsent('yes')
+    else if (command === 'file:forget') setSessionConsent('no')
     else if (command === 'edit:find') {
       document.querySelector<HTMLInputElement>('.topbar input[type="search"]')?.focus()
     }
@@ -117,6 +131,7 @@ export function AppShell() {
             )}
           </button>
         </header>
+        <SessionConsent />
         <div className="workspace">
           {workspace === 'directory' ? <Directory /> : null}
           {workspace === 'web' ? <Web /> : null}

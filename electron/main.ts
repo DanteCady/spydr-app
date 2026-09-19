@@ -10,14 +10,19 @@ import {
   loadSession,
   loadSessionMeta,
   saveSession,
+  toProfile,
   type SessionProfile,
   type SessionView
 } from './directory/session'
+import type { MenuRole } from '../shared/menu'
 import type { ConnectionInput, DirectorySnapshot } from '../shared/types'
 
 app.setName('SPYDR')
 
 const TITLE_BAR_HEIGHT = 36
+
+/** Connection details of the live bind, minus the password. Memory only; never leaves main. */
+let lastProfile: SessionProfile | null = null
 
 function preloadPath(): string {
   const js = join(__dirname, '../preload/preload.js')
@@ -30,6 +35,13 @@ function appIcon(): Electron.NativeImage | undefined {
   if (!png) return undefined
   const image = nativeImage.createFromPath(png)
   return image.isEmpty() ? undefined : image
+}
+
+/** The renderer's own document: the dev server in development, the packaged file otherwise. */
+function isOwnDocument(url: string): boolean {
+  const dev = process.env.ELECTRON_RENDERER_URL
+  if (dev && url.startsWith(dev)) return true
+  return url.startsWith('file://') && url.includes('/renderer/')
 }
 
 function createWindow(): void {
@@ -69,6 +81,14 @@ function createWindow(): void {
     void shell.openExternal(details.url)
     return { action: 'deny' }
   })
+  // The window renders one document: ours. Anything else — a stray link, an injected redirect —
+  // would otherwise inherit the preload bridge and with it the ability to bind to a directory.
+  win.webContents.on('will-navigate', (evt, url) => {
+    if (isOwnDocument(url)) return
+    evt.preventDefault()
+    if (/^https?:/.test(url)) void shell.openExternal(url)
+  })
+  win.webContents.on('will-attach-webview', (evt) => evt.preventDefault())
 
   if (process.env.ELECTRON_RENDERER_URL) {
     void win.loadURL(process.env.ELECTRON_RENDERER_URL)
@@ -81,13 +101,17 @@ function registerIpc(): void {
   ipcMain.handle('spydr:prefill', () => windowsPrefill())
   ipcMain.handle('spydr:discover', async (_evt, domain: string) => discoverDcs(domain))
   ipcMain.handle('spydr:test', async (_evt, input: ConnectionInput) => testConnection(input))
-  ipcMain.handle('spydr:ingest', async (_evt, input: ConnectionInput) => ingestDirectory(input))
+  ipcMain.handle('spydr:ingest', async (_evt, input: ConnectionInput) => {
+    const snapshot = await ingestDirectory(input)
+    // toProfile strips the password. Deriving the profile here, rather than accepting one over
+    // IPC, means the renderer never has to be trusted to do that stripping.
+    lastProfile = toProfile(input)
+    return snapshot
+  })
   ipcMain.handle('spydr:session:peek', () => loadSessionMeta())
   ipcMain.handle('spydr:session:restore', () => loadSession())
-  ipcMain.handle(
-    'spydr:session:save',
-    (_evt, payload: { snapshot: DirectorySnapshot; profile: SessionProfile | null; view: SessionView }) =>
-      saveSession(payload.snapshot, payload.profile, payload.view)
+  ipcMain.handle('spydr:session:save', (_evt, payload: { snapshot: DirectorySnapshot; view: SessionView }) =>
+    saveSession(payload.snapshot, payload.snapshot.source === 'ldap' ? lastProfile : null, payload.view)
   )
   ipcMain.handle('spydr:session:clear', () => clearSession())
   ipcMain.handle('spydr:report', async (evt, snapshot: DirectorySnapshot): Promise<ReportResult | null> => {
@@ -113,9 +137,19 @@ function registerIpc(): void {
     }
   })
   ipcMain.handle('spydr:role', (evt, role: string) => {
+    // Allowlisted by name. Looking the role up on webContents would let the renderer call any
+    // method on it — including ones that open devtools or navigate the window.
     const wc = BrowserWindow.fromWebContents(evt.sender)?.webContents
-    const fn = (wc as unknown as Record<string, () => void> | undefined)?.[role]
-    if (typeof fn === 'function') fn.call(wc)
+    if (!wc) return
+    const actions: Record<MenuRole, () => void> = {
+      undo: () => wc.undo(),
+      redo: () => wc.redo(),
+      cut: () => wc.cut(),
+      copy: () => wc.copy(),
+      paste: () => wc.paste(),
+      selectAll: () => wc.selectAll()
+    }
+    actions[role as MenuRole]?.()
   })
 }
 

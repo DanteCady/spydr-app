@@ -70,13 +70,22 @@ function ldapUrl(input: ConnectionInput): string {
   return `${scheme}://${input.host}:${input.port}`
 }
 
-async function withClient<T>(input: ConnectionInput, fn: (client: Client) => Promise<T>): Promise<T> {
-  const client = new Client({
+/**
+ * tlsOptions must only be set for ldaps://. ldapts takes their presence as "this socket is TLS" and
+ * negotiates against a plaintext port, which breaks LDAP and StartTLS outright. StartTLS passes its
+ * own options when it upgrades the socket, which is a separate call.
+ */
+export function clientOptions(input: ConnectionInput): ConstructorParameters<typeof Client>[0] {
+  return {
     url: ldapUrl(input),
     timeout: 30_000,
     connectTimeout: 8_000,
-    tlsOptions: { rejectUnauthorized: !input.trustServerCert }
-  })
+    ...(input.protocol === 'ldaps' ? { tlsOptions: { rejectUnauthorized: !input.trustServerCert } } : {})
+  }
+}
+
+async function withClient<T>(input: ConnectionInput, fn: (client: Client) => Promise<T>): Promise<T> {
+  const client = new Client(clientOptions(input))
   try {
     if (input.protocol === 'starttls') {
       await client.startTLS({ rejectUnauthorized: !input.trustServerCert })
@@ -118,6 +127,9 @@ async function searchAll(client: Client, baseDn: string, filter: string, attribu
 }
 
 
+/** Ceiling on a single group's membership. Well past any real group; stops a runaway server. */
+const MAX_GROUP_MEMBERS = 250_000
+
 async function readMembers(client: Client, dn: string, seed: Record<string, unknown>): Promise<string[]> {
   const collected: string[] = []
   const take = (entry: Record<string, unknown>): { dns: string[]; next: number | null } => {
@@ -136,7 +148,11 @@ async function readMembers(client: Client, dn: string, seed: Record<string, unkn
   const firstPage = take(seed)
   collected.push(...firstPage.dns)
   let start = firstPage.next
-  while (start != null) {
+  // A server that keeps handing back the same range would otherwise spin forever, so ranges must
+  // strictly advance and the whole read is capped.
+  let lastStart = -1
+  while (start != null && start > lastStart && collected.length < MAX_GROUP_MEMBERS) {
+    lastStart = start
     const attr = `member;range=${start}-${start + 1499}`
     const { searchEntries } = await client.search(dn, {
       scope: 'base',

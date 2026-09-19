@@ -83,7 +83,10 @@ export function generalizedTime(value: unknown): string | undefined {
   if (!s) return undefined
   const m = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/.exec(s)
   if (!m) return s
-  return new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`).toISOString()
+  // Shapely but impossible values (month 19, day 40) reach here; toISOString would throw on those
+  // and take the whole ingest down, so the raw value is handed back instead.
+  const date = new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`)
+  return Number.isNaN(date.getTime()) ? s : date.toISOString()
 }
 
 export function memberAttrNames(entry: Record<string, unknown>): string[] {
