@@ -9,14 +9,13 @@ export interface OuTreeNode {
   children: OuTreeNode[]
 }
 
-/** Containers an admin expects to see. Everything else with objectClass=container is plumbing. */
-const WELL_KNOWN_CONTAINERS = new Set([
-  'users',
-  'computers',
-  'builtin',
-  'foreignsecurityprincipals',
-  'managed service accounts'
-])
+/**
+ * Containers an admin manages, so they stay visible. Everything else with objectClass=container is
+ * AD's own bookkeeping. ForeignSecurityPrincipals is deliberately not here: it holds SIDs from
+ * trusted domains and nobody administers it by hand. Managed Service Accounts is, because gMSAs
+ * are accounts an admin creates and maintains.
+ */
+const ADMIN_CONTAINERS = new Set(['users', 'computers', 'builtin', 'managed service accounts'])
 
 function rdnValue(dn: string): string {
   return (dn.split(',')[0] ?? '').replace(/^(CN|OU|DC)=/i, '')
@@ -32,7 +31,7 @@ export function isSystemContainer(node: DirectoryNode, baseDn: string): boolean 
   if (node.type !== 'container') return false
   if (node.dn.toLowerCase() === baseDn.toLowerCase()) return false
   const rdn = rdnValue(node.dn).toLowerCase()
-  return !WELL_KNOWN_CONTAINERS.has(rdn)
+  return !ADMIN_CONTAINERS.has(rdn)
 }
 
 export function buildOuTree(

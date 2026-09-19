@@ -142,15 +142,15 @@ export function Directory() {
             disabled={systemCount === 0}
             title={
               systemCount === 0
-                ? 'This directory has no system containers to show — nothing is being hidden'
+                ? 'This directory has no internal containers to show — nothing is being hidden'
                 : showSystem
-                  ? `Hide the ${systemCount} container${systemCount === 1 ? '' : 's'} Active Directory maintains itself`
-                  : `Show the ${systemCount} container${systemCount === 1 ? '' : 's'} Active Directory maintains itself, such as Configuration and System`
+                  ? `Hide the ${systemCount} container${systemCount === 1 ? '' : 's'} Active Directory maintains for itself`
+                  : `Show the ${systemCount} container${systemCount === 1 ? '' : 's'} Active Directory maintains for itself, such as System, Program Data and NTDS Quotas`
             }
             onClick={() => setShowSystem((on) => !on)}
           >
             {showSystem ? <Eye size={14} aria-hidden /> : <EyeOff size={14} aria-hidden />}
-            <span>System{systemCount > 0 ? ` (${systemCount})` : ''}</span>
+            <span>AD internals{systemCount > 0 ? ` (${systemCount})` : ''}</span>
           </button>
         </div>
         <div className="tree">
