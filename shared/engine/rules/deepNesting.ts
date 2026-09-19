@@ -5,6 +5,8 @@ export const deepNesting = defineRule({
   name: 'Deep nesting',
   severity: 'high',
   describe: 'Groups nested more levels deep than the configured limit, outside of reported cycles.',
+  why:
+    'Access granted five levels down is access nobody reviews. Deep chains are usually the fossil record of old role groups, and each level is another place a membership can hide.',
   detect: (ctx) => {
     const limit = ctx.config.deepNesting
     const out = []

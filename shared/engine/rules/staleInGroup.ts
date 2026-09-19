@@ -5,6 +5,8 @@ export const staleInGroup = defineRule({
   name: 'Stale user still in groups',
   severity: 'medium',
   describe: 'Enabled accounts with no recent logon that still hold group memberships.',
+  why:
+    'An account nobody has used in months is an account nobody would notice being used. Its memberships are the blast radius if it is ever compromised.',
   detect: (ctx) => {
     const out = []
     for (const n of ctx.users) {

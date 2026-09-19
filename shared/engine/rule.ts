@@ -28,6 +28,8 @@ export interface Rule {
   severity: FindingSeverity
   /** One line on what the rule looks for. */
   describe: string
+  /** Why an admin should care — the consequence, not the restated definition. */
+  why: string
   detect(ctx: EngineContext): Finding[]
 }
 

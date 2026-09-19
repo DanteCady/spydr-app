@@ -5,6 +5,8 @@ export const redundantMembership = defineRule({
   name: 'Redundant direct membership',
   severity: 'low',
   describe: 'A user who is a direct member of both a group and one of its nested member groups.',
+  why:
+    'Removing the obvious membership looks like revoking access and does not, because the nested one still grants it. This is how offboarding quietly fails.',
   detect: (ctx) => {
     const out = []
     for (const user of ctx.users) {

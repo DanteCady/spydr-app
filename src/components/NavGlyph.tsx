@@ -1,4 +1,4 @@
-import { FolderTree, Route, Settings2, Sparkles } from 'lucide-react'
+import { CircleHelp, FolderTree, Route, Settings2, Sparkles } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { WorkspaceId } from '@shared/types'
 
@@ -49,7 +49,8 @@ const ICON: Record<WorkspaceId, ComponentType<GlyphProps>> = {
   web: SpiderWeb,
   pathfinder: Route,
   hygiene: Sparkles,
-  settings: Settings2
+  settings: Settings2,
+  help: CircleHelp
 }
 
 export function NavGlyph({ id }: { id: WorkspaceId }) {

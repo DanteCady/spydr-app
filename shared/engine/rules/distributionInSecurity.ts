@@ -5,6 +5,8 @@ export const distributionInSecurity = defineRule({
   name: 'Distribution group nested in a security group',
   severity: 'high',
   describe: 'Mail distribution groups nested inside security groups, where they can grant access.',
+  why:
+    'A distribution group is a mailing list: people are added to it casually, by people who are not thinking about access. Nest one inside a security group and the mailing list becomes an access grant.',
   detect: (ctx) => {
     const out = []
     for (const edge of ctx.edges) {

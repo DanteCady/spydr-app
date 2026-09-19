@@ -5,6 +5,8 @@ export const emptySecurityGroup = defineRule({
   name: 'Empty security group',
   severity: 'low',
   describe: 'Security groups with no members at all, excluding the ones AD creates itself.',
+  why:
+    'Empty groups are usually abandoned, but they still carry their ACLs. The next admin who needs a group with that name reuses it, and inherits permissions nobody remembers granting.',
   detect: (ctx) =>
     ctx.nodes
       .filter(

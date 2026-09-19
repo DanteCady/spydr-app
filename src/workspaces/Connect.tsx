@@ -1,4 +1,4 @@
-import { DatabaseZap, FolderOpen, History, Plug, Radar, Settings2, X } from 'lucide-react'
+import { CircleHelp, DatabaseZap, FolderOpen, History, Plug, Radar, Settings2, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ConnectionInput, Protocol } from '@shared/types'
 import { WidowMark } from '../components/WidowMark'
@@ -9,7 +9,8 @@ function defaultPort(protocol: Protocol): number {
 }
 
 export function Connect() {
-  const { openSample, ingestLdap, savedSession, restoreSession, forgetSession, settings, setWorkspace } = useApp()
+  const { openSample, ingestLdap, savedSession, restoreSession, forgetSession, settings, setWorkspace, openHelp } =
+    useApp()
   // Settings supply the starting point; a saved profile below still wins over them.
   const defaults = useRef(settings.connection).current
   const [domain, setDomain] = useState('')
@@ -162,6 +163,13 @@ export function Connect() {
               <span>
                 <strong>Settings</strong>
                 <em>Hygiene thresholds, connection defaults, privacy</em>
+              </span>
+            </button>
+            <button type="button" className="welcome-action" onClick={() => openHelp('start')}>
+              <CircleHelp size={16} aria-hidden />
+              <span>
+                <strong>Guide</strong>
+                <em>What the fields mean, what the findings mean, what SPYDR never does</em>
               </span>
             </button>
           </section>

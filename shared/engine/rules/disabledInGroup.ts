@@ -5,6 +5,8 @@ export const disabledInGroup = defineRule({
   name: 'Disabled user still in groups',
   severity: 'medium',
   describe: 'Disabled accounts that still hold explicit group memberships.',
+  why:
+    'A disabled account is not a revoked one. Re-enable it — a helpdesk restore, a returning contractor — and every membership it kept comes back with it, silently.',
   detect: (ctx) => {
     const out = []
     for (const n of ctx.users) {
