@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Downloads } from '@/components/Downloads'
 import { HeroGraph } from '@/components/HeroGraph'
+import { Subscribe } from '@/components/Subscribe'
 
 const SHOTS = {
   pathfinder: { src: '/assets/pathfinder.png', w: 1844, h: 960 },
@@ -47,6 +48,7 @@ export default function Home() {
           <p className="fineprint">
             Free · No account · Binds as an ordinary domain user · Never writes to your directory
           </p>
+          <Subscribe />
         </div>
         <HeroGraph />
       </section>
