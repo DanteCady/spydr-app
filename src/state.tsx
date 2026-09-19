@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { loadContosoFixture } from '../fixtures/contoso-lab'
 import { buildMembershipGraph, enumeratePaths } from '@shared/graph'
+import { rescoreSnapshot } from '@shared/enrich'
+import { applyPatch, DEFAULT_SETTINGS, type AppSettings, type SettingsPatch } from '@shared/settings'
 import type { ConnectionInput, DirectorySnapshot, Finding, PathResult, WorkspaceId } from '@shared/types'
 import type { SessionMeta } from './vite-env'
 
@@ -42,6 +44,10 @@ interface AppState {
   forgetSession: () => Promise<void>
   sessionConsent: SessionConsent
   setSessionConsent: (consent: 'yes' | 'no') => void
+  /** The settings file, mirrored from the main process. */
+  settings: AppSettings
+  updateSettings: (patch: SettingsPatch) => void
+  resetSettings: () => void
   /** True while a live directory is open and the question has not been answered yet. */
   needsSessionConsent: boolean
   /** PDF report of the current findings. Status doubles as the error channel. */
@@ -62,20 +68,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pathTarget, setPathTarget] = useState('')
   const [activeFinding, setActiveFinding] = useState<Finding | null>(null)
   const [savedSession, setSavedSession] = useState<SessionMeta | null>(null)
-  const [sessionConsent, setConsent] = useState<SessionConsent>(() => {
-    const saved = window.localStorage.getItem('spydr-session-consent')
-    return saved === 'yes' || saved === 'no' ? saved : 'unset'
-  })
   const [reportBusy, setReportBusy] = useState(false)
   const [reportStatus, setReportStatus] = useState<string | null>(null)
-  const [theme, setTheme] = useState<Theme>(() => {
-    const saved = window.localStorage.getItem('spydr-theme')
-    return THEMES.includes(saved as Theme) ? (saved as Theme) : 'dark'
-  })
+  // Read synchronously, so the first paint is already in the right theme. Outside the desktop app
+  // there is no store to read, and the defaults stand.
+  const [settings, setSettings] = useState<AppSettings>(() => window.spydr?.settingsSync() ?? DEFAULT_SETTINGS)
+
+  const theme = settings.appearance.theme
+  const sessionConsent: SessionConsent = settings.privacy.sessionConsent
+
+  const updateSettings = useCallback((patch: SettingsPatch) => {
+    // Applied locally first so a control never lags a keystroke behind; main is the final word.
+    setSettings((current) => applyPatch(current, patch))
+    void window.spydr?.setSettings(patch).then((saved) => saved && setSettings(saved))
+  }, [])
+
+  const resetSettings = useCallback(() => {
+    setSettings(DEFAULT_SETTINGS)
+    void window.spydr?.resetSettings().then((saved) => saved && setSettings(saved))
+  }, [])
+
+  // Another window may have changed them.
+  useEffect(() => window.spydr?.onSettings(setSettings), [])
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
-    window.localStorage.setItem('spydr-theme', theme)
   }, [theme])
 
   useEffect(() => {
@@ -106,8 +123,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const openSample = useCallback(() => {
-    applySnapshot(loadContosoFixture())
-  }, [applySnapshot])
+    applySnapshot(rescoreSnapshot(loadContosoFixture(), settings.hygiene))
+  }, [applySnapshot, settings.hygiene])
 
   const ingestLdap = useCallback(
     async (input: ConnectionInput) => {
@@ -145,11 +162,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const setSessionConsent = useCallback((consent: 'yes' | 'no') => {
-    setConsent(consent)
-    window.localStorage.setItem('spydr-session-consent', consent)
+    updateSettings({ privacy: { sessionConsent: consent } })
     // Declining is retroactive: anything already written is removed, not just left in place.
     if (consent === 'no') void forgetSession()
-  }, [forgetSession])
+  }, [forgetSession, updateSettings])
 
   const generateReport = useCallback(async () => {
     if (!snapshot) return
@@ -168,6 +184,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setReportBusy(false)
     }
   }, [snapshot])
+
+  const setTheme = useCallback(
+    (next: Theme) => updateSettings({ appearance: { theme: next } }),
+    [updateSettings]
+  )
+  const toggleTheme = useCallback(
+    () => setTheme(THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length]),
+    [setTheme, theme]
+  )
+
+  // Thresholds, disabled rules and the privileged-group list change what the rules find. The engine
+  // is shared code, so the open directory is re-scored here rather than re-read from the DC.
+  const hygieneKey = JSON.stringify(settings.hygiene)
+  useEffect(() => {
+    setSnapshot((current) => (current ? rescoreSnapshot(current, JSON.parse(hygieneKey)) : current))
+  }, [hygieneKey])
 
   const goTo = useCallback((w: WorkspaceId, objectId?: string) => {
     if (objectId) {
@@ -242,7 +274,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value: AppState = {
     theme,
-    toggleTheme: useCallback(() => setTheme((t) => THEMES[(THEMES.indexOf(t) + 1) % THEMES.length]), []),
+    toggleTheme,
     setTheme,
     snapshot,
     workspace,
@@ -270,6 +302,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     forgetSession,
     sessionConsent,
     setSessionConsent,
+    settings,
+    updateSettings,
+    resetSettings,
     needsSessionConsent: !!snapshot && snapshot.source === 'ldap' && sessionConsent === 'unset',
     generateReport,
     reportBusy,

@@ -1,6 +1,8 @@
 import type { ConnectionInput, DcRecord, DirectorySnapshot, TestConnectionResult, WindowsPrefill } from '@shared/types'
 import type { SessionMeta, SessionProfile, SessionView } from '../electron/directory/session'
 import type { ReportResult } from '../electron/report'
+import type { AboutInfo, AppSettings, SettingsPatch } from '@shared/settings'
+import type { UpdateCheck } from '../electron/updates'
 
 export interface SpydrApi {
   windowsPrefill: () => Promise<WindowsPrefill>
@@ -12,12 +14,18 @@ export interface SpydrApi {
   sessionSave: (payload: { snapshot: DirectorySnapshot; view: SessionView }) => Promise<void>
   sessionClear: () => Promise<void>
   report: (snapshot: DirectorySnapshot) => Promise<ReportResult | null>
+  settingsSync: () => AppSettings
+  setSettings: (patch: SettingsPatch) => Promise<AppSettings>
+  resetSettings: () => Promise<AppSettings>
+  onSettings: (handler: (settings: AppSettings) => void) => () => void
+  about: () => Promise<AboutInfo>
+  checkForUpdate: () => Promise<UpdateCheck>
   onMenuCommand: (handler: (command: string) => void) => () => void
   chrome: () => { custom: boolean; platform: string; titleBarHeight: number }
   execRole: (role: string) => Promise<void>
 }
 
-export type { ReportResult, SessionMeta, SessionProfile, SessionView }
+export type { ReportResult, SessionMeta, SessionProfile, SessionView, UpdateCheck }
 
 declare global {
   interface Window {

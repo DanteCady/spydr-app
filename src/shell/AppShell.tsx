@@ -9,6 +9,7 @@ import { useApp } from '../state'
 import { Directory } from '../workspaces/Directory'
 import { Hygiene } from '../workspaces/Hygiene'
 import { Pathfinder } from '../workspaces/Pathfinder'
+import { Settings } from '../workspaces/Settings'
 import { Web } from '../workspaces/Web'
 
 const NAV: { id: WorkspaceId; label: string; hint: string }[] = [
@@ -42,6 +43,7 @@ export function AppShell() {
     else if (command === 'view:web') setWorkspace('web')
     else if (command === 'view:pathfinder') setWorkspace('pathfinder')
     else if (command === 'view:hygiene') setWorkspace('hygiene')
+    else if (command === 'view:settings') setWorkspace('settings')
     else if (command === 'view:theme:dark') setTheme('dark')
     else if (command === 'view:theme:light') setTheme('light')
     else if (command === 'view:theme:vivid') setTheme('vivid')
@@ -83,6 +85,15 @@ export function AppShell() {
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          data-workspace="settings"
+          className={workspace === 'settings' ? 'rail-settings active' : 'rail-settings'}
+          onClick={() => setWorkspace('settings')}
+        >
+          <NavGlyph id="settings" />
+          Settings
+        </button>
         <div className="rail-foot">
           <div>
             {snapshot.domain}
@@ -137,7 +148,8 @@ export function AppShell() {
           {workspace === 'web' ? <Web /> : null}
           {workspace === 'pathfinder' ? <Pathfinder /> : null}
           {workspace === 'hygiene' ? <Hygiene /> : null}
-          <ObjectInspector />
+          {workspace === 'settings' ? <Settings /> : null}
+          {workspace === 'settings' ? null : <ObjectInspector />}
         </div>
       </div>
     </div>

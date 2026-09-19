@@ -2,6 +2,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 import type { ConnectionInput, DcRecord, DirectorySnapshot, TestConnectionResult, WindowsPrefill } from '../shared/types'
 import type { SessionMeta, SessionView } from './directory/session'
 import type { ReportResult } from './report'
+import type { AboutInfo, AppSettings, SettingsPatch } from '../shared/settings'
+import type { UpdateCheck } from './updates'
 
 const api = {
   windowsPrefill: (): Promise<WindowsPrefill> => ipcRenderer.invoke('spydr:prefill'),
@@ -16,6 +18,17 @@ const api = {
   sessionClear: (): Promise<void> => ipcRenderer.invoke('spydr:session:clear'),
   /** Writes a PDF of the current findings; resolves null when the user cancels the save dialog. */
   report: (snapshot: DirectorySnapshot): Promise<ReportResult | null> => ipcRenderer.invoke('spydr:report', snapshot),
+  /** Settings. The first read is synchronous so the first paint already has the right theme. */
+  settingsSync: (): AppSettings => ipcRenderer.sendSync('spydr:settings:sync'),
+  setSettings: (patch: SettingsPatch): Promise<AppSettings> => ipcRenderer.invoke('spydr:settings:set', patch),
+  resetSettings: (): Promise<AppSettings> => ipcRenderer.invoke('spydr:settings:reset'),
+  onSettings: (handler: (settings: AppSettings) => void): (() => void) => {
+    const listener = (_evt: unknown, settings: AppSettings): void => handler(settings)
+    ipcRenderer.on('spydr:settings', listener)
+    return () => { ipcRenderer.removeListener('spydr:settings', listener) }
+  },
+  about: (): Promise<AboutInfo> => ipcRenderer.invoke('spydr:about'),
+  checkForUpdate: (): Promise<UpdateCheck> => ipcRenderer.invoke('spydr:updates:check'),
   /** Subscribe to menu commands; returns an unsubscribe. */
   /** Chrome the renderer must draw itself, and the editing actions the OS performs for us. */
   chrome: (): { custom: boolean; platform: string; titleBarHeight: number } =>

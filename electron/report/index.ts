@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { unlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { buildReport, reportFileName } from '../../shared/report/model'
+import { DEFAULT_SETTINGS, type ReportSettings } from '../../shared/settings'
 import type { DirectorySnapshot } from '../../shared/types'
 import { renderReportHtml } from './html'
 
@@ -54,9 +55,16 @@ export interface ReportResult {
  * Renders the report in an offscreen window and prints it to PDF. The window is isolated and loads
  * nothing but the document we just wrote: no preload, no node, no network.
  */
-export async function writeReportPdf(snapshot: DirectorySnapshot, filePath: string): Promise<ReportResult> {
-  const report = buildReport(snapshot)
-  const html = renderReportHtml(report, fontCss())
+export async function writeReportPdf(
+  snapshot: DirectorySnapshot,
+  filePath: string,
+  settings: ReportSettings = DEFAULT_SETTINGS.report
+): Promise<ReportResult> {
+  const report = buildReport(snapshot, {
+    perSection: settings.perSection,
+    priority: settings.prioritySection
+  })
+  const html = renderReportHtml(report, fontCss(), settings.paper)
   const tmp = join(app.getPath('temp'), `spydr-report-${randomUUID()}.html`)
   await writeFile(tmp, html, 'utf8')
 
@@ -77,7 +85,7 @@ export async function writeReportPdf(snapshot: DirectorySnapshot, filePath: stri
     const pdf = await win.webContents.printToPDF({
       printBackground: true,
       preferCSSPageSize: true,
-      pageSize: 'Letter',
+      pageSize: settings.paper,
       margins: { top: 0, bottom: 0, left: 0, right: 0 }
     })
     await writeFile(filePath, pdf)

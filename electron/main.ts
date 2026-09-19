@@ -1,9 +1,12 @@
 import { app, BrowserWindow, dialog, ipcMain, nativeImage, session, shell } from 'electron'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { discoverDcs, windowsPrefill } from './directory/discoverDc'
 import { ingestDirectory, testConnection } from './directory/ldapProvider'
 import { buildMenu, usesCustomTitleBar } from './menu'
+import { getSettings, resetSettings, settingsPath, updateSettings } from './settings'
+import { checkForUpdate, type UpdateCheck } from './updates'
+import type { SettingsPatch } from '../shared/settings'
 import { reportFileName, writeReportPdf, type ReportResult } from './report'
 import {
   clearSession,
@@ -28,6 +31,24 @@ function preloadPath(): string {
   const js = join(__dirname, '../preload/preload.js')
   const mjs = join(__dirname, '../preload/preload.mjs')
   return existsSync(js) ? js : mjs
+}
+
+/**
+ * app.getVersion() answers with Electron's own version when it cannot find our package.json, which
+ * happens whenever main is launched by file path rather than by project directory. Read it directly
+ * in development so the About section never reports the runtime as the product.
+ */
+function appVersion(): string {
+  if (app.isPackaged) return app.getVersion()
+  for (const dir of [app.getAppPath(), process.cwd(), join(__dirname, '../..')]) {
+    try {
+      const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as { name?: string; version?: string }
+      if (pkg.name === 'spydr' && pkg.version) return pkg.version
+    } catch {
+      /* try the next candidate */
+    }
+  }
+  return app.getVersion()
 }
 
 function appIcon(): Electron.NativeImage | undefined {
@@ -102,7 +123,15 @@ function registerIpc(): void {
   ipcMain.handle('spydr:discover', async (_evt, domain: string) => discoverDcs(domain))
   ipcMain.handle('spydr:test', async (_evt, input: ConnectionInput) => testConnection(input))
   ipcMain.handle('spydr:ingest', async (_evt, input: ConnectionInput) => {
-    const snapshot = await ingestDirectory(input)
+    const { connection, hygiene } = getSettings()
+    const snapshot = await ingestDirectory(input, {
+      pageSize: connection.pageSize,
+      searchTimeout: connection.searchTimeout,
+      connectTimeout: connection.connectTimeout,
+      includeComputers: connection.includeComputers,
+      includeContainers: connection.includeContainers,
+      hygiene
+    })
     // toProfile strips the password. Deriving the profile here, rather than accepting one over
     // IPC, means the renderer never has to be trusted to do that stripping.
     lastProfile = toProfile(input)
@@ -125,10 +154,27 @@ function registerIpc(): void {
       ? await dialog.showSaveDialog(win, options)
       : await dialog.showSaveDialog(options)
     if (canceled || !filePath) return null
-    const result = await writeReportPdf(snapshot, filePath)
-    void shell.openPath(result.path)
+    const result = await writeReportPdf(snapshot, filePath, getSettings().report)
+    if (getSettings().report.openAfterSave) void shell.openPath(result.path)
     return result
   })
+  ipcMain.on('spydr:settings:sync', (evt) => {
+    // Synchronous so the first paint already has the right theme; writes are async.
+    evt.returnValue = getSettings()
+  })
+  ipcMain.handle('spydr:settings:set', (_evt, patch: SettingsPatch) => updateSettings(patch))
+  ipcMain.handle('spydr:settings:reset', () => resetSettings())
+  ipcMain.handle('spydr:updates:check', (): Promise<UpdateCheck> => checkForUpdate(getSettings().updates.feedUrl, appVersion()))
+  ipcMain.handle('spydr:about', () => ({
+    version: appVersion(),
+    electron: process.versions.electron,
+    chrome: process.versions.chrome,
+    node: process.versions.node,
+    platform: `${process.platform} ${process.arch}`,
+    settingsPath: settingsPath(),
+    userData: app.getPath('userData'),
+    packaged: app.isPackaged
+  }))
   ipcMain.on('spydr:chrome', (evt) => {
     evt.returnValue = {
       custom: usesCustomTitleBar(),
@@ -165,6 +211,10 @@ void app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+})
+
+app.on('will-quit', () => {
+  if (getSettings().privacy.forgetOnQuit) clearSession()
 })
 
 app.on('window-all-closed', () => {

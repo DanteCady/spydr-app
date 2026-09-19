@@ -2,7 +2,7 @@ export type DirectoryObjectType = 'user' | 'group' | 'ou' | 'computer' | 'contai
 
 export type Protocol = 'ldap' | 'ldaps' | 'starttls'
 
-export type WorkspaceId = 'directory' | 'web' | 'pathfinder' | 'hygiene'
+export type WorkspaceId = 'directory' | 'web' | 'pathfinder' | 'hygiene' | 'settings'
 
 export type FindingSeverity = 'critical' | 'high' | 'medium' | 'low'
 
