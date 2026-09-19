@@ -34,6 +34,10 @@ interface AppState {
   setPathSource: (id: string) => void
   setPathTarget: (id: string) => void
   goTo: (workspace: WorkspaceId, objectId?: string) => void
+  /** Open the canvas with a chain highlighted from source to target. */
+  traceInWeb: (sourceId: string, targetId: string) => void
+  traceRequest: { sourceId: string; targetId: string } | null
+  clearTraceRequest: () => void
   goToFinding: (finding: Finding) => void
   clearFinding: () => void
   activeFinding: Finding | null
@@ -68,6 +72,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pathTarget, setPathTarget] = useState('')
   const [activeFinding, setActiveFinding] = useState<Finding | null>(null)
   const [savedSession, setSavedSession] = useState<SessionMeta | null>(null)
+  const [traceRequest, setTraceRequest] = useState<{ sourceId: string; targetId: string } | null>(null)
   const [reportBusy, setReportBusy] = useState(false)
   const [reportStatus, setReportStatus] = useState<string | null>(null)
   // Read synchronously, so the first paint is already in the right theme. Outside the desktop app
@@ -201,6 +206,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSnapshot((current) => (current ? rescoreSnapshot(current, JSON.parse(hygieneKey)) : current))
   }, [hygieneKey])
 
+  const traceInWeb = useCallback((sourceId: string, targetId: string) => {
+    setSelectedId(sourceId)
+    setSnapshot((current) => {
+      const node = current?.nodes.find((n) => n.id === sourceId)
+      if (node?.parentDn) setContainerDn(node.parentDn)
+      return current
+    })
+    setTraceRequest({ sourceId, targetId })
+    setWorkspace('web')
+  }, [])
+
   const goTo = useCallback((w: WorkspaceId, objectId?: string) => {
     if (objectId) {
       setSelectedId(objectId)
@@ -293,6 +309,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPathSource,
     setPathTarget,
     goTo,
+    traceInWeb,
+    traceRequest,
+    clearTraceRequest: useCallback(() => setTraceRequest(null), []),
     goToFinding,
     clearFinding: useCallback(() => setActiveFinding(null), []),
     activeFinding,

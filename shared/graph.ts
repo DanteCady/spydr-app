@@ -164,3 +164,67 @@ export function nestedMembership(graph: MembershipGraph, start: string, maxDepth
   for (const id of membershipReach(graph, start, { direction: 'in', maxDepth })) found.add(id)
   return found
 }
+
+/** An account that ends up inside a group, and how far away it sits. */
+export interface EffectiveMember {
+  id: string
+  /** 1 means a direct member; anything higher arrives through that many nested groups. */
+  depth: number
+}
+
+/**
+ * Everyone who ends up inside a group, direct or nested. This is the question an access review
+ * actually starts from — "who is really in Domain Admins?" — and it is not answerable from the
+ * group's member list, because most of them are not in it.
+ */
+export function effectiveMembers(
+  graph: MembershipGraph,
+  groupId: string,
+  options: { maxDepth?: number } = {}
+): EffectiveMember[] {
+  const out: EffectiveMember[] = []
+  if (!graph.hasNode(groupId)) return out
+  const maxDepth = options.maxDepth ?? 12
+  const seen = new Set<string>([groupId])
+  let frontier = [groupId]
+  for (let depth = 1; depth <= maxDepth && frontier.length; depth += 1) {
+    const next: string[] = []
+    for (const id of frontier) {
+      for (const member of graph.inNeighbors(id)) {
+        if (seen.has(member)) continue
+        seen.add(member)
+        out.push({ id: member, depth })
+        next.push(member)
+      }
+    }
+    frontier = next
+  }
+  return out
+}
+
+/**
+ * The links every path has in common. Cutting one of these breaks all of them at once, which is
+ * the difference between revoking access and appearing to.
+ */
+export function sharedLinks(paths: PathResult[]): { from: string; to: string }[] {
+  if (paths.length === 0) return []
+  const keysOf = (path: PathResult): Set<string> => {
+    const keys = new Set<string>()
+    for (let i = 0; i < path.nodeIds.length - 1; i += 1) keys.add(`${path.nodeIds[i]}>${path.nodeIds[i + 1]}`)
+    return keys
+  }
+  let common = keysOf(paths[0])
+  for (const path of paths.slice(1)) {
+    const keys = keysOf(path)
+    common = new Set([...common].filter((k) => keys.has(k)))
+    if (common.size === 0) break
+  }
+  // Ordered as they appear in the first path, so the nearest link to the account comes first.
+  const first = paths[0]
+  const links: { from: string; to: string }[] = []
+  for (let i = 0; i < first.nodeIds.length - 1; i += 1) {
+    const key = `${first.nodeIds[i]}>${first.nodeIds[i + 1]}`
+    if (common.has(key)) links.push({ from: first.nodeIds[i], to: first.nodeIds[i + 1] })
+  }
+  return links
+}
