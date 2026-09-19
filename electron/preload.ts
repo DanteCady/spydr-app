@@ -10,6 +10,10 @@ const api = {
   discoverDcs: (domain: string): Promise<DcRecord[]> => ipcRenderer.invoke('spydr:discover', domain),
   testConnection: (input: ConnectionInput): Promise<TestConnectionResult> => ipcRenderer.invoke('spydr:test', input),
   ingest: (input: ConnectionInput): Promise<DirectorySnapshot> => ipcRenderer.invoke('spydr:ingest', input),
+  /** Re-read the directory with the credentials main is already holding. */
+  refresh: (): Promise<DirectorySnapshot> => ipcRenderer.invoke('spydr:refresh'),
+  canRefresh: (): boolean => ipcRenderer.sendSync('spydr:can-refresh'),
+  forgetBind: (): Promise<void> => ipcRenderer.invoke('spydr:forget-bind'),
   sessionPeek: (): Promise<SessionMeta | null> => ipcRenderer.invoke('spydr:session:peek'),
   sessionRestore: (): Promise<{ snapshot: DirectorySnapshot; view: SessionView } | null> =>
     ipcRenderer.invoke('spydr:session:restore'),
