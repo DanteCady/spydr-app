@@ -1,5 +1,6 @@
 import { ChevronLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { BridgeMismatch } from './components/BridgeMismatch'
 import { TitleBar } from './components/TitleBar'
 import { useMenuCommand } from './lib/useMenuCommand'
 import { AppProvider, useApp } from './state'
@@ -62,6 +63,7 @@ export function App() {
     <AppProvider>
       {chrome?.custom ? <TitleBar platform={chrome.platform} /> : null}
       <div className="app-body">
+        <BridgeMismatch />
         <Gate />
       </div>
     </AppProvider>
