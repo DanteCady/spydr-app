@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import type { ConnectionInput, DcRecord, DirectorySnapshot, TestConnectionResult, WindowsPrefill } from '@shared/types'
 import type { SessionMeta, SessionProfile, SessionView } from '../electron/directory/session'
 import type { ReportResult } from '../electron/report'
