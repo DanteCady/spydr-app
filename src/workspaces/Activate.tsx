@@ -1,5 +1,5 @@
 import { ExternalLink, KeyRound, Loader2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { keyLooksValid } from '@shared/license'
 import { WidowMark } from '../components/WidowMark'
 import { useApp } from '../state'
@@ -16,6 +16,12 @@ export function Activate() {
   const { activate, licence, openSample } = useApp()
   const [key, setKey] = useState('')
   const [busy, setBusy] = useState(false)
+  // A development build points at the site running next door, so the link lands somewhere real.
+  const [site, setSite] = useState('https://getspydr.com')
+
+  useEffect(() => {
+    void window.spydr?.about().then((info) => info.site && setSite(info.site))
+  }, [])
 
   const shaped = keyLooksValid(key)
 
@@ -71,7 +77,7 @@ export function Activate() {
                 {busy ? <Loader2 size={14} className="spin" aria-hidden /> : <KeyRound size={14} aria-hidden />}
                 {busy ? 'Checking…' : 'Activate'}
               </button>
-              <a className="linkish" href="https://getspydr.com" target="_blank" rel="noreferrer">
+              <a className="linkish" href={site} target="_blank" rel="noreferrer">
                 Get a free key <ExternalLink size={12} aria-hidden />
               </a>
             </div>

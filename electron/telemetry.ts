@@ -1,6 +1,7 @@
 import { net } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { buildPayload, sanitize, type TelemetryPayload, type UsageFacts } from '../shared/telemetry'
+import { apiBase } from './endpoints'
 import { getSettings, updateSettings } from './settings'
 import { appVersion } from './version'
 import type { WorkspaceId } from '../shared/types'
@@ -65,7 +66,7 @@ export function currentPayload(): TelemetryPayload {
 }
 
 function endpoint(): string {
-  return `${process.env.SPYDR_LICENSE_API ?? 'https://getspydr.com'}/api/telemetry`
+  return `${apiBase()}/api/telemetry`
 }
 
 /** Sends now regardless of schedule — used by the "send one now" button in Settings. */
