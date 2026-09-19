@@ -49,6 +49,16 @@ the page at all.
 (`x: 214–1136`) and saved at 2× so they stay sharp at the width the page renders them. `next/image`
 serves AVIF and WebP from them. Retake at 1440×900 if the interface moves.
 
+## The domain
+
+Production is **getspydr.com**. It is set in one place — `NEXT_PUBLIC_SITE_URL`, defaulting to the
+production URL — and read by the metadata, the sitemap and robots.txt. Preview deployments should
+set it to their own URL so they do not advertise production in canonical tags.
+
+Worth knowing: the name has neighbours. `spydr.com` is a digital agency, `spydr.io` is a security
+blog and `spydrsolutions.com` is a live business. None of them is this product, which is part of
+why the site leans on being specific about what SPYDR is.
+
 ## Deploying
 
 Vercel needs no configuration. Anywhere else, `npm run build && npm start` behind a proxy works; if

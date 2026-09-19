@@ -18,8 +18,12 @@ const mono = IBM_Plex_Mono({
   display: 'swap'
 })
 
+/** Overridden per environment so preview deployments do not advertise the production URL. */
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://getspydr.com'
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://spydr.local'),
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: '/' },
   title: {
     default: 'SPYDR — read-only Active Directory explorer',
     template: '%s — SPYDR'
@@ -29,7 +33,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'SPYDR — read-only Active Directory explorer',
     description: 'Who is really in this group, how did they get there, and what has quietly stopped making sense.',
-    type: 'website'
+    type: 'website',
+    url: SITE_URL,
+    siteName: 'SPYDR'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SPYDR — read-only Active Directory explorer',
+    description: 'Who is really in this group, how did they get there, and what has quietly stopped making sense.'
   }
 }
 
