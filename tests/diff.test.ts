@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { loadContosoFixture } from '../fixtures/contoso-lab'
-import { describeDiff, diffSnapshots } from '../shared/diff'
+import { describeDiff, diffSnapshots, isUnchanged } from '../shared/diff'
 import type { DirectorySnapshot } from '../shared/types'
 
 const base = loadContosoFixture()
@@ -9,10 +9,7 @@ const clone = (): DirectorySnapshot => JSON.parse(JSON.stringify(base)) as Direc
 describe('diffSnapshots', () => {
   it('reports nothing for an unchanged re-read', () => {
     const diff = diffSnapshots(base, clone())
-    expect(diff.added).toEqual([])
-    expect(diff.removed).toEqual([])
-    expect(diff.changed).toEqual([])
-    expect(diff.edgesAdded + diff.edgesRemoved).toBe(0)
+    expect(isUnchanged(diff)).toBe(true)
     expect(describeDiff(diff)).toBe('Nothing changed since the last read.')
   })
 
@@ -28,25 +25,43 @@ describe('diffSnapshots', () => {
     expect(describeDiff(diff)).toContain('1 object added, 1 object removed')
   })
 
-  it('spots a rename and a disable without counting them as new objects', () => {
+  it('describes a rename and a disable in words, without calling them new objects', () => {
     const after = clone()
     after.nodes[2] = { ...after.nodes[2], displayName: 'Renamed Person' }
-    after.nodes[3] = { ...after.nodes[3], userAccountControl: 514 }
+    after.nodes[3] = { ...after.nodes[3], userAccountControl: (after.nodes[3].userAccountControl ?? 512) | 2 }
 
     const diff = diffSnapshots(base, after)
     expect(diff.added).toEqual([])
-    expect(diff.changed.map((c) => c.after.id).sort()).toEqual([base.nodes[2].id, base.nodes[3].id].sort())
+    const renamed = diff.changed.find((c) => c.id === base.nodes[2].id)
+    const disabled = diff.changed.find((c) => c.id === base.nodes[3].id)
+    expect(renamed?.changes[0]).toContain(`renamed from ${base.nodes[2].displayName}`)
+    expect(disabled?.changes).toContain('disabled')
   })
 
-  it('counts memberships in both directions', () => {
+  it('names both ends of a membership that changed', () => {
     const after = clone()
     const dropped = after.edges[0]
     after.edges = after.edges.slice(1)
-    after.edges.push({ from: dropped.to, to: dropped.from, via: 'member' })
 
     const diff = diffSnapshots(base, after)
-    expect(diff.edgesRemoved).toBe(1)
-    expect(diff.edgesAdded).toBe(1)
+    expect(diff.membershipsRemoved).toHaveLength(1)
+    const [change] = diff.membershipsRemoved
+    expect(change.fromId).toBe(dropped.from)
+    expect(change.toId).toBe(dropped.to)
+    // Names, not GUIDs — the timeline has to read without the directory open.
+    expect(change.fromName).not.toBe(change.fromId)
+    expect(change.toName).not.toBe(change.toId)
+  })
+
+  it('separates findings that opened from findings that closed', () => {
+    const after = clone()
+    const closed = after.findings[0]
+    after.findings = after.findings.slice(1)
+    after.findings.push({ ...closed, id: 'new-finding', title: 'Something new' })
+
+    const diff = diffSnapshots(base, after)
+    expect(diff.findingsClosed.map((f) => f.id)).toEqual([closed.id])
+    expect(diff.findingsOpened.map((f) => f.id)).toEqual(['new-finding'])
   })
 
   it('mentions the score only when it moved', () => {

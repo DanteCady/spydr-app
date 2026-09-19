@@ -3,6 +3,7 @@ import type { ConnectionInput, DcRecord, DirectorySnapshot, TestConnectionResult
 import type { SessionMeta, SessionView } from './directory/session'
 import type { ReportResult } from './report'
 import type { AboutInfo, AppSettings, SettingsPatch } from '../shared/settings'
+import type { TimelineEntry } from '../shared/timeline'
 import type { UpdateCheck } from './updates'
 
 const api = {
@@ -32,6 +33,13 @@ const api = {
     return () => { ipcRenderer.removeListener('spydr:settings', listener) }
   },
   about: (): Promise<AboutInfo> => ipcRenderer.invoke('spydr:about'),
+  /** The change timeline. List results carry no detail; get() decrypts one entry. */
+  timelineList: (domain?: string): Promise<TimelineEntry[]> => ipcRenderer.invoke('spydr:timeline:list', domain),
+  timelineGet: (id: string): Promise<TimelineEntry | null> => ipcRenderer.invoke('spydr:timeline:get', id),
+  timelineObject: (objectGuid: string): Promise<{ entry: TimelineEntry; kinds: string[] }[]> =>
+    ipcRenderer.invoke('spydr:timeline:object', objectGuid),
+  timelineClear: (): Promise<void> => ipcRenderer.invoke('spydr:timeline:clear'),
+  timelineStats: (): Promise<{ entries: number; path: string }> => ipcRenderer.invoke('spydr:timeline:stats'),
   checkForUpdate: (): Promise<UpdateCheck> => ipcRenderer.invoke('spydr:updates:check'),
   /** Subscribe to menu commands; returns an unsubscribe. */
   /** Chrome the renderer must draw itself, and the editing actions the OS performs for us. */

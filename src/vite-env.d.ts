@@ -2,6 +2,7 @@ import type { ConnectionInput, DcRecord, DirectorySnapshot, TestConnectionResult
 import type { SessionMeta, SessionProfile, SessionView } from '../electron/directory/session'
 import type { ReportResult } from '../electron/report'
 import type { AboutInfo, AppSettings, SettingsPatch } from '@shared/settings'
+import type { TimelineEntry } from '@shared/timeline'
 import type { UpdateCheck } from '../electron/updates'
 
 export interface SpydrApi {
@@ -22,6 +23,11 @@ export interface SpydrApi {
   resetSettings: () => Promise<AppSettings>
   onSettings: (handler: (settings: AppSettings) => void) => () => void
   about: () => Promise<AboutInfo>
+  timelineList: (domain?: string) => Promise<TimelineEntry[]>
+  timelineGet: (id: string) => Promise<TimelineEntry | null>
+  timelineObject: (objectGuid: string) => Promise<{ entry: TimelineEntry; kinds: string[] }[]>
+  timelineClear: () => Promise<void>
+  timelineStats: () => Promise<{ entries: number; path: string }>
   checkForUpdate: () => Promise<UpdateCheck>
   onMenuCommand: (handler: (command: string) => void) => () => void
   chrome: () => { custom: boolean; platform: string; titleBarHeight: number }

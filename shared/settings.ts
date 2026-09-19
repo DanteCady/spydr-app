@@ -65,10 +65,12 @@ export interface ReportSettings {
 }
 
 export interface PrivacySettings {
-  /** 'unset' means the question has not been asked yet. */
+  /** 'unset' means the question has not been asked yet. Covers the snapshot and the timeline. */
   sessionConsent: 'yes' | 'no' | 'unset'
   /** Drop the saved session when the app quits, keeping restore within a run only. */
   forgetOnQuit: boolean
+  /** Days of change history to keep. Zero keeps everything. */
+  historyRetentionDays: number
 }
 
 export interface AppearanceSettings {
@@ -127,7 +129,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   privacy: {
     sessionConsent: 'unset',
-    forgetOnQuit: false
+    forgetOnQuit: false,
+    historyRetentionDays: 90
   },
   appearance: {
     theme: 'dark',
@@ -152,7 +155,8 @@ export const LIMITS = {
   searchTimeout: { min: 5, max: 600 },
   connectTimeout: { min: 1, max: 120 },
   perSection: { min: 1, max: 500 },
-  prioritySection: { min: 1, max: 200 }
+  prioritySection: { min: 1, max: 200 },
+  historyRetentionDays: { min: 0, max: 3650 }
 } as const
 
 function clamp(value: unknown, fallback: number, bounds: { min: number; max: number }): number {
@@ -244,7 +248,8 @@ export function normalizeSettings(raw: unknown): AppSettings {
     },
     privacy: {
       sessionConsent: pick(p.sessionConsent, ['yes', 'no', 'unset'] as const, d.privacy.sessionConsent),
-      forgetOnQuit: bool(p.forgetOnQuit, d.privacy.forgetOnQuit)
+      forgetOnQuit: bool(p.forgetOnQuit, d.privacy.forgetOnQuit),
+      historyRetentionDays: clamp(p.historyRetentionDays, d.privacy.historyRetentionDays, LIMITS.historyRetentionDays)
     },
     appearance: {
       theme: pick(a.theme, ['dark', 'light', 'vivid', 'minimal', 'minimal-dark'] as const, d.appearance.theme),
