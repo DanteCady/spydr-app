@@ -16,7 +16,8 @@ const NAV: { id: WorkspaceId; label: string; hint: string }[] = [
   { id: 'directory', label: 'Directory', hint: 'ADUC' },
   { id: 'web', label: 'Web', hint: 'Nesting' },
   { id: 'pathfinder', label: 'Pathfinder', hint: 'How' },
-  { id: 'hygiene', label: 'Hygiene', hint: 'Cleanup' }
+  { id: 'hygiene', label: 'Hygiene', hint: 'Cleanup' },
+  { id: 'settings', label: 'Settings', hint: 'Prefs' }
 ]
 
 /** The theme each button press moves to, so the control can say where it is going. */
@@ -84,18 +85,6 @@ export function AppShell() {
               <span className="hint">{item.hint}</span>
             </button>
           ))}
-        </div>
-        <div className="nav nav-foot">
-          <button
-            type="button"
-            data-workspace="settings"
-            className={workspace === 'settings' ? 'active' : ''}
-            onClick={() => setWorkspace('settings')}
-          >
-            <NavGlyph id="settings" />
-            Settings
-            <span className="hint">Prefs</span>
-          </button>
         </div>
         <div className="rail-foot">
           <div>
