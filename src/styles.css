@@ -260,6 +260,57 @@
 .theme-pop .theme-check { flex: none; color: var(--brand); }
 .set-control .theme-wrap .theme-pop { right: 0; }
 
+
+/* Minimal, inverted: the same restraint on a black page. */
+[data-theme='minimal-dark'] {
+  color-scheme: dark;
+  --canvas: #000000;
+  --background: #000000;
+  --foreground: #ededed;
+  --card: #0a0a0a;
+  --panel: #111111;
+  --muted-bg: #161616;
+  --muted: #8f8f8f;
+  --border: #262626;
+  --border-subtle: #1a1a1a;
+  --ring: #ffffff;
+  --brand: #ffffff;
+  --brand-foreground: #000000;
+  --brand-muted: rgba(255, 255, 255, 0.08);
+  --secondary: #1a1a1a;
+  --destructive: #ff4d4d;
+  --sidebar: #000000;
+  --sidebar-foreground: #a1a1a1;
+  --sidebar-active: rgba(255, 255, 255, 0.08);
+  --crit: #ff4d4d;
+  --high: #f5a623;
+  --med: #a1a1aa;
+  --low: #6b6b6b;
+  --user: #ededed;
+  --group: #a1a1a1;
+  --ou: #7d7d7d;
+  --computer: #5a5a5a;
+  --web-user-bg: #1a1a1a;
+  --web-group-bg: #242424;
+  --web-priv-bg: #2e2e2e;
+  --web-cluster-bg: #141414;
+  --web-edge: #3d3d3d;
+  --edge-member: #ffffff;
+  --edge-primary: #6b6b6b;
+  --graph-node-bg: #0a0a0a;
+  --graph-focus-bg: #1a1a1a;
+  --node-user-bg: #141414;
+  --node-group-bg: #1c1c1c;
+  --node-priv-bg: #262626;
+  --node-focus-bg: #202020;
+  --minimap-mask: rgba(0, 0, 0, 0.6);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.6), 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme='minimal-dark'] .nav button .nav-glyph { color: #ededed; }
+[data-theme='minimal-dark'] .nav button.active { color: #ffffff; }
+
 /* Each workspace keeps its own colour in the rail, so the nav is part of the palette. */
 [data-theme='vivid'] .nav button[data-workspace='directory'] .nav-glyph { color: #2563eb; }
 [data-theme='vivid'] .nav button[data-workspace='web'] .nav-glyph { color: #7c3aed; }

@@ -11,7 +11,13 @@ const THEMES: { id: Theme; label: string; hint: string; swatches: [string, strin
   { id: 'dark', label: 'Dark', hint: 'Deep navy, teal accent', swatches: ['#0b1220', '#14b8a6', '#1e2a3a'] },
   { id: 'light', label: 'Light', hint: 'Cool grey, teal accent', swatches: ['#edf1f8', '#0f766e', '#c6d0e0'] },
   { id: 'vivid', label: 'Vivid', hint: 'Colour by object type', swatches: ['#f6f8fa', '#2563eb', '#f59e0b'] },
-  { id: 'minimal', label: 'Minimal', hint: 'Black, white, nothing else', swatches: ['#ffffff', '#000000', '#eaeaea'] }
+  { id: 'minimal', label: 'Minimal Light', hint: 'Black, white, nothing else', swatches: ['#ffffff', '#000000', '#eaeaea'] },
+  {
+    id: 'minimal-dark',
+    label: 'Minimal Dark',
+    hint: 'The same restraint, inverted',
+    swatches: ['#000000', '#ffffff', '#262626']
+  }
 ]
 
 export function ThemeMenu({ variant = 'icon' }: { variant?: 'icon' | 'inline' }) {

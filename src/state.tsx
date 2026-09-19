@@ -7,12 +7,12 @@ import { applyPatch, DEFAULT_SETTINGS, type AppSettings, type SettingsPatch } fr
 import type { ConnectionInput, DirectorySnapshot, Finding, PathResult, WorkspaceId } from '@shared/types'
 import type { SessionMeta } from './vite-env'
 
-export type Theme = 'dark' | 'light' | 'vivid' | 'minimal'
+export type Theme = 'dark' | 'light' | 'vivid' | 'minimal' | 'minimal-dark'
 
 /** Whether the user has agreed to SPYDR keeping a copy of a live directory on this computer. */
 export type SessionConsent = 'yes' | 'no' | 'unset'
 
-export const THEMES: Theme[] = ['dark', 'light', 'vivid', 'minimal']
+export const THEMES: Theme[] = ['dark', 'light', 'vivid', 'minimal', 'minimal-dark']
 
 interface AppState {
   theme: Theme
