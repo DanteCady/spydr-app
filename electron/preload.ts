@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { ConnectionInput, DcRecord, DirectorySnapshot, TestConnectionResult, WindowsPrefill } from '../shared/types'
-import type { SessionMeta, SessionProfile, SessionView } from './directory/session'
+import type { SessionMeta, SessionView } from './directory/session'
 import type { ReportResult } from './report'
 
 const api = {
@@ -11,11 +11,8 @@ const api = {
   sessionPeek: (): Promise<SessionMeta | null> => ipcRenderer.invoke('spydr:session:peek'),
   sessionRestore: (): Promise<{ snapshot: DirectorySnapshot; view: SessionView } | null> =>
     ipcRenderer.invoke('spydr:session:restore'),
-  sessionSave: (payload: {
-    snapshot: DirectorySnapshot
-    profile: SessionProfile | null
-    view: SessionView
-  }): Promise<void> => ipcRenderer.invoke('spydr:session:save', payload),
+  sessionSave: (payload: { snapshot: DirectorySnapshot; view: SessionView }): Promise<void> =>
+    ipcRenderer.invoke('spydr:session:save', payload),
   sessionClear: (): Promise<void> => ipcRenderer.invoke('spydr:session:clear'),
   /** Writes a PDF of the current findings; resolves null when the user cancels the save dialog. */
   report: (snapshot: DirectorySnapshot): Promise<ReportResult | null> => ipcRenderer.invoke('spydr:report', snapshot),

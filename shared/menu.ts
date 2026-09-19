@@ -10,6 +10,8 @@ export type MenuCommand =
   | 'file:disconnect'
   | 'file:export'
   | 'file:report'
+  | 'file:remember'
+  | 'file:forget'
   | 'edit:find'
   | 'view:directory'
   | 'view:web'
@@ -55,6 +57,8 @@ export const MENU: MenuSection[] = [
       { label: 'Open Sample Directory', command: 'file:sample', accelerator: 'CmdOrCtrl+Shift+O' },
       { label: 'Connect to Active Directory…', command: 'file:connect', accelerator: 'CmdOrCtrl+O' },
       { label: 'Restore Last Session', command: 'file:restore', accelerator: 'CmdOrCtrl+Shift+R' },
+      { label: 'Keep This Directory on This Computer', command: 'file:remember' },
+      { label: 'Forget Saved Session', command: 'file:forget' },
       { separator: true },
       { label: 'Export Canvas as PNG…', command: 'file:export', accelerator: 'CmdOrCtrl+E' },
       { label: 'Generate Hygiene Report (PDF)…', command: 'file:report', accelerator: 'CmdOrCtrl+P' },

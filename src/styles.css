@@ -1318,3 +1318,29 @@ table.grid tr.selected td { background: var(--sel); }
 .chip-gap { flex: 1 1 auto; min-width: 12px; }
 .spin { animation: spydr-spin 900ms linear infinite; }
 @keyframes spydr-spin { to { transform: rotate(360deg); } }
+
+/* ---- session consent ---- */
+.consent-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--brand) 7%, var(--card));
+  color: var(--text);
+}
+.consent-bar > svg { color: var(--brand); flex: none; }
+.consent-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.consent-text strong { font-size: 12.5px; }
+.consent-text .muted { font-size: 11.5px; line-height: 1.45; }
+.consent-yes {
+  flex: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: var(--brand);
+  color: var(--brand-foreground);
+  font-size: 12px;
+  font-weight: 600;
+}
+.consent-bar .linkish { flex: none; font-size: 12px; }

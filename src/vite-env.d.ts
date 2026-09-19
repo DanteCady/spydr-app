@@ -9,11 +9,7 @@ export interface SpydrApi {
   ingest: (input: ConnectionInput) => Promise<DirectorySnapshot>
   sessionPeek: () => Promise<SessionMeta | null>
   sessionRestore: () => Promise<{ snapshot: DirectorySnapshot; view: SessionView } | null>
-  sessionSave: (payload: {
-    snapshot: DirectorySnapshot
-    profile: SessionProfile | null
-    view: SessionView
-  }) => Promise<void>
+  sessionSave: (payload: { snapshot: DirectorySnapshot; view: SessionView }) => Promise<void>
   sessionClear: () => Promise<void>
   report: (snapshot: DirectorySnapshot) => Promise<ReportResult | null>
   onMenuCommand: (handler: (command: string) => void) => () => void

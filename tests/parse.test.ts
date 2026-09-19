@@ -98,6 +98,12 @@ describe('generalizedTime', () => {
     expect(generalizedTime('20240115103000.0Z')).toBe('2024-01-15T10:30:00.000Z')
   })
 
+  it('hands back a well-shaped but impossible date instead of throwing', () => {
+    // A single bad attribute must not take down the whole ingest.
+    expect(() => generalizedTime('20241945103000.0Z')).not.toThrow()
+    expect(generalizedTime('20241945103000.0Z')).toBe('20241945103000.0Z')
+  })
+
   it('passes through anything it cannot parse, and drops empties', () => {
     expect(generalizedTime('whenever')).toBe('whenever')
     expect(generalizedTime(undefined)).toBeUndefined()
