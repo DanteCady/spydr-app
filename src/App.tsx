@@ -5,14 +5,15 @@ import { useMenuCommand } from './lib/useMenuCommand'
 import { AppProvider, useApp } from './state'
 import { AppShell } from './shell/AppShell'
 import { Connect } from './workspaces/Connect'
+import { Help } from './workspaces/Help'
 import { Settings } from './workspaces/Settings'
 
 /**
- * Settings with no directory open. Thresholds, privacy and the connection defaults are exactly the
- * things someone wants to set before binding for the first time, so they cannot live behind a
- * connection.
+ * Settings and the guide with no directory open. Thresholds, privacy, connection defaults and the
+ * help someone needs to make sense of the connect screen are all things wanted before a first
+ * bind, so none of them can live behind one.
  */
-function StandaloneSettings() {
+function Standalone({ view }: { view: 'settings' | 'help' }) {
   const { setWorkspace } = useApp()
   return (
     <div className="settings-standalone">
@@ -20,15 +21,15 @@ function StandaloneSettings() {
         <button type="button" className="linkish" onClick={() => setWorkspace('directory')}>
           <ChevronLeft size={14} aria-hidden /> Back to start
         </button>
-        <span className="muted">SPYDR settings</span>
+        <span className="muted">{view === 'help' ? 'SPYDR guide' : 'SPYDR settings'}</span>
       </header>
-      <Settings />
+      {view === 'help' ? <Help /> : <Settings />}
     </div>
   )
 }
 
 function Gate() {
-  const { snapshot, workspace, setWorkspace, openSample, restoreSession, disconnect } = useApp()
+  const { snapshot, workspace, setWorkspace, openSample, restoreSession, disconnect, openHelp } = useApp()
 
   // Commands that apply whether or not a directory is open.
   useMenuCommand((command) => {
@@ -36,10 +37,12 @@ function Gate() {
     else if (command === 'file:restore') void restoreSession()
     else if (command === 'file:connect') disconnect()
     else if (command === 'view:settings') setWorkspace('settings')
+    else if (command === 'help:docs') openHelp()
   })
 
   if (snapshot) return <AppShell />
-  return workspace === 'settings' ? <StandaloneSettings /> : <Connect />
+  if (workspace === 'settings' || workspace === 'help') return <Standalone view={workspace} />
+  return <Connect />
 }
 
 export function App() {

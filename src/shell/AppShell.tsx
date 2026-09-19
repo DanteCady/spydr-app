@@ -1,4 +1,4 @@
-import { Moon, Palette, Search, Sun } from 'lucide-react'
+import { CircleHelp, Moon, Palette, Search, Sun } from 'lucide-react'
 import type { WorkspaceId } from '@shared/types'
 import { NavGlyph } from '../components/NavGlyph'
 import { useMenuCommand } from '../lib/useMenuCommand'
@@ -9,6 +9,7 @@ import { useApp } from '../state'
 import { Directory } from '../workspaces/Directory'
 import { Hygiene } from '../workspaces/Hygiene'
 import { Pathfinder } from '../workspaces/Pathfinder'
+import { Help } from '../workspaces/Help'
 import { Settings } from '../workspaces/Settings'
 import { Web } from '../workspaces/Web'
 
@@ -35,7 +36,8 @@ export function AppShell() {
     toggleTheme,
     setTheme,
     generateReport,
-    setSessionConsent
+    setSessionConsent,
+    openHelp
   } = useApp()
 
   // Menu commands that belong to the shell; the canvas handles its own.
@@ -45,6 +47,8 @@ export function AppShell() {
     else if (command === 'view:pathfinder') setWorkspace('pathfinder')
     else if (command === 'view:hygiene') setWorkspace('hygiene')
     else if (command === 'view:settings') setWorkspace('settings')
+    else if (command === 'help:docs') openHelp()
+    else if (command === 'help:about') setWorkspace('settings')
     else if (command === 'view:theme:dark') setTheme('dark')
     else if (command === 'view:theme:light') setTheme('light')
     else if (command === 'view:theme:vivid') setTheme('vivid')
@@ -133,6 +137,15 @@ export function AppShell() {
               <Moon size={14} aria-hidden />
             )}
           </button>
+          <button
+            type="button"
+            className={workspace === 'help' ? 'icon-btn active' : 'icon-btn'}
+            aria-label="Open the SPYDR guide"
+            title="Guide — how SPYDR reads your directory, and what the findings mean"
+            onClick={() => openHelp()}
+          >
+            <CircleHelp size={14} aria-hidden />
+          </button>
         </header>
         <SessionConsent />
         <div className="workspace">
@@ -141,7 +154,8 @@ export function AppShell() {
           {workspace === 'pathfinder' ? <Pathfinder /> : null}
           {workspace === 'hygiene' ? <Hygiene /> : null}
           {workspace === 'settings' ? <Settings /> : null}
-          {workspace === 'settings' ? null : <ObjectInspector />}
+          {workspace === 'help' ? <Help /> : null}
+          {workspace === 'settings' || workspace === 'help' ? null : <ObjectInspector />}
         </div>
       </div>
     </div>

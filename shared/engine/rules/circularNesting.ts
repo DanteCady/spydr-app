@@ -5,6 +5,8 @@ export const circularNesting = defineRule({
   name: 'Circular group nesting',
   severity: 'critical',
   describe: 'A chain of nested groups that loops back on itself.',
+  why:
+    'Effective membership becomes unanswerable: each group grants the others\' access, and token expansion can loop. Nobody can say what the chain actually confers, so nobody safely changes it.',
   detect: (ctx) =>
     ctx.cycles.map((cycle, i) => ({
       id: `circular-${i}`,

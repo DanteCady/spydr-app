@@ -1,7 +1,5 @@
-import { app, BrowserWindow, Menu, shell, type MenuItemConstructorOptions } from 'electron'
+import { app, BrowserWindow, Menu, type MenuItemConstructorOptions } from 'electron'
 import { MENU, type MenuEntry } from '../shared/menu'
-
-const DOCS = 'https://github.com/'
 
 /**
  * macOS keeps its menu in the system bar, as every Mac application does and as VS Code does.
@@ -13,10 +11,6 @@ export const usesCustomTitleBar = (): boolean =>
 
 function send(command: string) {
   return (): void => {
-    if (command === 'help:docs') {
-      void shell.openExternal(DOCS)
-      return
-    }
     BrowserWindow.getFocusedWindow()?.webContents.send('spydr:menu', command)
   }
 }

@@ -6,6 +6,8 @@ export const privilegedNestedPath = defineRule({
   name: 'Nested path into a privileged group',
   severity: 'critical',
   describe: 'Users who reach a privileged group through nested groups rather than direct membership.',
+  why:
+    'The member list of Domain Admins will not show these people. Access reviews read that list, so a nested path is privilege that survives the review that was meant to catch it.',
   detect: (ctx) => {
     const out = []
     for (const user of ctx.users) {

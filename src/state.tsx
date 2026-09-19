@@ -49,6 +49,9 @@ interface AppState {
   forgetSession: () => Promise<void>
   sessionConsent: SessionConsent
   setSessionConsent: (consent: 'yes' | 'no') => void
+  /** Open the guide, optionally at a given article. */
+  openHelp: (topic?: string) => void
+  helpTopic: string | null
   /** The settings file, mirrored from the main process. */
   settings: AppSettings
   updateSettings: (patch: SettingsPatch) => void
@@ -80,6 +83,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeFinding, setActiveFinding] = useState<Finding | null>(null)
   const [savedSession, setSavedSession] = useState<SessionMeta | null>(null)
   const [traceRequest, setTraceRequest] = useState<{ sourceId: string; targetId: string } | null>(null)
+  const [helpTopic, setHelpTopic] = useState<string | null>(null)
   const [canRefresh, setCanRefresh] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [refreshStatus, setRefreshStatus] = useState<string | null>(null)
@@ -241,6 +245,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSnapshot((current) => (current ? rescoreSnapshot(current, JSON.parse(hygieneKey)) : current))
   }, [hygieneKey])
 
+  const openHelp = useCallback((topic?: string) => {
+    setHelpTopic(topic ?? null)
+    setWorkspace('help')
+  }, [])
+
   const traceInWeb = useCallback((sourceId: string, targetId: string) => {
     setSelectedId(sourceId)
     setSnapshot((current) => {
@@ -356,6 +365,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     forgetSession,
     sessionConsent,
     setSessionConsent,
+    openHelp,
+    helpTopic,
     settings,
     updateSettings,
     resetSettings,
