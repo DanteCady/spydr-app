@@ -1581,7 +1581,7 @@ table.grid tr.selected td { background: var(--sel); }
   color: var(--muted);
 }
 .kb-search input { flex: 1; background: none; border: none; color: var(--text); font-size: 12.5px; outline: none; min-width: 0; }
-.kb-nav > button {
+.kb-nav .kb-section button {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1592,11 +1592,11 @@ table.grid tr.selected td { background: var(--sel); }
   text-align: left;
   color: var(--muted);
 }
-.kb-nav > button strong { font-size: 12.5px; font-weight: 600; color: var(--text); }
-.kb-nav > button em { font-style: normal; font-size: 11px; line-height: 1.4; }
-.kb-nav > button:hover { background: var(--sidebar-active); }
-.kb-nav > button.active { background: var(--sidebar-active); }
-.kb-nav > button.active strong { color: var(--brand); }
+.kb-nav .kb-section button strong { font-size: 12.5px; font-weight: 600; color: var(--text); }
+.kb-nav .kb-section button em { font-style: normal; font-size: 11px; line-height: 1.4; }
+.kb-nav .kb-section button:hover { background: var(--sidebar-active); }
+.kb-nav .kb-section button.active { background: var(--sidebar-active); }
+.kb-nav .kb-section button.active strong { color: var(--brand); }
 .kb-empty { font-size: 11.5px; color: var(--muted); padding: 10px; line-height: 1.5; }
 
 .kb-body { padding: 26px 34px 48px; }
@@ -1632,3 +1632,24 @@ table.grid tr.selected td { background: var(--sel); }
 }
 .kb-foot { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--muted); }
 .icon-btn.active { color: var(--brand); }
+
+.kb-section { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.kb-section h4 {
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 8px 10px 4px;
+}
+.kb-crumb { font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand); margin-bottom: 6px; }
+.kb-steps { padding-left: 20px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
+.kb-steps li { font-size: 12.8px; line-height: 1.7; color: var(--muted); }
+.kb-control dt::before { content: '·'; color: var(--brand); margin-right: 6px; }
+.kb-body kbd {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 11px;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--card);
+}

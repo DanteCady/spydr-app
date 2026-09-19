@@ -1,20 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { MENU, type MenuEntry } from '@shared/menu'
+import { prettyAccelerator } from '../lib/accelerator'
 import { emitMenuCommand } from '../lib/useMenuCommand'
 import { WidowMark } from './WidowMark'
-
-/** Cmd+Shift+O reads better than the raw accelerator string the native menu wants. */
-function prettyAccelerator(accelerator: string | undefined, platform: string): string {
-  if (!accelerator) return ''
-  const mac = platform === 'darwin'
-  return accelerator
-    .replace('CmdOrCtrl', mac ? '⌘' : 'Ctrl')
-    .replace('Shift', mac ? '⇧' : 'Shift')
-    .replace('Plus', '+')
-    .split('+')
-    .filter(Boolean)
-    .join(mac ? '' : '+')
-}
 
 function Item({ entry, platform, onRun }: { entry: MenuEntry; platform: string; onRun: () => void }) {
   const [open, setOpen] = useState(false)

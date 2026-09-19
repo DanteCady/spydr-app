@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
-import { ARTICLES } from '../help/articles'
+import { ARTICLES, SECTIONS } from '../help/articles'
 import { useApp } from '../state'
 
 /** The visible text of an article, for the filter to match against. */
@@ -41,23 +41,33 @@ export function Help() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </label>
-        {matches.map((a) => (
-          <button
-            key={a.id}
-            type="button"
-            className={showing?.id === a.id ? 'active' : ''}
-            onClick={() => setCurrent(a.id)}
-          >
-            <strong>{a.title}</strong>
-            <em>{a.blurb}</em>
-          </button>
-        ))}
+        {SECTIONS.map((section) => {
+          const inSection = matches.filter((a) => a.section === section)
+          if (inSection.length === 0) return null
+          return (
+            <div className="kb-section" key={section}>
+              <h4>{section}</h4>
+              {inSection.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  className={showing?.id === a.id ? 'active' : ''}
+                  onClick={() => setCurrent(a.id)}
+                >
+                  <strong>{a.title}</strong>
+                  <em>{a.blurb}</em>
+                </button>
+              ))}
+            </div>
+          )
+        })}
         {matches.length === 0 ? <p className="kb-empty">Nothing in the guide matches “{query}”.</p> : null}
       </nav>
 
       <article className="kb-body scroll">
         {showing ? (
           <>
+            <p className="kb-crumb">{showing.section}</p>
             <h2>{showing.title}</h2>
             {showing.body}
           </>
