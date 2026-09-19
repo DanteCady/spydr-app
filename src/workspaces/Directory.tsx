@@ -170,22 +170,24 @@ export function Directory() {
           <span>{search.trim() ? `Search results (${rows.length})` : containerName}</span>
           <span className="head-right">
             <span className="muted">Read {relativeTime(snapshot.ingestedAt)}</span>
-            {snapshot.source === 'ldap' ? (
-              <button
-                type="button"
-                className="tb-btn"
-                onClick={() => void refreshDirectory()}
-                disabled={!canRefresh || refreshing}
-                title={
-                  canRefresh
+            {/* Always present, so the feature is discoverable, and disabled with the reason when
+                it cannot run. A control that vanishes teaches nobody it exists. */}
+            <button
+              type="button"
+              className="tb-btn"
+              onClick={() => void refreshDirectory()}
+              disabled={!canRefresh || refreshing}
+              title={
+                snapshot.source === 'fixture'
+                  ? 'Re-crawl reads a live domain controller. This is the sample directory, which never changes.'
+                  : canRefresh
                     ? 'Read the directory again and show what changed'
-                    : 'Connect to the directory again to re-crawl — the credentials are not kept between runs'
-                }
-              >
-                <RefreshCw size={13} className={refreshing ? 'spin' : undefined} aria-hidden />
-                {refreshing ? 'Reading…' : 'Re-crawl'}
-              </button>
-            ) : null}
+                    : 'Connect to the directory again to re-crawl — credentials are held for the session only, not across restarts'
+              }
+            >
+              <RefreshCw size={13} className={refreshing ? 'spin' : undefined} aria-hidden />
+              {refreshing ? 'Reading…' : 'Re-crawl'}
+            </button>
             <span>{rows.length} objects</span>
           </span>
         </div>
