@@ -1,4 +1,4 @@
-import { DatabaseZap, FolderOpen, History, Plug, Radar, X } from 'lucide-react'
+import { DatabaseZap, FolderOpen, History, Plug, Radar, Settings2, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ConnectionInput, Protocol } from '@shared/types'
 import { WidowMark } from '../components/WidowMark'
@@ -9,7 +9,7 @@ function defaultPort(protocol: Protocol): number {
 }
 
 export function Connect() {
-  const { openSample, ingestLdap, savedSession, restoreSession, forgetSession, settings } = useApp()
+  const { openSample, ingestLdap, savedSession, restoreSession, forgetSession, settings, setWorkspace } = useApp()
   // Settings supply the starting point; a saved profile below still wins over them.
   const defaults = useRef(settings.connection).current
   const [domain, setDomain] = useState('')
@@ -157,6 +157,13 @@ export function Connect() {
                 </span>
               </button>
             ) : null}
+            <button type="button" className="welcome-action" onClick={() => setWorkspace('settings')}>
+              <Settings2 size={16} aria-hidden />
+              <span>
+                <strong>Settings</strong>
+                <em>Hygiene thresholds, connection defaults, privacy</em>
+              </span>
+            </button>
           </section>
 
           <section className="welcome-col">

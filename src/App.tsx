@@ -1,21 +1,45 @@
+import { ChevronLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { TitleBar } from './components/TitleBar'
 import { useMenuCommand } from './lib/useMenuCommand'
 import { AppProvider, useApp } from './state'
 import { AppShell } from './shell/AppShell'
 import { Connect } from './workspaces/Connect'
+import { Settings } from './workspaces/Settings'
+
+/**
+ * Settings with no directory open. Thresholds, privacy and the connection defaults are exactly the
+ * things someone wants to set before binding for the first time, so they cannot live behind a
+ * connection.
+ */
+function StandaloneSettings() {
+  const { setWorkspace } = useApp()
+  return (
+    <div className="settings-standalone">
+      <header>
+        <button type="button" className="linkish" onClick={() => setWorkspace('directory')}>
+          <ChevronLeft size={14} aria-hidden /> Back to start
+        </button>
+        <span className="muted">SPYDR settings</span>
+      </header>
+      <Settings />
+    </div>
+  )
+}
 
 function Gate() {
-  const { snapshot, openSample, restoreSession, disconnect } = useApp()
+  const { snapshot, workspace, setWorkspace, openSample, restoreSession, disconnect } = useApp()
 
   // Commands that apply whether or not a directory is open.
   useMenuCommand((command) => {
     if (command === 'file:sample') openSample()
     else if (command === 'file:restore') void restoreSession()
     else if (command === 'file:connect') disconnect()
+    else if (command === 'view:settings') setWorkspace('settings')
   })
 
-  return snapshot ? <AppShell /> : <Connect />
+  if (snapshot) return <AppShell />
+  return workspace === 'settings' ? <StandaloneSettings /> : <Connect />
 }
 
 export function App() {

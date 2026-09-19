@@ -85,15 +85,18 @@ export function AppShell() {
             </button>
           ))}
         </div>
-        <button
-          type="button"
-          data-workspace="settings"
-          className={workspace === 'settings' ? 'rail-settings active' : 'rail-settings'}
-          onClick={() => setWorkspace('settings')}
-        >
-          <NavGlyph id="settings" />
-          Settings
-        </button>
+        <div className="nav nav-foot">
+          <button
+            type="button"
+            data-workspace="settings"
+            className={workspace === 'settings' ? 'active' : ''}
+            onClick={() => setWorkspace('settings')}
+          >
+            <NavGlyph id="settings" />
+            Settings
+            <span className="hint">Prefs</span>
+          </button>
+        </div>
         <div className="rail-foot">
           <div>
             {snapshot.domain}
