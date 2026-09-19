@@ -13,6 +13,17 @@ import { useApp } from '../state'
  * It is deliberately not a wall: the sample directory opens without a key, so anyone can see what
  * SPYDR does before handing over an email address.
  */
+/**
+ * How long the web stays up, at least.
+ *
+ * A local server answers in under a second, which reads as a flicker rather than as work — and a
+ * flicker is worse than no animation at all. 2.6s is one full turn of the web: spun, held, gone.
+ * Set VITE_SPYDR_MIN_SPIN to watch a longer one while working on it.
+ */
+const MIN_SPIN_MS = Number(import.meta.env.VITE_SPYDR_MIN_SPIN ?? 2600)
+
+const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
+
 export function Activate() {
   const { activate, licence, openSample } = useApp()
   const [key, setKey] = useState('')
@@ -29,9 +40,12 @@ export function Activate() {
   const submit = async (): Promise<void> => {
     if (!shaped || busy) return
     setBusy(true)
+    const started = Date.now()
     try {
       await activate(key)
     } finally {
+      // Hold the web until it has had a whole turn, counting the time the check itself took.
+      await wait(Math.max(0, MIN_SPIN_MS - (Date.now() - started)))
       setBusy(false)
     }
   }
