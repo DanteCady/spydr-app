@@ -135,13 +135,15 @@ export interface RecordInput {
   diff: SnapshotDiff | null
   scope: ReadScope
   source?: EntrySource
+  /** When the read happened. Only the sample generator passes anything but now. */
+  at?: Date
 }
 
 /** Writes one entry and its object index in a single transaction. */
 export function recordRead(input: RecordInput): TimelineEntry | null {
   const database = open()
   if (!database) return null
-  const entry = buildEntry({ ...input, id: randomUUID() })
+  const entry = buildEntry({ ...input, id: randomUUID(), now: input.at })
   const { blob, encrypted } = input.diff ? encode(input.diff) : { blob: null, encrypted: false }
 
   const insertEntry = database.prepare(`
@@ -257,6 +259,28 @@ export function pruneEntries(retentionDays: number): number {
     return 0
   }
   return ids.length
+}
+
+/** Removes only the invented entries, leaving any real history alone. */
+export function clearSampleEntries(): number {
+  const database = open()
+  if (!database) return 0
+  const rows = database.prepare("SELECT id FROM entry WHERE source = 'sample'").all() as Row[]
+  if (rows.length === 0) return 0
+  database.exec('BEGIN')
+  try {
+    const dropObjects = database.prepare('DELETE FROM entry_object WHERE entry_id = ?')
+    const dropEntry = database.prepare('DELETE FROM entry WHERE id = ?')
+    for (const row of rows) {
+      dropObjects.run(String(row.id))
+      dropEntry.run(String(row.id))
+    }
+    database.exec('COMMIT')
+  } catch {
+    database.exec('ROLLBACK')
+    return 0
+  }
+  return rows.length
 }
 
 export function clearTimeline(): void {

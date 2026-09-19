@@ -17,6 +17,7 @@ import {
   recordRead,
   timelinePath
 } from './timeline'
+import { generateSampleTimeline } from './sampleTimeline'
 import { diffSnapshots } from '../shared/diff'
 import { readScope, sameScope, worthRecording } from '../shared/timeline'
 import type { SettingsPatch } from '../shared/settings'
@@ -230,6 +231,7 @@ function registerIpc(): void {
   ipcMain.handle('spydr:timeline:get', (_evt, id: string) => getEntry(id))
   ipcMain.handle('spydr:timeline:object', (_evt, objectGuid: string) => objectHistory(objectGuid))
   ipcMain.handle('spydr:timeline:clear', () => clearTimeline())
+  ipcMain.handle('spydr:timeline:sample', () => generateSampleTimeline())
   ipcMain.handle('spydr:timeline:stats', () => ({ entries: countEntries(), path: timelinePath() }))
   ipcMain.handle('spydr:about', () => ({
     version: appVersion(),

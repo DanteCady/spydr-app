@@ -146,7 +146,7 @@ export function Connect() {
               <FolderOpen size={16} aria-hidden />
               <span>
                 <strong>Open sample directory</strong>
-                <em>contoso.lab — nested groups, a cycle, a path into Domain Admins</em>
+                <em>See how SPYDR works</em>
               </span>
             </button>
             {savedSession ? (

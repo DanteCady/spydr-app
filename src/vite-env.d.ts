@@ -27,6 +27,7 @@ export interface SpydrApi {
   timelineGet: (id: string) => Promise<TimelineEntry | null>
   timelineObject: (objectGuid: string) => Promise<{ entry: TimelineEntry; kinds: string[] }[]>
   timelineClear: () => Promise<void>
+  timelineSample: () => Promise<{ created: number; replaced: number }>
   timelineStats: () => Promise<{ entries: number; path: string }>
   checkForUpdate: () => Promise<UpdateCheck>
   onMenuCommand: (handler: (command: string) => void) => () => void

@@ -119,8 +119,8 @@ export function isUnchanged(diff: SnapshotDiff): boolean {
 
 const count = (n: number, one: string, many = `${one}s`): string => `${n} ${n === 1 ? one : many}`
 
-/** One line an admin can read at a glance. */
-export function describeDiff(diff: SnapshotDiff): string {
+/** What moved, without the score — for places that render the score themselves. */
+export function describeChanges(diff: SnapshotDiff): string {
   if (isUnchanged(diff)) return 'Nothing changed since the last read.'
   const parts: string[] = []
   if (diff.added.length) parts.push(`${count(diff.added.length, 'object')} added`)
@@ -129,6 +129,13 @@ export function describeDiff(diff: SnapshotDiff): string {
   if (diff.membershipsAdded.length) parts.push(`${count(diff.membershipsAdded.length, 'membership')} added`)
   if (diff.membershipsRemoved.length) parts.push(`${count(diff.membershipsRemoved.length, 'membership')} removed`)
   if (diff.findingsBefore !== diff.findingsAfter) parts.push(`findings ${diff.findingsBefore} → ${diff.findingsAfter}`)
+  return parts.join(', ')
+}
+
+/** One line an admin can read at a glance, score included. */
+export function describeDiff(diff: SnapshotDiff): string {
+  const changes = describeChanges(diff)
+  if (isUnchanged(diff)) return changes
   const score = diff.scoreBefore === diff.scoreAfter ? '' : ` · score ${diff.scoreBefore} → ${diff.scoreAfter}`
-  return `${parts.join(', ')}${score}`
+  return `${changes}${score}`
 }
