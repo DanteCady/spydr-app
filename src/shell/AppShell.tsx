@@ -1,6 +1,7 @@
-import { CircleHelp, Moon, Palette, Search, Sun } from 'lucide-react'
+import { CircleHelp, Search } from 'lucide-react'
 import type { WorkspaceId } from '@shared/types'
 import { NavGlyph } from '../components/NavGlyph'
+import { ThemeMenu } from '../components/ThemeMenu'
 import { useMenuCommand } from '../lib/useMenuCommand'
 import { WidowMark } from '../components/WidowMark'
 import { ObjectInspector } from '../inspector/ObjectInspector'
@@ -21,9 +22,6 @@ const NAV: { id: WorkspaceId; label: string; hint: string }[] = [
   { id: 'settings', label: 'Settings', hint: 'Prefs' }
 ]
 
-/** The theme each button press moves to, so the control can say where it is going. */
-const NEXT_THEME: Record<string, string> = { dark: 'light', light: 'vivid', vivid: 'dark' }
-
 export function AppShell() {
   const {
     snapshot,
@@ -32,8 +30,6 @@ export function AppShell() {
     search,
     setSearch,
     disconnect,
-    theme,
-    toggleTheme,
     setTheme,
     generateReport,
     setSessionConsent,
@@ -52,6 +48,7 @@ export function AppShell() {
     else if (command === 'view:theme:dark') setTheme('dark')
     else if (command === 'view:theme:light') setTheme('light')
     else if (command === 'view:theme:vivid') setTheme('vivid')
+    else if (command === 'view:theme:minimal') setTheme('minimal')
     else if (command === 'file:disconnect') disconnect()
     else if (command === 'file:report') void generateReport()
     else if (command === 'file:remember') setSessionConsent('yes')
@@ -122,21 +119,7 @@ export function AppShell() {
             {snapshot.findings.length} finding{snapshot.findings.length === 1 ? '' : 's'}
           </button>
           <span className="muted">ingested {new Date(snapshot.ingestedAt).toLocaleString()}</span>
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label={`Theme: ${theme}. Switch to ${NEXT_THEME[theme]}.`}
-            title={`Theme: ${theme} — switch to ${NEXT_THEME[theme]}`}
-            onClick={toggleTheme}
-          >
-            {theme === 'dark' ? (
-              <Sun size={14} aria-hidden />
-            ) : theme === 'light' ? (
-              <Palette size={14} aria-hidden />
-            ) : (
-              <Moon size={14} aria-hidden />
-            )}
-          </button>
+          <ThemeMenu />
           <button
             type="button"
             className={workspace === 'help' ? 'icon-btn active' : 'icon-btn'}

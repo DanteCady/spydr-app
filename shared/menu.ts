@@ -21,6 +21,7 @@ export type MenuCommand =
   | 'view:theme:dark'
   | 'view:theme:light'
   | 'view:theme:vivid'
+  | 'view:theme:minimal'
   | 'canvas:tree'
   | 'canvas:structure'
   | 'canvas:grid'
@@ -113,7 +114,8 @@ export const MENU: MenuSection[] = [
         submenu: [
           { label: 'Dark', command: 'view:theme:dark' },
           { label: 'Light', command: 'view:theme:light' },
-          { label: 'Vivid', command: 'view:theme:vivid' }
+          { label: 'Vivid', command: 'view:theme:vivid' },
+          { label: 'Minimal', command: 'view:theme:minimal' }
         ]
       }
     ]

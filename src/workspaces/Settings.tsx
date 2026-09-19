@@ -13,6 +13,7 @@ import { RULES } from '@shared/engine/registry'
 import { LIMITS, type AboutInfo } from '@shared/settings'
 import type { FindingType } from '@shared/types'
 import type { UpdateCheck } from '../vite-env'
+import { ThemeMenu } from '../components/ThemeMenu'
 import { useApp } from '../state'
 
 type SectionId = 'hygiene' | 'connection' | 'reports' | 'privacy' | 'appearance' | 'about'
@@ -356,15 +357,8 @@ export function Settings() {
         {section === 'appearance' ? (
           <>
             <h2>Appearance</h2>
-            <Row label="Theme">
-              <select
-                value={appearance.theme}
-                onChange={(e) => updateSettings({ appearance: { theme: e.target.value as typeof appearance.theme } })}
-              >
-                <option value="dark">Dark</option>
-                <option value="light">Light</option>
-                <option value="vivid">Vivid</option>
-              </select>
+            <Row label="Theme" hint="The same control as the palette button in the header.">
+              <ThemeMenu variant="inline" />
             </Row>
             <h3>Canvas defaults</h3>
             <p className="set-intro">Where the Web canvas starts each time you open it.</p>
