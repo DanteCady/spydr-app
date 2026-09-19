@@ -28,6 +28,50 @@ Adding an article to the app adds a page here. Nothing needs to be written twice
 filenames, byte sizes and download URLs. Without it the page falls back to the 0.1.0 artefacts and
 says so under the cards, rather than pretending to link to something.
 
+## Licence keys and the API
+
+SPYDR is free but activated. Signing up on the landing page issues a key; the desktop app checks it
+on first run and roughly monthly after that.
+
+| Route | Does |
+| --- | --- |
+| `POST /api/signup` | `{ email }` → `{ key, tier }`. One live key per address; asking again retires the old one. |
+| `POST /api/activate` | `{ key, machine, version, os }` → a signed licence the app caches for 30 days. |
+| `POST /api/telemetry` | Anonymous usage, only from installs that switched it on. Unknown fields are rejected. |
+| `GET /api/pubkey` | The public half of the signing key, for building the app against this server. |
+
+Keys are stored hashed, so a copy of the database is not a pile of working licences — which also
+means a lost key is reissued rather than recovered. The machine identifier arrives already hashed
+by the client and is hashed again with `LICENSE_PEPPER`: enough to count installs, not enough to
+identify a computer.
+
+### Generating the signing pair
+
+```sh
+npm run keygen
+```
+
+The private half goes in `LICENSE_PRIVATE_KEY`; the public half belongs in the desktop app's
+`resources/license-public.pem`, so a cached activation can be verified offline. Without
+`LICENSE_PRIVATE_KEY` the server generates an ephemeral pair at boot and says so on `/api/pubkey` —
+fine locally, useless in production.
+
+### Environment
+
+```sh
+NEXT_PUBLIC_SITE_URL=https://getspydr.com
+LICENSE_DB=/var/lib/spydr/spydr.db     # SQLite, needs a writable directory
+LICENSE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n…"
+LICENSE_PEPPER=<random string>
+SUBSCRIBE_WEBHOOK=…                    # optional, mailing list
+```
+
+### On Lightsail
+
+Node 22 or newer, because the store uses `node:sqlite` — no native modules, nothing to compile.
+Run `npm ci && npm run build && npm start` behind nginx with TLS, keep `LICENSE_DB` on a path that
+survives deploys, and back that file up: it is the list of everyone using SPYDR.
+
 ## The update list
 
 The hero carries an email field. Where the address goes is up to you — set one of these and the

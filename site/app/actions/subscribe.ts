@@ -1,67 +1,81 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
+import { hashKey, newKey } from '@/lib/server/keys'
+import { rateLimit, store } from '@/lib/server/store'
+
 /**
- * The update list.
+ * Signing up does two things at once: it puts you on the release-notes list and it issues the
+ * licence key SPYDR is activated with. One form, because asking twice for the same address would
+ * be silly.
  *
- * The address goes wherever you configure, and nowhere else — there is no database here and no
- * third party watching the page. Set one of:
- *
- *   SUBSCRIBE_WEBHOOK   any URL that accepts POST { email, source }
- *   BUTTONDOWN_API_KEY  posts to Buttondown's subscribers endpoint
- *
- * With neither set the form says so rather than thanking someone for an address it just dropped.
+ * Where the address goes beyond the licence database is up to you — SUBSCRIBE_WEBHOOK or
+ * BUTTONDOWN_API_KEY. Neither is required for a key to be issued.
  */
 
-export type SubscribeStatus = 'idle' | 'ok' | 'invalid' | 'error' | 'unconfigured'
+export type SignupStatus = 'idle' | 'ok' | 'invalid' | 'error' | 'throttled'
 
-export interface SubscribeState {
-  status: SubscribeStatus
+export interface SignupState {
+  status: SignupStatus
+  key?: string
   message?: string
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
-async function deliver(email: string): Promise<SubscribeState> {
+async function alsoSubscribe(email: string): Promise<void> {
   const webhook = process.env.SUBSCRIBE_WEBHOOK
   const buttondown = process.env.BUTTONDOWN_API_KEY
-
-  if (webhook) {
-    const res = await fetch(webhook, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, source: 'spydr.site' })
-    })
-    if (!res.ok) throw new Error(`webhook answered ${res.status}`)
-    return { status: 'ok' }
+  try {
+    if (webhook) {
+      await fetch(webhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'getspydr.com' })
+      })
+    } else if (buttondown) {
+      await fetch('https://api.buttondown.email/v1/subscribers', {
+        method: 'POST',
+        headers: { Authorization: `Token ${buttondown}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+    }
+  } catch {
+    // The key is the thing that matters; a mailing-list hiccup must not lose it.
   }
-
-  if (buttondown) {
-    const res = await fetch('https://api.buttondown.email/v1/subscribers', {
-      method: 'POST',
-      headers: { Authorization: `Token ${buttondown}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    })
-    // Already on the list is a success from the reader's point of view.
-    if (res.status === 409) return { status: 'ok', message: 'You were already on the list.' }
-    if (!res.ok) throw new Error(`buttondown answered ${res.status}`)
-    return { status: 'ok' }
-  }
-
-  return { status: 'unconfigured' }
 }
 
-export async function subscribe(_previous: SubscribeState, form: FormData): Promise<SubscribeState> {
-  // A field no person can see and every naive bot fills in.
-  if (String(form.get('company') ?? '').trim() !== '') return { status: 'ok' }
+export async function requestKey(_previous: SignupState, form: FormData): Promise<SignupState> {
+  // Hidden from people, irresistible to bots.
+  if (String(form.get('company') ?? '').trim() !== '') return { status: 'ok', key: 'SPYDR-XXXXX-XXXXX-XXXXX-XXXXX' }
 
-  const email = String(form.get('email') ?? '').trim()
+  const email = String(form.get('email') ?? '').trim().toLowerCase()
   if (!EMAIL.test(email) || email.length > 254) {
     return { status: 'invalid', message: 'That does not look like an email address.' }
   }
+  if (!rateLimit(`signup:${email}`, 5, 60 * 60 * 1000)) {
+    return { status: 'throttled', message: 'That address has requested several keys. Try again later.' }
+  }
 
   try {
-    return await deliver(email)
+    const db = store()
+    const existing = db.prepare('SELECT id FROM licence WHERE email = ? AND revoked = 0').get(email) as
+      | { id: string }
+      | undefined
+    if (existing) {
+      // Only the hash is stored, so an old key cannot be read back — retire it and issue another.
+      db.prepare('UPDATE licence SET revoked = 1, note = ? WHERE id = ?').run('reissued', existing.id)
+    }
+
+    const key = newKey()
+    db.prepare(
+      `INSERT INTO licence (id, email, key_hash, tier, features, created_at)
+       VALUES (?, ?, ?, 'free', '[]', ?)`
+    ).run(randomUUID(), email, hashKey(key), new Date().toISOString())
+
+    await alsoSubscribe(email)
+    return { status: 'ok', key }
   } catch {
-    return { status: 'error', message: 'Something went wrong sending that. Try again in a minute.' }
+    return { status: 'error', message: 'Something went wrong issuing that key. Try again in a minute.' }
   }
 }
