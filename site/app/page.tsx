@@ -46,7 +46,7 @@ export default function Home() {
             </Link>
           </div>
           <p className="fineprint">
-            Free · No account · Binds as an ordinary domain user · Never writes to your directory
+            Free · Licence key, no account · Binds as an ordinary domain user · Never writes to your directory
           </p>
           <Subscribe />
         </div>
@@ -210,7 +210,10 @@ export default function Home() {
           </div>
           <div>
             <dt>Network</dt>
-            <dd>the domain controller you name. No telemetry, no analytics, no account, no licence check</dd>
+            <dd>
+              the domain controller you name, and a licence check on first run that repeats monthly. No analytics, no
+              account, and telemetry only if you switch it on
+            </dd>
           </div>
           <div>
             <dt>Runs on</dt>

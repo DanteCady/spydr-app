@@ -1,26 +1,44 @@
 'use client'
 
-import { useActionState } from 'react'
-import { subscribe, type SubscribeState } from '@/app/actions/subscribe'
+import { useActionState, useState } from 'react'
+import { requestKey, type SignupState } from '@/app/actions/subscribe'
 
-const INITIAL: SubscribeState = { status: 'idle' }
-
-const NOTE: Record<Exclude<SubscribeState['status'], 'idle'>, string> = {
-  ok: 'You are on the list. Release notes only.',
-  invalid: 'That does not look like an email address.',
-  error: 'Something went wrong sending that. Try again in a minute.',
-  unconfigured: 'The list is not wired up yet — nothing was sent, and nothing was stored.'
-}
+const INITIAL: SignupState = { status: 'idle' }
 
 export function Subscribe() {
-  const [state, action, pending] = useActionState(subscribe, INITIAL)
-  const done = state.status === 'ok'
+  const [state, action, pending] = useActionState(requestKey, INITIAL)
+  const [copied, setCopied] = useState(false)
+
+  if (state.status === 'ok' && state.key) {
+    return (
+      <div className="subscribe issued">
+        <p className="mono label">Your licence key</p>
+        <div className="key-row">
+          <code>{state.key}</code>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={() => {
+              void navigator.clipboard.writeText(state.key ?? '').then(() => setCopied(true))
+            }}
+          >
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+        <p className="subscribe-note">
+          Keep it somewhere you will find it again. SPYDR asks for it once, on first run, and you are on the list for
+          release notes.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <form className="subscribe" action={action}>
       <label className="sr-only" htmlFor="subscribe-email">
-        Email address for release notes
+        Email address for your licence key
       </label>
+      <p className="mono label">Free licence key</p>
       <div className="subscribe-row">
         <input
           id="subscribe-email"
@@ -30,19 +48,21 @@ export function Subscribe() {
           autoComplete="email"
           placeholder="you@company.com"
           required
-          disabled={pending || done}
+          disabled={pending}
           aria-invalid={state.status === 'invalid'}
         />
-        {/* Hidden from people, irresistible to bots. */}
         <input className="sr-only" name="company" tabIndex={-1} autoComplete="off" aria-hidden />
-        <button type="submit" className="btn ghost" disabled={pending || done}>
-          {pending ? 'Sending…' : done ? 'Done' : 'Notify me'}
+        <button type="submit" className="btn ghost" disabled={pending}>
+          {pending ? 'Issuing…' : 'Get a key'}
         </button>
       </div>
-      <p className={`subscribe-note${state.status === 'invalid' || state.status === 'error' ? ' bad' : ''}`} aria-live="polite">
+      <p
+        className={`subscribe-note${state.status === 'invalid' || state.status === 'error' || state.status === 'throttled' ? ' bad' : ''}`}
+        aria-live="polite"
+      >
         {state.status === 'idle'
-          ? 'Told when a version ships, and nothing else. No analytics on this page, and the address goes nowhere but the list.'
-          : (state.message ?? NOTE[state.status])}
+          ? 'SPYDR is free and asks for a key on first run. You also get told when a version ships — nothing else, ever.'
+          : (state.message ?? '')}
       </p>
     </form>
   )
