@@ -39,8 +39,11 @@ export const PRIVILEGED_SAM = new Set([
   'administrators'
 ])
 
-export function isPrivilegedSam(sam: string): boolean {
-  return PRIVILEGED_SAM.has(sam.trim().toLowerCase())
+export function isPrivilegedSam(sam: string, extra: readonly string[] = []): boolean {
+  const key = sam.trim().toLowerCase()
+  if (PRIVILEGED_SAM.has(key)) return true
+  // Tier-0 groups in a real forest are rarely called "Domain Admins"; the admin names their own.
+  return extra.some((name) => name.trim().toLowerCase() === key)
 }
 
 /**

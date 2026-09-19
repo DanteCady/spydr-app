@@ -17,6 +17,7 @@ export type MenuCommand =
   | 'view:web'
   | 'view:pathfinder'
   | 'view:hygiene'
+  | 'view:settings'
   | 'view:theme:dark'
   | 'view:theme:light'
   | 'view:theme:vivid'
@@ -87,6 +88,8 @@ export const MENU: MenuSection[] = [
       { label: 'Web', command: 'view:web', accelerator: 'CmdOrCtrl+2' },
       { label: 'Pathfinder', command: 'view:pathfinder', accelerator: 'CmdOrCtrl+3' },
       { label: 'Hygiene', command: 'view:hygiene', accelerator: 'CmdOrCtrl+4' },
+      { separator: true },
+      { label: 'Settings', command: 'view:settings', accelerator: 'CmdOrCtrl+,' },
       { separator: true },
       {
         label: 'Canvas',

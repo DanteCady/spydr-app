@@ -1,5 +1,5 @@
 import { DatabaseZap, FolderOpen, History, Plug, Radar, X } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ConnectionInput, Protocol } from '@shared/types'
 import { WidowMark } from '../components/WidowMark'
 import { useApp } from '../state'
@@ -9,15 +9,17 @@ function defaultPort(protocol: Protocol): number {
 }
 
 export function Connect() {
-  const { openSample, ingestLdap, savedSession, restoreSession, forgetSession } = useApp()
+  const { openSample, ingestLdap, savedSession, restoreSession, forgetSession, settings } = useApp()
+  // Settings supply the starting point; a saved profile below still wins over them.
+  const defaults = useRef(settings.connection).current
   const [domain, setDomain] = useState('')
   const [host, setHost] = useState('')
-  const [protocol, setProtocol] = useState<Protocol>('ldaps')
-  const [port, setPort] = useState(636)
+  const [protocol, setProtocol] = useState<Protocol>(defaults.defaultProtocol)
+  const [port, setPort] = useState(defaultPort(defaults.defaultProtocol))
   const [bindUsername, setBindUsername] = useState('')
   const [password, setPassword] = useState('')
   const [baseDn, setBaseDn] = useState('')
-  const [trustServerCert, setTrustServerCert] = useState(false)
+  const [trustServerCert, setTrustServerCert] = useState(defaults.trustServerCert)
   const [busy, setBusy] = useState<'test' | 'ingest' | 'discover' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [ok, setOk] = useState<string | null>(null)

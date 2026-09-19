@@ -9,7 +9,13 @@ import type { Report } from '../../shared/report/model'
  * process waits for that to finish before printing. The result is also more predictable — a finding
  * card is never sliced through the middle of a row.
  */
-export function renderReportHtml(report: Report, fontCss: string): string {
+const PAPER = {
+  Letter: { w: '8.5in', h: '11in' },
+  A4: { w: '210mm', h: '297mm' }
+}
+
+export function renderReportHtml(report: Report, fontCss: string, paper: 'Letter' | 'A4' = 'Letter'): string {
+  const size = PAPER[paper] ?? PAPER.Letter
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -18,6 +24,8 @@ export function renderReportHtml(report: Report, fontCss: string): string {
 <style>
 ${fontCss}
 ${STYLE}
+@page { size: ${size.w} ${size.h}; margin: 0; }
+.sheet { width: ${size.w}; height: ${size.h}; }
 </style>
 </head>
 <body>

@@ -1,5 +1,6 @@
 import { Client } from 'ldapts'
 import { enrichSnapshot } from '../../shared/enrich'
+import type { HygieneSettings } from '../../shared/settings'
 import type { ConnectionInput, DirectoryEdge, DirectoryNode, DirectorySnapshot, TestConnectionResult } from '../../shared/types'
 import { mapLdapError } from './errors'
 import {
@@ -65,6 +66,24 @@ const COMPUTER_ATTRS = [
   'whenCreated'
 ]
 
+/** The parts of the connection settings the ingest actually uses. */
+export interface IngestTuning {
+  pageSize: number
+  searchTimeout: number
+  connectTimeout: number
+  includeComputers: boolean
+  includeContainers: boolean
+  hygiene?: HygieneSettings
+}
+
+const DEFAULT_TUNING: IngestTuning = {
+  pageSize: 500,
+  searchTimeout: 30,
+  connectTimeout: 8,
+  includeComputers: true,
+  includeContainers: true
+}
+
 function ldapUrl(input: ConnectionInput): string {
   const scheme = input.protocol === 'ldaps' ? 'ldaps' : 'ldap'
   return `${scheme}://${input.host}:${input.port}`
@@ -75,17 +94,21 @@ function ldapUrl(input: ConnectionInput): string {
  * negotiates against a plaintext port, which breaks LDAP and StartTLS outright. StartTLS passes its
  * own options when it upgrades the socket, which is a separate call.
  */
-export function clientOptions(input: ConnectionInput): ConstructorParameters<typeof Client>[0] {
+export function clientOptions(input: ConnectionInput, tuning: IngestTuning = DEFAULT_TUNING): ConstructorParameters<typeof Client>[0] {
   return {
     url: ldapUrl(input),
-    timeout: 30_000,
-    connectTimeout: 8_000,
+    timeout: tuning.searchTimeout * 1000,
+    connectTimeout: tuning.connectTimeout * 1000,
     ...(input.protocol === 'ldaps' ? { tlsOptions: { rejectUnauthorized: !input.trustServerCert } } : {})
   }
 }
 
-async function withClient<T>(input: ConnectionInput, fn: (client: Client) => Promise<T>): Promise<T> {
-  const client = new Client(clientOptions(input))
+async function withClient<T>(
+  input: ConnectionInput,
+  fn: (client: Client) => Promise<T>,
+  tuning: IngestTuning = DEFAULT_TUNING
+): Promise<T> {
+  const client = new Client(clientOptions(input, tuning))
   try {
     if (input.protocol === 'starttls') {
       await client.startTLS({ rejectUnauthorized: !input.trustServerCert })
@@ -115,12 +138,18 @@ async function withClient<T>(input: ConnectionInput, fn: (client: Client) => Pro
 
 
 
-async function searchAll(client: Client, baseDn: string, filter: string, attributes: string[]): Promise<Record<string, unknown>[]> {
+async function searchAll(
+  client: Client,
+  baseDn: string,
+  filter: string,
+  attributes: string[],
+  pageSize = DEFAULT_TUNING.pageSize
+): Promise<Record<string, unknown>[]> {
   const { searchEntries } = await client.search(baseDn, {
     scope: 'sub',
     filter,
     attributes,
-    paged: { pageSize: 500 },
+    paged: { pageSize },
     explicitBufferAttributes: ['objectGUID', 'objectSid']
   })
   return searchEntries as unknown as Record<string, unknown>[]
@@ -219,7 +248,10 @@ export async function testConnection(input: ConnectionInput): Promise<TestConnec
   })
 }
 
-export async function ingestDirectory(input: ConnectionInput): Promise<DirectorySnapshot> {
+export async function ingestDirectory(
+  input: ConnectionInput,
+  tuning: IngestTuning = DEFAULT_TUNING
+): Promise<DirectorySnapshot> {
   return withClient(input, async (client) => {
     const tested = await (async () => {
       const { searchEntries } = await client.search('', {
@@ -235,12 +267,15 @@ export async function ingestDirectory(input: ConnectionInput): Promise<Directory
 
     if (!tested.baseDn) throw new Error('Could not read defaultNamingContext from rootDSE. Enter a base DN.')
 
+    const none = Promise.resolve([] as Record<string, unknown>[])
     const [users, groups, ous, containers, computers] = await Promise.all([
-      searchAll(client, tested.baseDn, USER_FILTER, USER_ATTRS),
-      searchAll(client, tested.baseDn, GROUP_FILTER, GROUP_ATTRS),
-      searchAll(client, tested.baseDn, OU_FILTER, OU_ATTRS),
-      searchAll(client, tested.baseDn, CONTAINER_FILTER, OU_ATTRS),
-      searchAll(client, tested.baseDn, COMPUTER_FILTER, COMPUTER_ATTRS)
+      searchAll(client, tested.baseDn, USER_FILTER, USER_ATTRS, tuning.pageSize),
+      searchAll(client, tested.baseDn, GROUP_FILTER, GROUP_ATTRS, tuning.pageSize),
+      searchAll(client, tested.baseDn, OU_FILTER, OU_ATTRS, tuning.pageSize),
+      // Computers can be half of a large directory and carry no membership of their own beyond a
+      // primary group, so an admin can leave them out to halve the ingest.
+      tuning.includeContainers ? searchAll(client, tested.baseDn, CONTAINER_FILTER, OU_ATTRS, tuning.pageSize) : none,
+      tuning.includeComputers ? searchAll(client, tested.baseDn, COMPUTER_FILTER, COMPUTER_ATTRS, tuning.pageSize) : none
     ])
 
     const nodes: DirectoryNode[] = []
@@ -307,6 +342,6 @@ export async function ingestDirectory(input: ConnectionInput): Promise<Directory
       boundAs: input.bindUsername,
       nodes,
       edges
-    })
-  })
+    }, tuning.hygiene)
+  }, tuning)
 }

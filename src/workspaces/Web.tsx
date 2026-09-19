@@ -2,6 +2,7 @@ import cytoscape from 'cytoscape'
 import { ChevronsDownUp, ChevronsUpDown, Download, GitBranch, Grid2x2, Info, Maximize, Minus, Network, Plus, RotateCcw, Route, Shapes, Type, Wand2 } from 'lucide-react'
 import dagre from 'cytoscape-dagre'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { AppearanceSettings } from '@shared/settings'
 import type { DirectoryObjectType } from '@shared/types'
 import type { DirectoryNode, DirectorySnapshot } from '@shared/types'
 import { buildMembershipGraph, enumeratePaths, findGroupCycles, groupIdSet, membershipReach } from '@shared/graph'
@@ -16,9 +17,9 @@ import { useApp } from '../state'
 
 cytoscape.use(dagre as Parameters<typeof cytoscape.use>[0])
 
-type Density = 'auto' | 'compact' | 'spread'
+type Density = AppearanceSettings['canvasDensity']
 /** Tree ranks membership upward; structure fans containment out to the right from the focus. */
-type LayoutMode = 'tree' | 'structure'
+type LayoutMode = AppearanceSettings['canvasLayout']
 
 const ZOOM_MIN = 0.2
 const ZOOM_MAX = 4
@@ -540,23 +541,25 @@ function syncGrid(cy: cytoscape.Core, el: HTMLElement | null): void {
 }
 
 export function Web() {
-  const { snapshot, selectedId, select, activeFinding, clearFinding, theme } = useApp()
+  const { snapshot, selectedId, select, activeFinding, clearFinding, theme, settings } = useApp()
+  // The canvas opens the way Settings says it should; changes made here are for this visit only.
+  const canvas = useRef(settings.appearance).current
   const host = useRef<HTMLDivElement>(null)
   const wrap = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
   const selectRef = useRef(select)
-  const labelsRef = useRef(true)
-  const densityRef = useRef<Density>('auto')
-  const [density, setDensity] = useState<Density>('auto')
-  const [grid, setGrid] = useState(false)
-  const [labels, setLabels] = useState(true)
-  const [layout, setLayout] = useState<LayoutMode>('tree')
-  const layoutRef = useRef<LayoutMode>('tree')
+  const labelsRef = useRef(canvas.canvasLabels)
+  const densityRef = useRef<Density>(canvas.canvasDensity)
+  const [density, setDensity] = useState<Density>(canvas.canvasDensity)
+  const [grid, setGrid] = useState(canvas.canvasGrid)
+  const [labels, setLabels] = useState(canvas.canvasLabels)
+  const [layout, setLayout] = useState<LayoutMode>(canvas.canvasLayout)
+  const layoutRef = useRef<LayoutMode>(canvas.canvasLayout)
   const [tracing, setTracing] = useState(false)
   const [traceTarget, setTraceTarget] = useState<string | null>(null)
   const tracingRef = useRef(false)
   const setTraceTargetRef = useRef(setTraceTarget)
-  const [legend, setLegend] = useState(true)
+  const [legend, setLegend] = useState(canvas.canvasLegend)
   const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(null)
   const [shown, setShown] = useState({ nodes: 0, edges: 0, trimmed: 0, container: false })
   const [cyInstance, setCyInstance] = useState<cytoscape.Core | null>(null)
