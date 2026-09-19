@@ -3,6 +3,7 @@
   "productName": "SPYDR",
   "version": "0.1.0",
   "description": "Read-only Active Directory explorer for messy on-prem directories",
+  "author": "SPYDR",
   "main": "./out/main/main.js",
   "type": "module",
   "scripts": {
@@ -45,7 +46,7 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^4.4.1",
-    "electron": "^36.2.0",
+    "electron": "^44.4.3",
     "electron-builder": "^26.15.3",
     "electron-vite": "^3.1.0",
     "tsx": "^4.19.0",
@@ -54,7 +55,6 @@
     "vitest": "^5.0.1"
   },
   "allowScripts": {
-    "electron@36.9.5": true,
     "esbuild@0.25.12": true,
     "esbuild@0.28.2": true
   }
