@@ -49,6 +49,7 @@ export function AppShell() {
     else if (command === 'view:theme:light') setTheme('light')
     else if (command === 'view:theme:vivid') setTheme('vivid')
     else if (command === 'view:theme:minimal') setTheme('minimal')
+    else if (command === 'view:theme:minimal-dark') setTheme('minimal-dark')
     else if (command === 'file:disconnect') disconnect()
     else if (command === 'file:report') void generateReport()
     else if (command === 'file:remember') setSessionConsent('yes')
