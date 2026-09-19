@@ -1936,3 +1936,60 @@ table.grid tr.selected td { background: var(--sel); }
 .tl-line.lane-2, .tl-swatch.lane-2 { background: var(--group); }
 .tl-line.lane-3, .tl-swatch.lane-3 { background: var(--user); }
 .tl-line.lane-4, .tl-swatch.lane-4 { background: var(--computer); }
+
+/* ---- activation ---- */
+.activate { flex: 1; display: grid; place-items: center; padding: 40px 24px; background: var(--bg); }
+.activate-card {
+  width: 100%;
+  max-width: 520px;
+  padding: 30px 32px 26px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.activate-card header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+.activate-card header h1 { font-size: 17px; letter-spacing: 0.08em; }
+.activate-card header p { font-size: 11.5px; color: var(--muted); }
+.activate-card h2 { font-size: 19px; letter-spacing: -0.02em; margin-bottom: 8px; }
+.activate-card > .muted { font-size: 12.5px; line-height: 1.6; margin-bottom: 22px; }
+.activate-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.activate-field .mono { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.activate-field input {
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+}
+.activate-field input:focus { outline: none; border-color: var(--brand); }
+.activate-error { font-size: 12px; color: var(--crit); margin-bottom: 14px; line-height: 1.5; }
+.activate-actions { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; }
+.activate-actions .primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--brand);
+  color: var(--brand-foreground);
+  font-size: 13px;
+  font-weight: 600;
+}
+.activate-actions .primary:disabled { opacity: 0.5; }
+.activate-actions .linkish { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; white-space: nowrap; }
+.activate-card footer {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+.mono-hint { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; letter-spacing: 0.04em; }
+.danger-text { color: var(--crit) !important; }

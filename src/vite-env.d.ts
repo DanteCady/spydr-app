@@ -3,6 +3,7 @@ import type { SessionMeta, SessionProfile, SessionView } from '../electron/direc
 import type { ReportResult } from '../electron/report'
 import type { AboutInfo, AppSettings, SettingsPatch } from '@shared/settings'
 import type { TimelineEntry } from '@shared/timeline'
+import type { LicenceState } from '@shared/license'
 import type { UpdateCheck } from '../electron/updates'
 
 export interface SpydrApi {
@@ -23,6 +24,9 @@ export interface SpydrApi {
   resetSettings: () => Promise<AppSettings>
   onSettings: (handler: (settings: AppSettings) => void) => () => void
   about: () => Promise<AboutInfo>
+  licence: () => Promise<LicenceState>
+  activate: (key: string) => Promise<LicenceState>
+  deactivate: () => Promise<LicenceState>
   timelineList: (domain?: string) => Promise<TimelineEntry[]>
   timelineGet: (id: string) => Promise<TimelineEntry | null>
   timelineObject: (objectGuid: string) => Promise<{ entry: TimelineEntry; kinds: string[] }[]>

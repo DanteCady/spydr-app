@@ -4,6 +4,7 @@ import type { SessionMeta, SessionView } from './directory/session'
 import type { ReportResult } from './report'
 import type { AboutInfo, AppSettings, SettingsPatch } from '../shared/settings'
 import type { TimelineEntry } from '../shared/timeline'
+import type { LicenceState } from '../shared/license'
 import type { UpdateCheck } from './updates'
 
 const api = {
@@ -33,6 +34,10 @@ const api = {
     return () => { ipcRenderer.removeListener('spydr:settings', listener) }
   },
   about: (): Promise<AboutInfo> => ipcRenderer.invoke('spydr:about'),
+  /** Activation. The key never reaches the renderer again once it is stored. */
+  licence: (): Promise<LicenceState> => ipcRenderer.invoke('spydr:licence:state'),
+  activate: (key: string): Promise<LicenceState> => ipcRenderer.invoke('spydr:licence:activate', key),
+  deactivate: (): Promise<LicenceState> => ipcRenderer.invoke('spydr:licence:deactivate'),
   /** The change timeline. List results carry no detail; get() decrypts one entry. */
   timelineList: (domain?: string): Promise<TimelineEntry[]> => ipcRenderer.invoke('spydr:timeline:list', domain),
   timelineGet: (id: string): Promise<TimelineEntry | null> => ipcRenderer.invoke('spydr:timeline:get', id),

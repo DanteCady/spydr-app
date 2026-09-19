@@ -173,6 +173,62 @@ export const BASICS: Article[] = [
     )
   },
   {
+    id: 'licence',
+    section: 'Operating',
+    title: 'Licence and activation',
+    blurb: 'Why a free tool asks for a key, and what the check does.',
+    keywords: 'licence license key activation free offline grace deactivate tier signup',
+    body: (
+      <>
+        <p>
+          SPYDR is free. It still asks for a licence key, for one honest reason: without it there is
+          no way to know whether anyone is using this, and a tool nobody can count is a tool nobody
+          keeps building.
+        </p>
+        <h3>What the check involves</h3>
+        <p>
+          The key is checked when you enter it and roughly once a month after that. The request
+          carries the key, an identifier for this installation, the SPYDR version and the operating
+          system — nothing about your directory, ever. Not a domain name, not an object, not a
+          count.
+        </p>
+        <p>
+          The installation identifier is a hash computed on your machine, and the server hashes it
+          again before storing it. It exists to count installations rather than to recognise a
+          computer.
+        </p>
+        <h3>When the check cannot happen</h3>
+        <p>
+          Administration machines are often on networks that do not reach the internet. If the
+          monthly check falls due while SPYDR cannot reach the licence server, it keeps working and
+          says so in Settings. Nothing locks. The only thing a lapsed check does is show a notice —
+          this is a read-only tool, and locking someone out of it during an incident would be
+          indefensible.
+        </p>
+        <p>
+          The answer is signed, so the copy held on your machine can be trusted for the month
+          without asking again, and cannot be forged by pointing the hostname somewhere else.
+        </p>
+        <h3>The sample needs no key</h3>
+        <p>
+          The sample directory opens without activating anything, so you can see exactly what SPYDR
+          does before handing over an email address.
+        </p>
+        <h3>Removing it</h3>
+        <p>
+          Settings ▸ Licence shows what is stored, when it was last checked, and a button that
+          deletes it from this machine. Nothing is sent when you do that.
+        </p>
+        <h3>What the tier is for</h3>
+        <p>
+          Every key today is <strong>free</strong>, and free carries every feature SPYDR has. The
+          tier exists so that paid capability — scheduled reports, team features, anything that
+          needs a server — has somewhere to attach later without re-plumbing the application.
+        </p>
+      </>
+    )
+  },
+  {
     id: 'sessions',
     section: 'Operating',
     title: 'Sessions and restoring',
