@@ -3,7 +3,7 @@
 import { Mail } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import { SUPPORT_EMAIL, supportMailto } from '@shared/contact'
+import { feedbackMailto, securityMailto, supportMailto, FEEDBACK_EMAIL, SECURITY_EMAIL, SUPPORT_EMAIL } from '@shared/contact'
 import type { AboutInfo } from '@shared/settings'
 import { prettyAccelerator } from '../lib/accelerator'
 
@@ -100,23 +100,30 @@ export function BuildInfo() {
  * A mail link with the version and platform already in the message.
  *
  * Every support thread otherwise opens with a round trip asking which build this is, and the
- * person least able to answer that quickly is the one having the problem.
+ * person least able to answer that quickly is the one having the problem. The body also arrives
+ * with the questions already in it, so a first message tends to answer them.
  */
-export function EmailSupport() {
+export function MailButton({ to = 'support' }: { to?: 'support' | 'feedback' | 'security' }) {
   const [about, setAbout] = useState<AboutInfo | null>(null)
   useEffect(() => {
     void window.spydr?.about().then(setAbout)
   }, [])
 
-  const href = supportMailto({
+  const build = {
     version: about?.version,
     platform: about ? `${about.platform} · Electron ${about.electron}` : undefined
-  })
+  }
+  const { href, label } =
+    to === 'feedback'
+      ? { href: feedbackMailto(build), label: FEEDBACK_EMAIL }
+      : to === 'security'
+        ? { href: securityMailto(build), label: SECURITY_EMAIL }
+        : { href: supportMailto(build), label: SUPPORT_EMAIL }
 
   return (
     <p>
       <a className="btn-inline" href={href}>
-        <Mail size={13} aria-hidden /> Email {SUPPORT_EMAIL}
+        <Mail size={13} aria-hidden /> Email {label}
       </a>
       {about ? (
         <span className="muted kb-aside">Opens your mail app with version {about.version} already filled in.</span>
