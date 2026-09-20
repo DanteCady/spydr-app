@@ -71,6 +71,7 @@ See `docs/RELEASING.md`.
 | `docs/LICENSING.md` | Keys, the signup flow, activation, grace, telemetry |
 | `docs/DEPLOYMENT.md` | Standing the licence server up on Lightsail |
 | `docs/RELEASING.md` | Versioning, release notes, packaging, updating |
+| `docs/ROADMAP.md` | What stands between v1 and selling it, and in what order |
 | `site/README.md` | The site's own environment and endpoints |
 
 User-facing documentation is not in this list: it lives in `src/help/` and is published to the site.
