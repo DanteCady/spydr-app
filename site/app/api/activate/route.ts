@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
-import { hashKey, keyLooksValid, signPayload } from '@/lib/server/keys'
+import { clientIp, readJson } from '@/lib/server/guard'
+import { requireProductionEnv } from '@/lib/server/env'
+import { hashKey, keyLooksValid, normalizeKey, signPayload } from '@/lib/server/keys'
 import { rateLimit, store } from '@/lib/server/store'
 
 export const runtime = 'nodejs'
@@ -26,24 +28,19 @@ interface LicenceRow {
  * pepper — enough to count installs, not enough to identify a computer.
  */
 export async function POST(request: Request) {
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  if (!rateLimit(`activate:${ip}`, 60, 60 * 60 * 1000)) {
+  requireProductionEnv()
+
+  if (!rateLimit(`activate:${clientIp(request)}`, 60, 60 * 60 * 1000)) {
     return NextResponse.json({ error: 'Too many requests.' }, { status: 429 })
   }
 
-  let key = ''
-  let machine = ''
-  let version = ''
-  let os = ''
-  try {
-    const body = (await request.json()) as { key?: string; machine?: string; version?: string; os?: string }
-    key = String(body.key ?? '')
-    machine = String(body.machine ?? '').slice(0, 128)
-    version = String(body.version ?? '').slice(0, 32)
-    os = String(body.os ?? '').slice(0, 32)
-  } catch {
-    return NextResponse.json({ error: 'Send JSON.' }, { status: 400 })
-  }
+  const parsed = await readJson<{ key?: string; machine?: string; version?: string; os?: string }>(request)
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status })
+
+  const key = String(parsed.body.key ?? '')
+  const machine = String(parsed.body.machine ?? '').slice(0, 128)
+  const version = String(parsed.body.version ?? '').slice(0, 32)
+  const os = String(parsed.body.os ?? '').slice(0, 32)
 
   if (!keyLooksValid(key)) {
     return NextResponse.json({ error: 'That key is not in the right shape.' }, { status: 400 })
@@ -59,9 +56,11 @@ export async function POST(request: Request) {
   }
 
   if (machine) {
-    const peppered = createHash('sha256')
-      .update(`${process.env.LICENSE_PEPPER ?? 'spydr'}:${machine}`)
-      .digest('hex')
+    // No literal default here: a pepper published in the source is not a pepper, it just makes
+    // every machine hash reproducible by anyone holding the database. Production refuses to start
+    // without one (see requireProductionEnv), so this fallback is only ever a local checkout.
+    const pepper = process.env.LICENSE_PEPPER ?? 'development-only-pepper'
+    const peppered = createHash('sha256').update(`${pepper}:${machine}`).digest('hex')
     const now = new Date().toISOString()
     db.prepare(
       `INSERT INTO activation (licence_id, machine, first_seen, last_seen, version, os)
@@ -74,7 +73,10 @@ export async function POST(request: Request) {
   const issuedAt = new Date()
   const notAfter = new Date(issuedAt.getTime() + VALID_DAYS * 86_400_000)
   const signed = signPayload({
-    key: key.toUpperCase(),
+    // The canonical form, not merely an uppercased one. The app re-POSTs whatever it was signed,
+    // so signing a non-canonical spelling would put a key into circulation that hashes differently
+    // from the one in the database the moment any client posts it without dashes.
+    key: normalizeKey(key),
     email: row.email,
     tier: row.tier,
     features: JSON.parse(row.features) as string[],
