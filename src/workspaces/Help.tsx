@@ -80,11 +80,14 @@ export function Help() {
             {showing.body}
           </>
         ) : null}
-        <footer className="kb-foot">
-          {snapshot
-            ? `Reading ${snapshot.domain} · ${snapshot.stats.findings} findings · SPYDR is read-only and never writes to Active Directory.`
-            : 'SPYDR is read-only and never writes to Active Directory.'}
-        </footer>
+        {/* What is open, when something is. The read-only promise used to be repeated here on
+            every article; it is a principle in About SPYDR, and saying it thirty times over does
+            not make it truer — it just trains people to stop reading the bottom of the page. */}
+        {snapshot ? (
+          <footer className="kb-foot">
+            Reading {snapshot.domain} · {snapshot.stats.findings} findings
+          </footer>
+        ) : null}
       </article>
     </div>
   )
