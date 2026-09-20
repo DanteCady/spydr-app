@@ -318,7 +318,26 @@ footer .mono { color: var(--faint); text-transform: none; letter-spacing: 0.03em
   gap: 56px;
   align-items: start;
 }
-.docs-nav { position: sticky; top: 86px; display: flex; flex-direction: column; gap: 22px; }
+/* Sticky rather than a fixed pane: page scroll is the right model for a website. It needs its own
+   overflow all the same — the list is long enough that without a bound the last few entries sit
+   below the fold with no way to reach them, since the sidebar stops moving while the page keeps
+   going. */
+.docs-nav {
+  position: sticky;
+  top: 86px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  /* Room for the scrollbar so entries do not sit under it. */
+  padding-right: 6px;
+}
+/* Unobtrusive until used — a permanent bar next to prose reads as clutter. */
+.docs-nav::-webkit-scrollbar { width: 8px; }
+.docs-nav::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+.docs-nav::-webkit-scrollbar-thumb:hover { background: var(--faint); }
 .docs-group { display: flex; flex-direction: column; gap: 2px; }
 .docs-group h4 { color: var(--faint); margin-bottom: 8px; font-weight: 500; }
 .docs-group a {

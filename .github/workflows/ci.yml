@@ -21,6 +21,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      # The read-only guarantee is the reason SPYDR is safe against a production DC. It is checked
+      # before anything else, because it is the one property no test would notice the loss of.
+      - run: npm run verify:readonly
       - run: npm test
       # Guards the sample forest: every rule must still fire on it.
       - run: npm run verify:fixture

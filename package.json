@@ -12,7 +12,7 @@
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "verify:fixture": "npx tsx electron/verify-fixture.ts",
-    "test": "vitest run",
+    "test": "node scripts/assert-read-only.mjs && vitest run",
     "lab:up": "docker compose -f lab/docker-compose.yml up -d --build",
     "lab:seed": "docker compose -f lab/docker-compose.yml exec dc /lab/seed.sh",
     "lab:verify": "npx tsx lab/verify.ts",
@@ -23,7 +23,8 @@
     "package:mac": "npm run build && electron-builder --mac --publish never",
     "package:win": "npm run build && electron-builder --win --publish never",
     "package:linux": "npm run build && electron-builder --linux --publish never",
-    "version:bump": "node scripts/version.mjs"
+    "version:bump": "node scripts/version.mjs",
+    "verify:readonly": "node scripts/assert-read-only.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.3.0",
