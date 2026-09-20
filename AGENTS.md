@@ -78,15 +78,25 @@ User-facing documentation is not in this list: it lives in `src/help/` and is pu
 
 ## Delegate
 
-Use project subagents instead of improvising parallel patterns:
+Agents live in `.claude/agents/`. Use them instead of improvising parallel patterns.
 
-| Work | Subagent |
+| Work | Agent |
 | --- | --- |
-| Feature ideas, roadmap, scope, creep checks | `product-scope` (read-only; does not implement) |
+| How to build something, and in what order | `architect` (read-only) |
+| Attacking IPC, TLS, credentials, file writes, public endpoints | `security-review` (read-only) |
+| Feature ideas, roadmap, creep checks | `product-scope` (read-only) |
 | Connect, ldapts, ingest, fixture, DC discovery | `ad-ldap` |
-| Directory / Web / Pathfinder / Hygiene / inspector | `spydir-ui` |
+| Directory / Web / Pathfinder / Hygiene / Timeline / inspector | `spydir-ui` |
 | graphology, cycles, paths, finding detectors | `graph-findings` |
-| Password handling, TLS toggle, snapshot leakage, write attempts | `ad-security` |
+| The licence server: auth, Stripe, seats, keys, email | `site-backend` |
+| Docs, the in-app guide, release notes | `docs-writer` |
+
+`architect` before anything spanning the app and the site. `security-review` after anything
+touching credentials, IPC or a public route, and before shipping.
+
+There is a parallel set in `.cursor/agents/` for Cursor. It is not what Claude Code reads, and the
+`ad-security` definition there still instructs checking a remember-password feature that does not
+exist — `security-review` supersedes it.
 
 Skills: `connect-onprem-ad`, `ad-hygiene-findings`.
 
