@@ -23,9 +23,11 @@ export function store(): Database {
 
   const sqlite = process.getBuiltinModule('node:sqlite') as SqliteModule
   db = new sqlite.DatabaseSync(path)
+  // turbopackIgnore keeps Next from tracing the whole project into the server bundle: it sees a
+  // non-literal path here and, to be safe, includes every source file in the deployment.
   for (const f of [path, `${path}-wal`, `${path}-shm`]) {
     try {
-      if (existsSync(f)) chmodSync(f, 0o600)
+      if (existsSync(/* turbopackIgnore: true */ f)) chmodSync(/* turbopackIgnore: true */ f, 0o600)
     } catch {
       // Windows and some mounts do not do modes. The path matters more than the bit.
     }
@@ -65,6 +67,17 @@ export function store(): Database {
       payload TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS telemetry_install ON telemetry (install, received_at);
+    -- A code proving someone can read the address they signed up with. Short-lived by design:
+    -- there is exactly one live challenge per address, and asking again replaces it.
+    CREATE TABLE IF NOT EXISTS otp (
+      email TEXT PRIMARY KEY,
+      code_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      sends INTEGER NOT NULL DEFAULT 1
+    );
+    CREATE INDEX IF NOT EXISTS otp_expiry ON otp (expires_at);
   `)
   // Added after the first release: keys are kept encrypted so a lost one can be re-sent.
   const columns = db.prepare('PRAGMA table_info(licence)').all() as { name: string }[]

@@ -76,9 +76,10 @@ export const CONTACT: Article[] = [
 
         <h3>A licence key you have lost</h3>
         <p>
-          Keys are issued one per address and are not shown twice, but they can be sent again. Ask at{' '}
-          <span className="mono-hint">{SITE_DOMAIN}</span> using the address you signed up with, and the key goes to
-          that address — never to whoever asked.
+          Keys are issued one per address and are not shown twice, but they can always be sent again. Ask at{' '}
+          <span className="mono-hint">{SITE_DOMAIN}/key</span> using the address you signed up with, and the key
+          goes to that address — never to whoever asked, which is also why the page answers the same way whether or
+          not it found anything.
         </p>
 
         <h3>Asking for something SPYDR does not do</h3>
