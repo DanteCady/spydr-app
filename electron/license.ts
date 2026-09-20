@@ -32,7 +32,7 @@ interface Stored {
 
 function file(): string {
   const dir = app.getPath('userData')
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true, mode: 0o700 })
   return join(dir, 'licence.json')
 }
 
@@ -87,7 +87,7 @@ function read(): Stored | null {
 
 function write(stored: Stored): void {
   const tmp = `${file()}.tmp`
-  writeFileSync(tmp, JSON.stringify(stored, null, 2), 'utf8')
+  writeFileSync(tmp, JSON.stringify(stored, null, 2), { encoding: 'utf8', mode: 0o600 })
   renameSync(tmp, file())
 }
 

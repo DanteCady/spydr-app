@@ -1,6 +1,6 @@
 import { app, safeStorage } from 'electron'
 import { gunzipSync, gzipSync } from 'node:zlib'
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ConnectionInput, DirectorySnapshot, WorkspaceId } from '../../shared/types'
 
@@ -38,7 +38,7 @@ export interface SessionMeta {
 
 function dir(): string {
   const d = join(app.getPath('userData'), 'session')
-  if (!existsSync(d)) mkdirSync(d, { recursive: true })
+  if (!existsSync(d)) mkdirSync(d, { recursive: true, mode: 0o700 })
   return d
 }
 const metaPath = (): string => join(dir(), 'last-session.json')
@@ -84,9 +84,13 @@ export function saveSession(
   }
 
   const tmp = `${dataPath()}.tmp`
-  writeFileSync(tmp, payload)
+  writeFileSync(tmp, payload, { mode: 0o600 })
   renameSync(tmp, dataPath())
-  writeFileSync(metaPath(), JSON.stringify(meta, null, 2), 'utf8')
+  writeFileSync(metaPath(), JSON.stringify(meta, null, 2), { encoding: 'utf8', mode: 0o600 })
+  // mode on writeFileSync only applies when the file is created, and this one is written in place.
+  // Earlier builds left it at the umask default, holding the domain, the DC hostname and the bind
+  // username in plain text — so tighten it every time rather than only on the first write.
+  chmodSync(metaPath(), 0o600)
 }
 
 export function loadSessionMeta(): SessionMeta | null {
