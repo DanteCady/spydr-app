@@ -53,6 +53,15 @@ const api = {
   timelineSample: (): Promise<{ created: number; replaced: number }> => ipcRenderer.invoke('spydir:timeline:sample'),
   timelineStats: (): Promise<{ entries: number; path: string }> => ipcRenderer.invoke('spydir:timeline:stats'),
   checkForUpdate: (): Promise<UpdateCheck> => ipcRenderer.invoke('spydir:updates:check'),
+  downloadUpdate: (): Promise<UpdateCheck> => ipcRenderer.invoke('spydir:updates:download'),
+  installUpdate: (): Promise<void> => ipcRenderer.invoke('spydir:updates:install'),
+  updateState: (): UpdateCheck => ipcRenderer.sendSync('spydir:updates:state'),
+  // Progress and state changes arrive while a download runs, so the screen follows it live.
+  onUpdate: (handler: (state: UpdateCheck) => void): (() => void) => {
+    const listener = (_evt: unknown, state: UpdateCheck): void => handler(state)
+    ipcRenderer.on('spydir:updates:state', listener)
+    return () => ipcRenderer.removeListener('spydir:updates:state', listener)
+  },
   /** Subscribe to menu commands; returns an unsubscribe. */
   /** Chrome the renderer must draw itself, and the editing actions the OS performs for us. */
   chrome: (): { custom: boolean; platform: string; titleBarHeight: number } =>

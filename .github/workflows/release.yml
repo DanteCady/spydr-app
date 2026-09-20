@@ -1,0 +1,55 @@
+name: Release
+
+# Tagging is the act that publishes. Pushing v0.2.0 builds every platform and attaches the
+# installers to a draft release, along with the latest*.yml manifests the updater reads — an
+# installer published without its manifest is an update nobody will ever be offered.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # The same checks CI runs. A tag should not be able to ship what a branch could not.
+      - run: npm run typecheck
+      - run: npm run verify:readonly
+      - run: npm test
+
+      - name: Build and publish
+        run: npx electron-builder --publish always
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # macOS. Without these the build is unsigned, and an unsigned macOS build cannot
+          # auto-update at all: Squirrel verifies the downloaded app against the running one's
+          # signing identity and refuses a mismatch. Set them and flip `notarize: true`.
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+          # Windows. Updates work unsigned, but every one of them trips SmartScreen.
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+
+          # Until signing credentials exist, don't let electron-builder pick up a stray local
+          # identity and produce something half-signed.
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.CSC_LINK != '' }}

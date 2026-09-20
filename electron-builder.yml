@@ -6,6 +6,14 @@ directories:
   output: release
   buildResources: resources
 
+# Where updates come from. This block is also what makes the build emit latest-mac.yml,
+# latest.yml and latest-linux.yml — those manifests *are* the update feed, and an installer
+# published without its manifest is an update nobody will ever be offered.
+publish:
+  provider: github
+  owner: DanteCady
+  repo: spydr-app
+
 # Only the built output ships. Renderer dependencies are bundled by Vite; main and preload keep
 # their externalized deps (ldapts, graphology) from node_modules.
 files:

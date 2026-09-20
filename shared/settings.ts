@@ -93,11 +93,21 @@ export interface AppearanceSettings {
 
 export interface UpdateSettings {
   /**
-   * A GitHub releases API URL (or anything returning the same shape). Empty means update checks are
-   * off — SPYDIR contacts nothing on its own.
+   * An override for where updates are fetched from, for a site that mirrors releases internally
+   * rather than letting every machine reach GitHub. Empty means the release feed the build was
+   * published with.
    */
   feedUrl: string
   checkOnStart: boolean
+  /**
+   * Download and stage an update without asking first.
+   *
+   * Off by default, and deliberately. SPYDIR is run by administrators against production domain
+   * controllers, and in those environments bytes arriving unannounced over the network is the sort
+   * of thing that turns up in an audit. Nothing is ever applied while the app is open either way —
+   * an update is swapped in on quit, so a long directory read can never be interrupted by one.
+   */
+  automatic: boolean
   /**
    * The newest release whose notes have been shown here. Kept in settings rather than in browser
    * storage so it survives a cache clear and travels with the rest of the app's state.
@@ -161,6 +171,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   updates: {
     feedUrl: '',
     checkOnStart: false,
+    automatic: false,
     lastSeenRelease: ''
   }
 }
@@ -285,6 +296,7 @@ export function normalizeSettings(raw: unknown): AppSettings {
       // Only https, so a settings file cannot point the app at a local file or a plaintext host.
       feedUrl: typeof u.feedUrl === 'string' && /^https:\/\//i.test(u.feedUrl.trim()) ? u.feedUrl.trim() : '',
       checkOnStart: bool(u.checkOnStart, d.updates.checkOnStart),
+      automatic: bool(u.automatic, d.updates.automatic),
       // A version string and nothing else: this is only ever compared, never displayed or resolved.
       lastSeenRelease:
         typeof u.lastSeenRelease === 'string' && /^\d{1,4}(\.\d{1,4}){0,3}$/.test(u.lastSeenRelease.trim())

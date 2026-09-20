@@ -81,6 +81,26 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
   )
 }
 
+/** One sentence for whatever the updater is currently doing. */
+function describeUpdate(update: UpdateCheck): string {
+  switch (update.status) {
+    case 'unconfigured':
+      return update.error ?? 'Updates are not available in this build.'
+    case 'checking':
+      return 'Checking…'
+    case 'current':
+      return `Up to date — running ${update.current}.`
+    case 'available':
+      return `${update.latest} is available. You are running ${update.current}.`
+    case 'ready':
+      return `${update.latest} is ready. It installs when you close SPYDIR, or restart now.`
+    case 'downloading':
+      return ''
+    case 'error':
+      return update.error ?? 'Could not check for updates.'
+  }
+}
+
 export function Settings() {
   const { settings, updateSettings, resetSettings, snapshot, forgetSession, savedSession, licence, activate, deactivate } =
     useApp()
@@ -114,6 +134,13 @@ export function Settings() {
     updateSettings({ hygiene: { privilegedGroups: [...hygiene.privilegedGroups, name] } })
     setGroupDraft('')
   }
+
+  // The updater pushes progress while a download runs, so the panel follows it rather than
+  // freezing on whatever the last request happened to return.
+  useEffect(() => {
+    setUpdate(window.spydir?.updateState() ?? null)
+    return window.spydir?.onUpdate(setUpdate)
+  }, [])
 
   const checkUpdates = async () => {
     setChecking(true)
@@ -614,11 +641,11 @@ export function Settings() {
               SPYDIR checks for updates only when you give it a feed to ask, and it never installs anything on its own —
               it tells you what is out there and links to it. A GitHub releases API URL works as-is.
             </p>
-            <Row label="Update feed" hint="https only. Leave empty to disable update checks entirely.">
+            <Row label="Update feed" hint="Leave empty to use the published releases. Set it to mirror them internally.">
               <input
                 className="wide"
                 value={updates.feedUrl}
-                placeholder="https://api.github.com/repos/owner/repo/releases"
+                placeholder="https://github.com/DanteCady/spydr-app/releases/latest/download"
                 onChange={(e) => updateSettings({ updates: { feedUrl: e.target.value } })}
               />
             </Row>
@@ -629,29 +656,49 @@ export function Settings() {
                 onChange={(v) => updateSettings({ updates: { checkOnStart: v } })}
               />
             </Row>
-            <Row label="Check now">
+            <Row
+              label="Download automatically"
+              hint="Off by default. Either way nothing is installed until you close SPYDIR, so a directory read is never interrupted."
+            >
+              <Toggle
+                checked={updates.automatic}
+                label="Fetch updates without asking"
+                onChange={(v) => updateSettings({ updates: { automatic: v } })}
+              />
+            </Row>
+            <Row label="Updates">
               <span className="stack">
-                <button type="button" onClick={() => void checkUpdates()} disabled={checking}>
-                  <Download size={13} aria-hidden /> {checking ? 'Checking…' : 'Check for updates'}
-                </button>
-                {update ? (
-                  <span className="muted">
-                    {update.status === 'unconfigured'
-                      ? 'No update feed set, so nothing was contacted.'
-                      : update.status === 'current'
-                        ? `Up to date — running ${update.current}.`
-                        : update.status === 'available'
-                          ? `${update.latest} is available (running ${update.current}).`
-                          : update.error}
-                    {update.status === 'available' && update.url ? (
-                      <>
-                        {' '}
-                        <a href={update.url} target="_blank" rel="noreferrer">
-                          Open release
-                        </a>
-                      </>
-                    ) : null}
+                <span className="update-actions">
+                  <button
+                    type="button"
+                    onClick={() => void checkUpdates()}
+                    disabled={checking || update?.status === 'downloading'}
+                  >
+                    <Download size={13} aria-hidden /> {checking ? 'Checking…' : 'Check for updates'}
+                  </button>
+                  {update?.status === 'available' ? (
+                    <button type="button" className="primary" onClick={() => void window.spydir?.downloadUpdate()}>
+                      Download {update.latest}
+                    </button>
+                  ) : null}
+                  {update?.status === 'ready' ? (
+                    <button type="button" className="primary" onClick={() => void window.spydir?.installUpdate()}>
+                      Restart and install
+                    </button>
+                  ) : null}
+                </span>
+
+                {update?.status === 'downloading' ? (
+                  <span className="update-progress">
+                    <progress max={100} value={update.progress ?? 0} />
+                    <span className="muted">
+                      Downloading {update.latest} — {update.progress ?? 0}%
+                    </span>
                   </span>
+                ) : null}
+
+                {update && update.status !== 'downloading' ? (
+                  <span className="muted">{describeUpdate(update)}</span>
                 ) : null}
               </span>
             </Row>
