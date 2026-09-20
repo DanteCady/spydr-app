@@ -83,14 +83,41 @@ rotating one would break whoever is already using it.
 
 ```sh
 NEXT_PUBLIC_SITE_URL=https://spydir.io
-LICENSE_DB=/var/lib/spydr/spydr.db     # SQLite, needs a writable directory
+LICENSE_DB=/var/lib/spydr/spydr.db     # SQLite, absolute, outside the deploy tree
 LICENSE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n…"
-LICENSE_PEPPER=<random string>         # hashes machine ids
-LICENSE_SECRET=<random string>         # encrypts stored keys so a lost one can be re-sent
+LICENSE_PEPPER=<32+ random bytes>      # hashes machine ids
+LICENSE_SECRET=<32+ random bytes>      # encrypts stored keys; must differ from the pepper
+TRUST_PROXY_HOPS=1                     # proxies in front of Node; without it rate limits collapse
 SUBSCRIBE_WEBHOOK=…                    # optional, mailing list
-MAIL_WEBHOOK=… | RESEND_API_KEY=…      # optional, needed for key recovery
+
+# Mail. Required — signup refuses to run without it, because the flow sends a code.
+SMTP_HOST=email-smtp.eu-west-1.amazonaws.com
+SMTP_PORT=587                          # 465 = implicit TLS; anything else requires STARTTLS
+SMTP_USER=…
+SMTP_PASS=…
 MAIL_FROM="SPYDR <keys@spydir.io>"
+# Instead of SMTP, either of these also works:
+# MAIL_WEBHOOK=…  posts { to, subject, text, html } anywhere
+# RESEND_API_KEY=…
 ```
+
+In production the server **refuses to start** without the first six. Every one of them used to
+have a fallback that let it run while doing something quietly wrong — signing with a throwaway
+key, peppering with a string published in this repository, or trusting an X-Forwarded-For header
+the caller wrote. Those failures are invisible from outside, which is why they are now fatal.
+
+### Signing up
+
+Two steps, because issuing a key to an unverified address meant anyone could type a stranger's
+address and take the only key it would ever be given:
+
+1. `POST /api/signup { email }` — sends a six-digit code, and answers identically whether or not
+   the address is already registered.
+2. `POST /api/verify { email, code }` — issues the key, or re-sends the existing one, by email.
+   The key is never in the response body.
+
+Codes are hashed with the pepper, last ten minutes, allow five wrong guesses and are destroyed on
+use. A lost key is re-sent from `/key`.
 
 ### On Lightsail
 
