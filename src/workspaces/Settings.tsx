@@ -531,7 +531,7 @@ export function Settings() {
             <Row label="Status">
               <span className="muted">{describeLicence(licence)}</span>
             </Row>
-            {licence.status !== 'none' ? (
+            {licence.status === 'active' || licence.status === 'grace' ? (
               <>
                 <Row label="Key">
                   <span className="muted mono-hint">{licence.keyHint}</span>

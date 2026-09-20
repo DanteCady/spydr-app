@@ -9,6 +9,9 @@ release/
 !.env.example
 *.pem
 *.key
+# ...but the licence public key is not a secret, and a build without it cannot
+# check a signature at all. It must travel with the source.
+!resources/license-public.pem
 coverage/
 .vite/
 *.local

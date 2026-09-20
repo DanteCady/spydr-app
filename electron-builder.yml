@@ -25,6 +25,10 @@ files:
 extraResources:
   - from: resources/report-fonts
     to: report-fonts
+  # The public half of the licence signing key. Without it the app cannot tell a real activation
+  # from a hand-edited one, and refuses to trust any stored licence — so this is not optional.
+  - from: resources/license-public.pem
+    to: license-public.pem
 
 mac:
   category: public.app-category.developer-tools
