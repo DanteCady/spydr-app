@@ -28,7 +28,7 @@ export function Activate() {
   const [key, setKey] = useState('')
   const [busy, setBusy] = useState(false)
   // A development build points at the site running next door, so the link lands somewhere real.
-  const [site, setSite] = useState('https://getspydr.com')
+  const [site, setSite] = useState('https://spydir.io')
 
   useEffect(() => {
     void window.spydr?.about().then((info) => info.site && setSite(info.site))

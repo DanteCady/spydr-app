@@ -11,7 +11,7 @@ export type MailResult = { sent: true } | { sent: false; reason: 'unconfigured' 
 export async function sendMail(to: string, subject: string, text: string): Promise<MailResult> {
   const webhook = process.env.MAIL_WEBHOOK
   const resend = process.env.RESEND_API_KEY
-  const from = process.env.MAIL_FROM ?? 'SPYDR <keys@getspydr.com>'
+  const from = process.env.MAIL_FROM ?? 'SPYDR <keys@spydir.io>'
 
   try {
     if (webhook) {

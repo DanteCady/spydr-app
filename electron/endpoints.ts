@@ -12,7 +12,7 @@ import { app } from 'electron'
  * shipped SPYDR has no reason to talk to anywhere but production.
  */
 const DEV_SITE = 'http://localhost:4200'
-const PRODUCTION_SITE = 'https://getspydr.com'
+const PRODUCTION_SITE = 'https://spydir.io'
 
 export function siteBase(): string {
   if (app.isPackaged) return PRODUCTION_SITE

@@ -1,7 +1,9 @@
 'use client'
 
+import { Mail } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
+import { SUPPORT_EMAIL, supportMailto } from '@shared/contact'
 import type { AboutInfo } from '@shared/settings'
 import { prettyAccelerator } from '../lib/accelerator'
 
@@ -91,5 +93,34 @@ export function BuildInfo() {
         </tr>
       </tbody>
     </table>
+  )
+}
+
+/**
+ * A mail link with the version and platform already in the message.
+ *
+ * Every support thread otherwise opens with a round trip asking which build this is, and the
+ * person least able to answer that quickly is the one having the problem.
+ */
+export function EmailSupport() {
+  const [about, setAbout] = useState<AboutInfo | null>(null)
+  useEffect(() => {
+    void window.spydr?.about().then(setAbout)
+  }, [])
+
+  const href = supportMailto({
+    version: about?.version,
+    platform: about ? `${about.platform} · Electron ${about.electron}` : undefined
+  })
+
+  return (
+    <p>
+      <a className="btn-inline" href={href}>
+        <Mail size={13} aria-hidden /> Email {SUPPORT_EMAIL}
+      </a>
+      {about ? (
+        <span className="muted kb-aside">Opens your mail app with version {about.version} already filled in.</span>
+      ) : null}
+    </p>
   )
 }
