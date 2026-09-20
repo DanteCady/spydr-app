@@ -19,7 +19,7 @@ const mono = IBM_Plex_Mono({
 })
 
 /** Overridden per environment so preview deployments do not advertise the production URL. */
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://getspydr.com'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://spydir.io'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

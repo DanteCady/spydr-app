@@ -559,7 +559,7 @@ export function Settings() {
                 </Row>
               </>
             ) : (
-              <Row label="Licence key" hint={`Issued when you sign up at ${about?.site ?? 'getspydr.com'}.`}>
+              <Row label="Licence key" hint={`Issued when you sign up at ${about?.site ?? 'spydir.io'}.`}>
                 <span className="stack">
                   <input
                     className="wide"

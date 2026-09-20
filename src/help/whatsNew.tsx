@@ -26,7 +26,7 @@ export const WHATS_NEW: Article[] = [
       <>
         <p>
           Every version of SPYDR and what changed in it. The same notes are published at{' '}
-          <span className="mono-hint">getspydr.com/releases</span>, so you can read them before deciding to update.
+          <span className="mono-hint">spydir.io/releases</span>, so you can read them before deciding to update.
         </p>
 
         {RELEASES.map((release, index) => (

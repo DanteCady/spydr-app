@@ -2193,3 +2193,19 @@ table.grid tr.selected td { background: var(--sel); }
   background: var(--brand);
   box-shadow: 0 0 0 2px var(--bg);
 }
+
+/* An action inside prose — the mail link in the contact guide. */
+.btn-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 12.5px;
+  text-decoration: none;
+}
+.btn-inline:hover { background: var(--hover); border-color: var(--brand); }
+.kb-aside { display: block; font-size: 11.5px; margin-top: 7px; }

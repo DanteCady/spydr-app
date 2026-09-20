@@ -82,14 +82,14 @@ rotating one would break whoever is already using it.
 ### Environment
 
 ```sh
-NEXT_PUBLIC_SITE_URL=https://getspydr.com
+NEXT_PUBLIC_SITE_URL=https://spydir.io
 LICENSE_DB=/var/lib/spydr/spydr.db     # SQLite, needs a writable directory
 LICENSE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n…"
 LICENSE_PEPPER=<random string>         # hashes machine ids
 LICENSE_SECRET=<random string>         # encrypts stored keys so a lost one can be re-sent
 SUBSCRIBE_WEBHOOK=…                    # optional, mailing list
 MAIL_WEBHOOK=… | RESEND_API_KEY=…      # optional, needed for key recovery
-MAIL_FROM="SPYDR <keys@getspydr.com>"
+MAIL_FROM="SPYDR <keys@spydir.io>"
 ```
 
 ### On Lightsail
@@ -121,7 +121,7 @@ serves AVIF and WebP from them. Retake at 1440×900 if the interface moves.
 
 ## The domain
 
-Production is **getspydr.com**. It is set in one place — `NEXT_PUBLIC_SITE_URL`, defaulting to the
+Production is **spydir.io**. It is set in one place — `NEXT_PUBLIC_SITE_URL`, defaulting to the
 production URL — and read by the metadata, the sitemap and robots.txt. Preview deployments should
 set it to their own URL so they do not advertise production in canonical tags.
 

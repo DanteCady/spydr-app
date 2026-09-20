@@ -30,7 +30,7 @@ async function alsoSubscribe(email: string): Promise<void> {
       await fetch(webhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: 'getspydr.com' })
+        body: JSON.stringify({ email, source: 'spydir.io' })
       })
     } else if (buttondown) {
       await fetch('https://api.buttondown.email/v1/subscribers', {
