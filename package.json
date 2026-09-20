@@ -33,6 +33,7 @@
     "cytoscape-dagre": "^4.0.1",
     "cytoscape-fcose": "^2.2.0",
     "dagre": "^0.8.5",
+    "electron-updater": "^6.8.9",
     "graphology": "^0.25.4",
     "ldapts": "^7.4.0",
     "lucide-react": "^1.46.0",

@@ -95,4 +95,43 @@ can be trusted anywhere it appears.
 1. `npm run version:bump <patch|minor|major>`
 2. Write `content/releases/<version>.md`
 3. `npm test` — confirms the notes and the version agree
-4. Merge `develop` into `main` with `--no-ff`, tag, and let CI package it
+4. Merge `develop` into `main` with `--no-ff`
+5. `git tag v<version> && git push --tags` — this is the act that publishes
+
+## Updating
+
+Installed copies update through `electron-updater`, reading the release published by the tag.
+
+### How it behaves
+
+Nothing is contacted until asked, nothing is downloaded without consent unless
+**Settings ▸ About & updates ▸ Download automatically** is on, and **nothing is ever installed
+while the app is open** — an update is staged and swapped in on quit. That last rule is not
+configurable: SPYDIR is pointed at production domain controllers, and a binary changing under a
+running directory read is not a smoother experience.
+
+`Update feed` in settings overrides where updates come from, for a site that mirrors releases
+internally rather than letting every machine reach GitHub.
+
+### What the tag produces
+
+`electron-builder --publish always` uploads the installers **and** `latest-mac.yml`,
+`latest.yml` and `latest-linux.yml`. Those manifests are the feed — an installer published
+without its manifest is an update nobody will ever be offered. `app-update.yml` is baked into the
+app at build time from the `publish:` block, which is how an installed copy knows where to look.
+
+macOS updates from the **zip**, not the dmg; both ship for that reason. `.deb` cannot self-update
+and never will — that is what apt is for. AppImage and NSIS both update normally.
+
+### The signing requirement
+
+**macOS auto-update does not work unsigned.** Squirrel verifies the downloaded app against the
+running one's signing identity and refuses a mismatch; there is no flag to skip it. Until
+`CSC_LINK` and the notarization secrets are set, macOS users have to download each release by
+hand, and the update panel will say so rather than failing silently.
+
+Windows updates *do* work unsigned, but every one trips SmartScreen. Note that since mid-2023 both
+OV and EV certificates require a hardware token or cloud HSM, so there is no longer a cheap
+paperwork-only option.
+
+Linux AppImage needs no signing at all.

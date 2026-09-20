@@ -5,7 +5,7 @@ import { discoverDcs, windowsPrefill } from './directory/discoverDc'
 import { ingestDirectory, testConnection } from './directory/ldapProvider'
 import { buildMenu, usesCustomTitleBar } from './menu'
 import { getSettings, resetSettings, settingsPath, updateSettings } from './settings'
-import { checkForUpdate, type UpdateCheck } from './updates'
+import { checkForUpdate, downloadUpdate, installUpdate, updateState, type UpdateCheck } from './updates'
 import { activate, canVerify, deactivate, licenceState, refreshLicence } from './license'
 import { siteBase } from './endpoints'
 import { appVersion } from './version'
@@ -281,7 +281,12 @@ function registerIpc(): void {
   })
   ipcMain.handle('spydir:settings:set', (_evt, patch: SettingsPatch) => updateSettings(patch))
   ipcMain.handle('spydir:settings:reset', () => resetSettings())
-  ipcMain.handle('spydir:updates:check', (): Promise<UpdateCheck> => checkForUpdate(getSettings().updates.feedUrl, appVersion()))
+  ipcMain.handle('spydir:updates:check', (): Promise<UpdateCheck> => checkForUpdate(getSettings(), appVersion()))
+  ipcMain.handle('spydir:updates:download', (): Promise<UpdateCheck> => downloadUpdate())
+  ipcMain.handle('spydir:updates:install', (): void => installUpdate())
+  ipcMain.on('spydir:updates:state', (evt) => {
+    evt.returnValue = { ...updateState(), current: appVersion() }
+  })
   ipcMain.handle('spydir:timeline:list', (_evt, domain?: string) => listEntries(domain))
   ipcMain.handle('spydir:timeline:get', (_evt, id: string) => getEntry(id))
   ipcMain.handle('spydir:timeline:object', (_evt, objectGuid: string) => objectHistory(objectGuid))

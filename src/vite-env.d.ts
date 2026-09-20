@@ -40,6 +40,10 @@ export interface SpydirApi {
   timelineSample: () => Promise<{ created: number; replaced: number }>
   timelineStats: () => Promise<{ entries: number; path: string }>
   checkForUpdate: () => Promise<UpdateCheck>
+  downloadUpdate: () => Promise<UpdateCheck>
+  installUpdate: () => Promise<void>
+  updateState: () => UpdateCheck
+  onUpdate: (handler: (state: UpdateCheck) => void) => () => void
   onMenuCommand: (handler: (command: string) => void) => () => void
   chrome: () => { custom: boolean; platform: string; titleBarHeight: number }
   execRole: (role: string) => Promise<void>
