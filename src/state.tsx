@@ -4,6 +4,7 @@ import { buildMembershipGraph, enumeratePaths } from '@shared/graph'
 import { describeDiff, diffSnapshots } from '@shared/diff'
 import { UNLICENSED, type LicenceState } from '@shared/license'
 import { rescoreSnapshot } from '@shared/enrich'
+import { mayPersist } from '@shared/session'
 import { applyPatch, DEFAULT_SETTINGS, type AppSettings, type SettingsPatch } from '@shared/settings'
 import type { ConnectionInput, DirectorySnapshot, Finding, PathResult, WorkspaceId } from '@shared/types'
 import type { SessionMeta } from './vite-env'
@@ -357,11 +358,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Persist whenever the snapshot or the user's place in it changes. Debounced so that clicking
   // through the tree does not rewrite a large directory on every selection. A real directory is
-  // only written once the user has said it may be; the sample carries nobody's data, so it is
-  // always restorable.
+  // only written once the user has said it may be.
+  //
+  // The sample is never written at all. There is one session slot, so saving it would overwrite a
+  // real read and the profile needed to reconnect — and the sample is the one thing on screen that
+  // is always one call away from being rebuilt. Looking at it must not cost someone their work.
   useEffect(() => {
     if (!snapshot || !window.spydr?.sessionSave) return
-    if (snapshot.source === 'ldap' && sessionConsent !== 'yes') return
+    if (!mayPersist(snapshot.source, sessionConsent)) return
     const id = window.setTimeout(() => {
       void window.spydr
         ?.sessionSave({ snapshot, view: { workspace, selectedId, containerDn } })

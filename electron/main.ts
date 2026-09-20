@@ -189,9 +189,13 @@ function registerIpc(): void {
   })
   ipcMain.handle('spydr:session:peek', () => loadSessionMeta())
   ipcMain.handle('spydr:session:restore', () => loadSession())
-  ipcMain.handle('spydr:session:save', (_evt, payload: { snapshot: DirectorySnapshot; view: SessionView }) =>
-    saveSession(payload.snapshot, payload.snapshot.source === 'ldap' ? lastProfile : null, payload.view)
-  )
+  // There is one session slot. The sample must never take it: it would overwrite a real read and
+  // the profile needed to reconnect, and it can always be rebuilt from the fixture anyway. The
+  // renderer already declines to ask, and this is the half that holds if it ever stops.
+  ipcMain.handle('spydr:session:save', (_evt, payload: { snapshot: DirectorySnapshot; view: SessionView }) => {
+    if (payload?.snapshot?.source !== 'ldap') return
+    return saveSession(payload.snapshot, lastProfile, payload.view)
+  })
   ipcMain.handle('spydr:session:clear', () => clearSession())
   ipcMain.handle('spydr:report', async (evt, snapshot: DirectorySnapshot): Promise<ReportResult | null> => {
     const win = BrowserWindow.fromWebContents(evt.sender)
