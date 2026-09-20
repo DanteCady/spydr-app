@@ -26,7 +26,7 @@ let db: Database | null = null
 
 function file(): string {
   const dir = app.getPath('userData')
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true, mode: 0o700 })
   return join(dir, 'timeline.db')
 }
 
@@ -35,7 +35,6 @@ function open(): Database | null {
   try {
     const sqlite = process.getBuiltinModule('node:sqlite') as SqliteModule
     const path = file()
-    const fresh = !existsSync(path)
     db = new sqlite.DatabaseSync(path)
     db.exec(`
       PRAGMA journal_mode = WAL;
@@ -71,7 +70,9 @@ function open(): Database | null {
       CREATE INDEX IF NOT EXISTS entry_object_guid ON entry_object (object_guid);
     `)
     // The file holds directory data; keep it to this user.
-    if (fresh) chmodSync(path, 0o600)
+    // Unconditional: a database created by an older build, or restored from a backup, arrives
+    // with whatever mode it was given and holds the same directory history either way.
+    chmodSync(path, 0o600)
     return db
   } catch {
     db = null

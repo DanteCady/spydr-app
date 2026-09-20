@@ -85,6 +85,23 @@ function appIcon(): Electron.NativeImage | undefined {
   return image.isEmpty() ? undefined : image
 }
 
+/**
+ * The only schemes SPYDR will hand to the operating system.
+ *
+ * openExternal gives a URL to whatever the OS has registered for it, and SPYDR is typically run by
+ * someone holding domain administrator credentials. On Windows a `file://` or `smb://` link to an
+ * attacker's host makes the machine authenticate outbound and leak that account's NetNTLM hash
+ * without a prompt; `ms-msdt:` and `search-ms:` are the same shape of problem. Nothing in this app
+ * needs to open anything but a web page.
+ */
+function isSafeExternal(url: string): boolean {
+  try {
+    return ['https:', 'http:'].includes(new URL(url).protocol)
+  } catch {
+    return false
+  }
+}
+
 /** The renderer's own document: the dev server in development, the packaged file otherwise. */
 function isOwnDocument(url: string): boolean {
   const dev = process.env.ELECTRON_RENDERER_URL
@@ -126,7 +143,7 @@ function createWindow(): void {
   }
   win.on('ready-to-show', () => win.show())
   win.webContents.setWindowOpenHandler((details) => {
-    void shell.openExternal(details.url)
+    if (isSafeExternal(details.url)) void shell.openExternal(details.url)
     return { action: 'deny' }
   })
   // The window renders one document: ours. Anything else — a stray link, an injected redirect —
@@ -134,7 +151,7 @@ function createWindow(): void {
   win.webContents.on('will-navigate', (evt, url) => {
     if (isOwnDocument(url)) return
     evt.preventDefault()
-    if (/^https?:/.test(url)) void shell.openExternal(url)
+    if (isSafeExternal(url)) void shell.openExternal(url)
   })
   win.webContents.on('will-attach-webview', (evt) => evt.preventDefault())
 
@@ -145,10 +162,54 @@ function createWindow(): void {
   }
 }
 
+/**
+ * A DNS name, loosely: labels of letters, digits and hyphens, separated by dots.
+ *
+ * discoverDcs concatenates this into an SRV lookup, so without a bound on it the renderer has a
+ * general-purpose DNS channel — every query goes out to a resolver, and the name itself is the
+ * message. Directory data is attacker-written in a compromised domain, so this is worth closing
+ * even though the renderer is ours.
+ */
+function isHostish(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value.length <= 253 && /^[A-Za-z0-9._-]+$/.test(value)
+}
+
+/**
+ * The renderer chooses where to bind, because that is where the user types it. It does not get to
+ * choose anything the shape of which we cannot check first.
+ */
+function validConnection(input: unknown): input is ConnectionInput {
+  if (!input || typeof input !== 'object') return false
+  const c = input as Record<string, unknown>
+  return (
+    isHostish(c.host) &&
+    typeof c.port === 'number' &&
+    Number.isInteger(c.port) &&
+    c.port >= 1 &&
+    c.port <= 65535 &&
+    (c.protocol === 'ldap' || c.protocol === 'ldaps' || c.protocol === 'starttls') &&
+    typeof c.domain === 'string' &&
+    c.domain.length <= 253 &&
+    typeof c.bindUsername === 'string' &&
+    c.bindUsername.length <= 256 &&
+    typeof c.bindPassword === 'string' &&
+    typeof c.baseDn === 'string' &&
+    c.baseDn.length <= 1024
+  )
+}
+
+const REJECTED = 'That connection is not valid. Check the host, port and protocol.'
+
 function registerIpc(): void {
   ipcMain.handle('spydr:prefill', () => windowsPrefill())
-  ipcMain.handle('spydr:discover', async (_evt, domain: string) => discoverDcs(domain))
-  ipcMain.handle('spydr:test', async (_evt, input: ConnectionInput) => testConnection(input))
+  ipcMain.handle('spydr:discover', async (_evt, domain: string) => {
+    if (!isHostish(domain)) return []
+    return discoverDcs(domain)
+  })
+  ipcMain.handle('spydr:test', async (_evt, input: ConnectionInput) => {
+    if (!validConnection(input)) throw new Error(REJECTED)
+    return testConnection(input)
+  })
   const tuning = () => {
     const { connection, hygiene } = getSettings()
     return {
@@ -162,6 +223,7 @@ function registerIpc(): void {
   }
 
   ipcMain.handle('spydr:ingest', async (_evt, input: ConnectionInput) => {
+    if (!validConnection(input)) throw new Error(REJECTED)
     const snapshot = await ingestDirectory(input, tuning())
     // toProfile strips the password. Deriving the profile here, rather than accepting one over
     // IPC, means the renderer never has to be trusted to do that stripping.
@@ -268,12 +330,39 @@ function registerIpc(): void {
   })
 }
 
+/**
+ * What the renderer is allowed to do, enforced by Chromium rather than by our own care.
+ *
+ * SPYDR renders directory data, and in a compromised domain every name, description and DN in it
+ * is written by the attacker. React escapes all of it today and there is no innerHTML anywhere —
+ * but this is the control that decides what a future slip is worth. `connect-src 'none'` is the
+ * important one: the renderer makes no network calls at all (everything goes over IPC), so an
+ * injected script has nowhere to send the directory it can read through the bridge.
+ */
+function applyCsp(): void {
+  const dev = process.env.ELECTRON_RENDERER_URL
+  const policy = dev
+    ? // Vite's client needs its own socket and eval to hot-reload.
+      `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ws: http://localhost:*; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'`
+    : `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'`
+
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({ responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': [policy] } })
+  })
+
+  // Nothing here needs a camera, a microphone, a location or a notification. Deny the lot rather
+  // than relying on Chromium's defaults for the file:// origin the packaged app runs from.
+  session.defaultSession.setPermissionRequestHandler((_wc, _permission, deny) => deny(false))
+}
+
 void app.whenReady().then(() => {
+  applyCsp()
   const icon = appIcon()
   if (icon) app.dock?.setIcon(icon)
-  session.defaultSession.on('will-download', (_evt, item) => {
-    item.setSavePath(join(app.getPath('downloads'), item.getFilename()))
-  })
+  // SPYDR saves exactly one thing, the report, and it does that through a save dialog rather than
+  // a download. So a download reaching here was started by the page, not by the user — cancel it
+  // instead of silently dropping a file into Downloads next to the reports they do trust.
+  session.defaultSession.on('will-download', (evt) => evt.preventDefault())
   registerIpc()
   pruneEntries(getSettings().privacy.historyRetentionDays)
   // The monthly re-check, once the window is up and out of the way of first paint.
