@@ -139,10 +139,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
    */
   const activate = useCallback(async (key: string, minMs = 0) => {
     const started = Date.now()
-    const next = await window.spydr?.activate(key)
+    let next: LicenceState | undefined
+    try {
+      next = await window.spydr?.activate(key)
+      // No bridge at all means this is a browser tab, not the app. Say so rather than sitting there.
+      if (!next) next = { ...UNLICENSED, message: 'Activation is only available in the SPYDR app.' }
+    } catch {
+      // A rejection from main would otherwise never reach the screen: it skips setLicence, so the
+      // form comes back unchanged and the person is left with no idea why nothing happened.
+      next = { ...UNLICENSED, message: 'Something went wrong saving the licence on this machine. Try again.' }
+    }
     const left = minMs - (Date.now() - started)
     if (left > 0) await new Promise((resolve) => setTimeout(resolve, left))
-    if (next) setLicence(next)
+    setLicence(next)
   }, [])
 
   /**

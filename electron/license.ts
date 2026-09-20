@@ -48,14 +48,21 @@ function publicKeyPem(): string | null {
   return found ? readFileSync(found, 'utf8') : null
 }
 
+/**
+ * A licence is only what the server signed.
+ *
+ * With no public key there is no way to tell a real activation from a hand-written one, so this
+ * refuses rather than trusts. Failing open here would make the file in userData — which is plain
+ * base64 JSON, sitting in the user's own home directory — authoritative about tier and features,
+ * which is exactly backwards.
+ */
 function verify(stored: Stored): SignedLicence | null {
   const pem = publicKeyPem()
+  if (!pem) return null
   const json = Buffer.from(stored.payload, 'base64').toString('utf8')
-  if (pem) {
+  try {
     const ok = edVerify(null, Buffer.from(json, 'utf8'), createPublicKey(pem), Buffer.from(stored.signature, 'base64'))
     if (!ok) return null
-  }
-  try {
     return JSON.parse(json) as SignedLicence
   } catch {
     return null
@@ -89,7 +96,15 @@ let cache: LicenceState | null = null
 function toState(stored: Stored, message?: string): LicenceState {
   const licence = verify(stored)
   if (!licence) {
-    return { ...UNLICENSED, status: 'lapsed', message: 'The stored licence could not be verified.' }
+    // Worth telling these apart: one is a build problem the user cannot do anything about, the
+    // other is a licence that does not match what the server signed.
+    return {
+      ...UNLICENSED,
+      status: 'lapsed',
+      message: canVerify()
+        ? 'The stored licence does not match the signature it came with. Enter your key again.'
+        : 'This build cannot check licence signatures, so the stored licence was not trusted. Please reinstall SPYDR.'
+    }
   }
   return {
     status: statusOf(licence),
@@ -110,15 +125,23 @@ export function licenceState(): LicenceState {
   return cache
 }
 
-async function callActivate(key: string): Promise<{ ok: true; stored: Stored } | { ok: false; error: string }> {
+async function callActivate(
+  key: string
+): Promise<{ ok: true; stored: Stored } | { ok: false; error: string; withdrawn?: boolean }> {
   try {
     const res = await net.fetch(`${apiBase()}/api/activate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key, machine: machineId(), version: appVersion(), os: process.platform })
     })
-    if (res.status === 404) return { ok: false, error: 'That key is not recognised. Check it and try again.' }
-    if (res.status === 403) return { ok: false, error: 'That key is no longer valid. Sign up again for a new one.' }
+    // 404 and 403 are the server's verdict on the key itself, not a failure to reach it. That
+    // distinction decides whether a re-check may fall back on the cached licence.
+    if (res.status === 404) {
+      return { ok: false, error: 'That key is not recognised. Check it and try again.', withdrawn: true }
+    }
+    if (res.status === 403) {
+      return { ok: false, error: 'That key is no longer valid. Sign up again for a new one.', withdrawn: true }
+    }
     if (!res.ok) return { ok: false, error: `The licence server answered ${res.status}.` }
 
     const body = (await res.json()) as { payload?: string; signature?: string }
@@ -139,7 +162,17 @@ export async function activate(rawKey: string): Promise<LicenceState> {
   }
   const result = await callActivate(key)
   if (!result.ok) return { ...licenceState(), message: result.error }
-  write(result.stored)
+  try {
+    write(result.stored)
+  } catch {
+    // Every other failure here travels as a message on the returned state. A throw would skip that
+    // channel entirely and leave the screen unchanged, which reads as nothing having happened —
+    // the worst answer for someone on a locked-down machine typing a key that is actually fine.
+    return {
+      ...UNLICENSED,
+      message: 'Your key is good, but the licence could not be saved to this machine. Check that SPYDR can write to its application data folder.'
+    }
+  }
   cache = toState(result.stored)
   return cache
 }
@@ -157,6 +190,12 @@ export async function refreshLicence(): Promise<LicenceState> {
 
   const result = await callActivate(licence.key)
   if (!result.ok) {
+    // Grace exists for a machine that cannot reach the server — not for a key the server has
+    // answered about. A withdrawn key is lapsed now, rather than good for another three weeks.
+    if (result.withdrawn) {
+      cache = { ...UNLICENSED, status: 'lapsed', keyHint: keyHint(licence.key), message: result.error }
+      return cache
+    }
     cache = toState(stored, result.error)
     return cache
   }
