@@ -29,7 +29,7 @@ export function BridgeMismatch() {
 
   useEffect(() => {
     if (!import.meta.env.DEV) return
-    const bridge = window.spydr as unknown as Record<string, unknown> | undefined
+    const bridge = window.spydir as unknown as Record<string, unknown> | undefined
     if (!bridge) return
     setMissing(EXPECTED.filter((name) => typeof bridge[name] !== 'function'))
   }, [])

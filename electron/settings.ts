@@ -38,13 +38,13 @@ function write(next: AppSettings): void {
 export function updateSettings(patch: SettingsPatch): AppSettings {
   const next = applyPatch(getSettings(), patch)
   write(next)
-  for (const win of BrowserWindow.getAllWindows()) win.webContents.send('spydr:settings', next)
+  for (const win of BrowserWindow.getAllWindows()) win.webContents.send('spydir:settings', next)
   return next
 }
 
 export function resetSettings(): AppSettings {
   write({ ...DEFAULT_SETTINGS })
-  for (const win of BrowserWindow.getAllWindows()) win.webContents.send('spydr:settings', cache)
+  for (const win of BrowserWindow.getAllWindows()) win.webContents.send('spydir:settings', cache)
   return getSettings()
 }
 

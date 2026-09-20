@@ -22,7 +22,7 @@ export default defineConfig({
       rollupOptions: {
         input: resolve(__dirname, 'electron/preload.ts'),
         // Sandboxed renderers can only load CommonJS preloads; with "type": "module" the
-        // default output would be .mjs, which Electron refuses and window.spydr never appears.
+        // default output would be .mjs, which Electron refuses and window.spydir never appears.
         output: { format: 'cjs', entryFileNames: '[name].js' }
       }
     }

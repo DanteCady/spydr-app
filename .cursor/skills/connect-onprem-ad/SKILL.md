@@ -1,6 +1,6 @@
 ---
 name: connect-onprem-ad
-description: On-prem AD connect wizard for Spydr — DC discovery, LDAP/LDAPS/StartTLS, UPN bind, rootDSE base DN, and admin error copy. Use when changing Connect, discoverDc, ldap bind, or connection profiles.
+description: On-prem AD connect wizard for Spydir — DC discovery, LDAP/LDAPS/StartTLS, UPN bind, rootDSE base DN, and admin error copy. Use when changing Connect, discoverDc, ldap bind, or connection profiles.
 ---
 
 # Connect on-prem AD

@@ -3,7 +3,7 @@ import type { Article, Section } from '../../src/help/kit'
 
 /**
  * The documentation is the desktop app's own guide — the same components, imported rather than
- * copied, so the help inside SPYDR and the docs on this site cannot drift apart.
+ * copied, so the help inside SPYDIR and the docs on this site cannot drift apart.
  */
 export type { Article, Section }
 export { ARTICLES, SECTIONS }

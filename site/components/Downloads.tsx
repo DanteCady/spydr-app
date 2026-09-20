@@ -20,7 +20,7 @@ export async function Downloads() {
           These builds are not code-signed yet. Windows will show SmartScreen&rsquo;s &ldquo;Windows protected your
           PC&rdquo; — choose <em>More info → Run anyway</em>. macOS will say the app &ldquo;is damaged&rdquo;, which is
           Gatekeeper&rsquo;s unhelpful wording for unsigned: right-click → Open, or{' '}
-          <span className="mono">xattr -dr com.apple.quarantine /Applications/SPYDR.app</span>. We would rather tell you
+          <span className="mono">xattr -dr com.apple.quarantine /Applications/SPYDIR.app</span>. We would rather tell you
           that here than have you discover it.
         </p>
       </div>

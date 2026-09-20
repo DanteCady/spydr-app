@@ -19,7 +19,7 @@ export function SiteHeader() {
         <Link href="/releases">Releases</Link>
       </nav>
       <Link className="btn small" href="/#downloads">
-        Get SPYDR <span className="ver">{VERSION}</span>
+        Get SPYDIR <span className="ver">{VERSION}</span>
       </Link>
     </header>
   )

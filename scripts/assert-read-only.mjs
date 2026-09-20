@@ -2,7 +2,7 @@
 /**
  * The read-only promise, enforced by the build rather than by everyone remembering.
  *
- * "SPYDR never writes to Active Directory" is the reason it is safe to point at a production
+ * "SPYDIR never writes to Active Directory" is the reason it is safe to point at a production
  * domain controller with domain administrator credentials, and it is the first thing anyone
  * evaluating it asks about. A promise that rests on reviewers noticing is not a promise; it is a
  * habit, and habits lapse quietly. This fails the build the day one lapses.
@@ -13,7 +13,7 @@
  * than assuming the variable is called `client`. Anything but bind, search, startTLS and unbind
  * on one of those is a write.
  *
- * And nothing anywhere may reach for a child process. SPYDR has no business running a command,
+ * And nothing anywhere may reach for a child process. SPYDIR has no business running a command,
  * and an app that can shell out can do anything the shell can — including the writes this file
  * exists to prevent.
  */
@@ -49,7 +49,7 @@ for (const base of ROOTS) {
     // A child process is a way around every other rule in this file.
     for (const pattern of [/child_process/, /\bexecFile\s*\(/, /\bspawnSync\s*\(/, /\bexecSync\s*\(/]) {
       if (pattern.test(source)) {
-        failures.push(`${where}: reaches for a child process (${pattern.source}). SPYDR does not run commands.`)
+        failures.push(`${where}: reaches for a child process (${pattern.source}). SPYDIR does not run commands.`)
       }
     }
 
@@ -65,7 +65,7 @@ for (const base of ROOTS) {
         if (ALLOWED.has(method)) continue
         const line = source.slice(0, call.index).split('\n').length
         failures.push(
-          `${where}:${line}: ${name}.${method}() is not a read. SPYDR v1 performs no LDAP writes — ` +
+          `${where}:${line}: ${name}.${method}() is not a read. SPYDIR v1 performs no LDAP writes — ` +
             `allowed operations are ${[...ALLOWED].join(', ')}.`
         )
       }
@@ -77,7 +77,7 @@ if (failures.length > 0) {
   console.error('\nThe read-only guarantee is broken:\n')
   for (const failure of failures) console.error(`  ${failure}`)
   console.error(
-    '\nIf a write is genuinely intended, that is a product decision and a change to what SPYDR is —\n' +
+    '\nIf a write is genuinely intended, that is a product decision and a change to what SPYDIR is —\n' +
       'update AGENTS.md, the About article and the site copy in the same change, then widen the\n' +
       'allow-list in scripts/assert-read-only.mjs deliberately rather than in passing.\n'
   )

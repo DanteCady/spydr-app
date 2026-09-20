@@ -25,7 +25,7 @@ export interface Release {
   live: boolean
 }
 
-/** e.g. "dantecady/spydr". Unset means the site builds from the fallback. */
+/** e.g. "dantecady/spydir". Unset means the site builds from the fallback. */
 const REPO = process.env.GITHUB_REPO ?? ''
 
 /**
@@ -39,10 +39,10 @@ const FALLBACK: Release = {
   url: '#downloads',
   live: false,
   assets: [
-    { os: 'macOS', file: `SPYDR-${VERSION}-arm64.dmg`, note: 'Apple silicon · 128 MB', url: '#downloads' },
-    { os: 'macOS', file: `SPYDR-${VERSION}.dmg`, note: 'Intel · 128 MB', url: '#downloads' },
-    { os: 'Windows', file: `SPYDR Setup ${VERSION}.exe`, note: 'x64 and arm64 · 225 MB', url: '#downloads' },
-    { os: 'Linux', file: `SPYDR-${VERSION}.AppImage`, note: 'x64 · 129 MB · chmod +x', url: '#downloads' }
+    { os: 'macOS', file: `SPYDIR-${VERSION}-arm64.dmg`, note: 'Apple silicon · 128 MB', url: '#downloads' },
+    { os: 'macOS', file: `SPYDIR-${VERSION}.dmg`, note: 'Intel · 128 MB', url: '#downloads' },
+    { os: 'Windows', file: `SPYDIR Setup ${VERSION}.exe`, note: 'x64 and arm64 · 225 MB', url: '#downloads' },
+    { os: 'Linux', file: `SPYDIR-${VERSION}.AppImage`, note: 'x64 · 129 MB · chmod +x', url: '#downloads' }
   ]
 }
 

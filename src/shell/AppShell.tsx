@@ -74,7 +74,7 @@ export function AppShell() {
             <WidowMark />
           </span>
           <div>
-            <h1>SPYDR</h1>
+            <h1>SPYDIR</h1>
             <p>Read-only directory</p>
           </div>
         </div>
@@ -127,11 +127,11 @@ export function AppShell() {
           <button
             type="button"
             className={workspace === 'help' ? 'icon-btn active' : 'icon-btn'}
-            aria-label={unread ? 'Open the SPYDR guide — there are new release notes' : 'Open the SPYDR guide'}
+            aria-label={unread ? 'Open the SPYDIR guide — there are new release notes' : 'Open the SPYDIR guide'}
             title={
               unread
                 ? 'Guide — and there is a release you have not read about yet'
-                : 'Guide — how SPYDR reads your directory, and what the findings mean'
+                : 'Guide — how SPYDIR reads your directory, and what the findings mean'
             }
             onClick={() => openHelp(unread ? WHATS_NEW_ID : undefined)}
           >

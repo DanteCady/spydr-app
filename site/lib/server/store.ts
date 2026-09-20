@@ -5,7 +5,7 @@ import { dirname } from 'node:path'
  * Licences, activations and telemetry, in SQLite on the instance.
  *
  * Node ships SQLite from 22, so this needs no native module on the Lightsail box either. The file
- * lives wherever LICENSE_DB points, defaulting to ./data/spydr.db.
+ * lives wherever LICENSE_DB points, defaulting to ./data/spydir.db.
  */
 
 type SqliteModule = typeof import('node:sqlite')
@@ -15,7 +15,7 @@ let db: Database | null = null
 
 export function store(): Database {
   if (db) return db
-  const path = process.env.LICENSE_DB ?? './data/spydr.db'
+  const path = process.env.LICENSE_DB ?? './data/spydir.db'
   const dir = dirname(path)
   // This file holds every registered address and a decryptable licence key for each one. The
   // directory is owner-only, and so is the database and the two files WAL mode keeps beside it.

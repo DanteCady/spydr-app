@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ version: 
   const release = releaseByVersion(version)
   if (!release) return { title: 'Release not found' }
   return {
-    title: `SPYDR ${release.version} — ${release.title}`,
+    title: `SPYDIR ${release.version} — ${release.title}`,
     description: release.summary
   }
 }

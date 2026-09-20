@@ -9,7 +9,7 @@ import { TTL_MINUTES } from '@/lib/server/otp'
  */
 export function verifyCodeEmail(code: string): Email {
   const body = [
-    p('Here is the code to confirm your email address and get your SPYDR licence key.'),
+    p('Here is the code to confirm your email address and get your SPYDIR licence key.'),
     panel(code),
     p(`It expires in ${TTL_MINUTES} minutes and can only be used once.`),
     p(
@@ -20,18 +20,18 @@ export function verifyCodeEmail(code: string): Email {
   const text = [
     'Confirm your email address',
     '',
-    `Your SPYDR verification code is: ${code}`,
+    `Your SPYDIR verification code is: ${code}`,
     '',
     `It expires in ${TTL_MINUTES} minutes and can only be used once.`,
     '',
     'If you did not ask for a licence key, ignore this email. No key has been created,',
     'and nothing will be unless the code is used.',
     '',
-    '— SPYDR · spydir.io'
+    '— SPYDIR · spydir.io'
   ].join('\n')
 
   return {
-    subject: `${code} is your SPYDR verification code`,
+    subject: `${code} is your SPYDIR verification code`,
     html: layout({ preview: `${esc(code)} — expires in ${TTL_MINUTES} minutes`, body }),
     text
   }

@@ -25,7 +25,7 @@
   --high: #f59e0b;
   --med: #eab308;
   --low: #22c55e;
-  /* Spydr AD semantics */
+  /* Spydir AD semantics */
   --user: #8eb4d4;
   --group: #c9a35a;
   --ou: #7ea57c;
@@ -1466,8 +1466,8 @@ table.grid tr.selected td { background: var(--sel); }
 .report-btn:disabled { opacity: 0.7; }
 .report-status { font-size: 11px; color: var(--muted); max-width: 46ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chip-gap { flex: 1 1 auto; min-width: 12px; }
-.spin { animation: spydr-spin 900ms linear infinite; }
-@keyframes spydr-spin { to { transform: rotate(360deg); } }
+.spin { animation: spydir-spin 900ms linear infinite; }
+@keyframes spydir-spin { to { transform: rotate(360deg); } }
 
 /* ---- session consent ---- */
 .consent-bar {

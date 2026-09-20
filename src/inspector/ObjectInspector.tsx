@@ -10,7 +10,7 @@ import { StatusBadges } from '../components/StatusBadges'
 import { formatLogon, formatWhen, groupScope, typeLabel, uacSummary } from '../lib/format'
 import { useApp } from '../state'
 
-type Tab = 'general' | 'account' | 'memberof' | 'members' | 'object' | 'spydr'
+type Tab = 'general' | 'account' | 'memberof' | 'members' | 'object' | 'spydir'
 
 export function ObjectInspector() {
   const { snapshot, selectedId, select, goTo, setPathSource } = useApp()
@@ -42,7 +42,7 @@ export function ObjectInspector() {
     { id: 'memberof', label: 'Member Of', show: node.type === 'user' || node.type === 'group' },
     { id: 'members', label: 'Members', show: node.type === 'group' },
     { id: 'object', label: 'Object', show: true },
-    { id: 'spydr', label: 'SPYDR', show: true }
+    { id: 'spydir', label: 'SPYDIR', show: true }
   ]
 
   const resolve = (id: string): DirectoryNode | undefined => snapshot.nodes.find((n) => n.id === id)
@@ -179,7 +179,7 @@ export function ObjectInspector() {
           </dl>
         ) : null}
 
-        {tab === 'spydr' ? (
+        {tab === 'spydir' ? (
           <div className="fix">
             <p>
               Direct member of {memberOfIds.length} group{memberOfIds.length === 1 ? '' : 's'}. {findings.length} finding

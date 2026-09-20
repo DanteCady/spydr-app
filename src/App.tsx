@@ -23,7 +23,7 @@ function Standalone({ view }: { view: 'settings' | 'help' }) {
         <button type="button" className="linkish" onClick={() => setWorkspace('directory')}>
           <ChevronLeft size={14} aria-hidden /> Back to start
         </button>
-        <span className="muted">{view === 'help' ? 'SPYDR guide' : 'SPYDR settings'}</span>
+        <span className="muted">{view === 'help' ? 'SPYDIR guide' : 'SPYDIR settings'}</span>
       </header>
       {view === 'help' ? <Help /> : <Settings />}
     </div>
@@ -58,7 +58,7 @@ export function App() {
   // Windows and Linux draw their own bar; macOS uses the system menu bar, as VS Code does.
   const [chrome, setChrome] = useState<{ custom: boolean; platform: string; titleBarHeight: number } | null>(null)
   useEffect(() => {
-    setChrome(window.spydr?.chrome?.() ?? { custom: false, platform: 'browser', titleBarHeight: 0 })
+    setChrome(window.spydir?.chrome?.() ?? { custom: false, platform: 'browser', titleBarHeight: 0 })
   }, [])
   useEffect(() => {
     document.documentElement.style.setProperty('--titlebar', chrome?.custom ? `${chrome.titleBarHeight}px` : '0px')

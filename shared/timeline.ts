@@ -5,13 +5,13 @@ import type { DirectorySnapshot } from './types'
 /**
  * The change timeline: one record per read that differed from the read before it.
  *
- * This is emphatically not an audit log. SPYDR sees the difference between two reads, so two
+ * This is emphatically not an audit log. SPYDIR sees the difference between two reads, so two
  * changes that cancel out in between are invisible, and it can never say who made a change or
  * exactly when. The domain controller's event log is the authority on both.
  */
 
 /**
- * 'observed' is a real read. 'applied' is reserved for changes SPYDR makes itself. 'sample' is
+ * 'observed' is a real read. 'applied' is reserved for changes SPYDIR makes itself. 'sample' is
  * invented data for the fictional domain, so it can never be mistaken for a record of anything.
  */
 export type EntrySource = 'observed' | 'applied' | 'sample'

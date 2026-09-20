@@ -1,9 +1,9 @@
 {
-  "name": "spydr",
-  "productName": "SPYDR",
+  "name": "spydir",
+  "productName": "SPYDIR",
   "version": "0.1.0",
   "description": "Read-only Active Directory explorer for messy on-prem directories",
-  "author": "SPYDR",
+  "author": "SPYDIR",
   "main": "./out/main/main.js",
   "type": "module",
   "scripts": {

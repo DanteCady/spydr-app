@@ -68,7 +68,7 @@ export function Timeline() {
   const domain = snapshot?.source === 'ldap' ? snapshot.domain : undefined
 
   useEffect(() => {
-    void window.spydr?.timelineList(domain).then((rows) => {
+    void window.spydir?.timelineList(domain).then((rows) => {
       setEntries(rows)
       setCurrentId((id) => id ?? rows[0]?.id ?? null)
     })
@@ -79,7 +79,7 @@ export function Timeline() {
       setDetail(null)
       return
     }
-    void window.spydr?.timelineGet(currentId).then(setDetail)
+    void window.spydir?.timelineGet(currentId).then(setDetail)
   }, [currentId])
 
   /** A read from a different controller than the one before it invites replication artefacts. */

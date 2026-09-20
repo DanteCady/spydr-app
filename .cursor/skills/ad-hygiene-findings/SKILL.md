@@ -1,6 +1,6 @@
 ---
 name: ad-hygiene-findings
-description: Spydr hygiene finding detectors and suggested-fix text. Use when adding or changing findings, Hygiene cockpit, or the inspector Spydr tab.
+description: Spydir hygiene finding detectors and suggested-fix text. Use when adding or changing findings, Hygiene cockpit, or the inspector Spydir tab.
 ---
 
 # Hygiene findings

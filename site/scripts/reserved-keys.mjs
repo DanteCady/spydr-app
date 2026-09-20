@@ -17,7 +17,7 @@ import { dirname, join } from 'node:path'
 
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 const OUT = process.env.KEYS_FILE ?? join(process.cwd(), 'keys', 'reserved-keys.enc')
-const DB = process.env.LICENSE_DB ?? './data/spydr.db'
+const DB = process.env.LICENSE_DB ?? './data/spydir.db'
 
 const PLAN = [
   { kind: 'developer', count: 10, tier: 'enterprise', features: ['scheduled-reports', 'multi-domain', 'write-operations', 'team-sync', 'priority-support'] },
@@ -37,7 +37,7 @@ function newKey() {
   const bytes = randomBytes(20)
   let out = ''
   for (const b of bytes) out += ALPHABET[b % ALPHABET.length]
-  return `SPYDR-${out.slice(0, 5)}-${out.slice(5, 10)}-${out.slice(10, 15)}-${out.slice(15, 20)}`
+  return `SPYDIR-${out.slice(0, 5)}-${out.slice(5, 10)}-${out.slice(10, 15)}-${out.slice(15, 20)}`
 }
 
 function db() {
@@ -64,7 +64,7 @@ function encrypt(text, secret) {
   const body = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()])
   return JSON.stringify(
     {
-      format: 'spydr-reserved-keys/1',
+      format: 'spydir-reserved-keys/1',
       kdf: 'scrypt',
       salt: salt.toString('base64'),
       iv: iv.toString('base64'),
@@ -93,7 +93,7 @@ function seed() {
   for (const group of PLAN) {
     for (let i = 1; i <= group.count; i += 1) {
       const label = `${group.kind}-${String(i).padStart(2, '0')}`
-      const email = `${label}@reserved.spydr`
+      const email = `${label}@reserved.spydir`
       if (handle.prepare('SELECT 1 FROM licence WHERE email = ? AND revoked = 0').get(email)) {
         console.log(`${label} already exists — left alone`)
         continue
@@ -123,7 +123,7 @@ function seed() {
   }
 
   const text = [
-    'SPYDR reserved keys',
+    'SPYDIR reserved keys',
     `Generated ${now}`,
     '',
     ...issued.map((k) => `${k.label.padEnd(12)} ${k.tier.padEnd(11)} ${k.key}`),

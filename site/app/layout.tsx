@@ -25,21 +25,21 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   alternates: { canonical: '/' },
   title: {
-    default: 'SPYDR — read-only Active Directory explorer',
-    template: '%s — SPYDR'
+    default: 'SPYDIR — read-only Active Directory explorer',
+    template: '%s — SPYDIR'
   },
   description:
-    'SPYDR reads your Active Directory and answers what a member list cannot: who is really in this group, how did they get there, and what has quietly stopped making sense. Read-only, local, no telemetry.',
+    'SPYDIR reads your Active Directory and answers what a member list cannot: who is really in this group, how did they get there, and what has quietly stopped making sense. Read-only, local, no telemetry.',
   openGraph: {
-    title: 'SPYDR — read-only Active Directory explorer',
+    title: 'SPYDIR — read-only Active Directory explorer',
     description: 'Who is really in this group, how did they get there, and what has quietly stopped making sense.',
     type: 'website',
     url: SITE_URL,
-    siteName: 'SPYDR'
+    siteName: 'SPYDIR'
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SPYDR — read-only Active Directory explorer',
+    title: 'SPYDIR — read-only Active Directory explorer',
     description: 'Who is really in this group, how did they get there, and what has quietly stopped making sense.'
   }
 }

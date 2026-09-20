@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
  * Sends an existing key back to the address that owns it.
  *
  * The answer is the same whether or not the address has a key: anything else turns this endpoint
- * into a way of asking which email addresses use SPYDR. The key is only ever delivered by email,
+ * into a way of asking which email addresses use SPYDIR. The key is only ever delivered by email,
  * never in the response — otherwise knowing an address would be enough to take its licence.
  *
  * "The same" has to include failures, which is the part that was missing. A decrypt or a mail
@@ -45,14 +45,14 @@ export async function POST(request: Request) {
 
       const result = await sendMail(
         address.email,
-        'Your SPYDR licence key',
+        'Your SPYDIR licence key',
         [
           'Here is the licence key for this address:',
           '',
           `    ${key}`,
           '',
-          'Enter it when SPYDR asks, or in Settings ▸ Licence.',
-          'SPYDR is free; the key is how we know anyone is using it.'
+          'Enter it when SPYDIR asks, or in Settings ▸ Licence.',
+          'SPYDIR is free; the key is how we know anyone is using it.'
         ].join('\n')
       )
 

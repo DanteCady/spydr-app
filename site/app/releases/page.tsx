@@ -4,7 +4,7 @@ import { RELEASES } from '@/lib/releaseNotes'
 
 export const metadata = {
   title: 'Releases',
-  description: 'Every version of SPYDR and what changed in it.'
+  description: 'Every version of SPYDIR and what changed in it.'
 }
 
 /**
@@ -19,7 +19,7 @@ export default function Releases() {
       <p className="kb-crumb mono">Releases</p>
       <h1>What has changed</h1>
       <p className="doc-lede">
-        Every version of SPYDR, newest first. The same notes are in the application under{' '}
+        Every version of SPYDIR, newest first. The same notes are in the application under{' '}
         <strong>Guide &rsaquo; What&rsquo;s new</strong>, so you can read them before or after updating.
       </p>
 

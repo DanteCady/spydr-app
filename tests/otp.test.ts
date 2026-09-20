@@ -11,7 +11,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
  * in SQL, and a mock would happily agree with a broken query.
  */
 
-const dir = mkdtempSync(join(tmpdir(), 'spydr-otp-'))
+const dir = mkdtempSync(join(tmpdir(), 'spydir-otp-'))
 
 let issueCode: typeof import('../site/lib/server/otp').issueCode
 let checkCode: typeof import('../site/lib/server/otp').checkCode

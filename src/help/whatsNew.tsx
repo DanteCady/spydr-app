@@ -7,7 +7,7 @@ import type { Article } from './kit'
  * What changed, read from the same Markdown the site publishes.
  *
  * It lives in the guide rather than behind its own button because that is where someone already
- * goes to find out how SPYDR works, and "what changed" is the same question with a timestamp on it.
+ * goes to find out how SPYDIR works, and "what changed" is the same question with a timestamp on it.
  *
  * Each version collapses. Once there are a dozen of them the page is otherwise a wall, and the
  * thing people come here for — what changed *most recently* — is the part they have to scroll
@@ -25,7 +25,7 @@ export const WHATS_NEW: Article[] = [
     body: (
       <>
         <p>
-          Every version of SPYDR and what changed in it. The same notes are published at{' '}
+          Every version of SPYDIR and what changed in it. The same notes are published at{' '}
           <span className="mono-hint">spydir.io/releases</span>, so you can read them before deciding to update.
         </p>
 

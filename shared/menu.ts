@@ -127,8 +127,8 @@ export const MENU: MenuSection[] = [
   {
     label: 'Help',
     items: [
-      { label: 'SPYDR Guide', command: 'help:docs', accelerator: 'CmdOrCtrl+/' },
-      { label: 'About SPYDR', command: 'help:about' }
+      { label: 'SPYDIR Guide', command: 'help:docs', accelerator: 'CmdOrCtrl+/' },
+      { label: 'About SPYDIR', command: 'help:about' }
     ]
   }
 ]

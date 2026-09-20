@@ -7,11 +7,11 @@ import { useApp } from '../state'
 
 /**
  * First run: the key. It takes the whole window, like the welcome screen it leads to, rather than
- * sitting in a dialog — this is the first thing anyone sees of SPYDR, and a box floating in the
+ * sitting in a dialog — this is the first thing anyone sees of SPYDIR, and a box floating in the
  * middle of an empty window says "installer", not "tool".
  *
  * It is deliberately not a wall: the sample directory opens without a key, so anyone can see what
- * SPYDR does before handing over an email address.
+ * SPYDIR does before handing over an email address.
  */
 /**
  * How long the web stays up, at least.
@@ -19,9 +19,9 @@ import { useApp } from '../state'
  * A local server answers in under a second, which reads as a flicker rather than as work — and a
  * flicker is worse than no animation at all. The keyframes run on a 2.6s loop, so this is two whole
  * turns: it lands on a boundary, with the web faded out, rather than cutting a half-drawn one.
- * Set VITE_SPYDR_MIN_SPIN to watch a longer one while working on it.
+ * Set VITE_SPYDIR_MIN_SPIN to watch a longer one while working on it.
  */
-const MIN_SPIN_MS = Number(import.meta.env.VITE_SPYDR_MIN_SPIN ?? 5200)
+const MIN_SPIN_MS = Number(import.meta.env.VITE_SPYDIR_MIN_SPIN ?? 5200)
 
 export function Activate() {
   const { activate, licence, openSample, savedSession } = useApp()
@@ -31,7 +31,7 @@ export function Activate() {
   const [site, setSite] = useState('https://spydir.io')
 
   useEffect(() => {
-    void window.spydr?.about().then((info) => info.site && setSite(info.site))
+    void window.spydir?.about().then((info) => info.site && setSite(info.site))
   }, [])
 
   const shaped = keyLooksValid(key)
@@ -55,7 +55,7 @@ export function Activate() {
             <WidowMark size={34} />
           </span>
           <div>
-            <h1>SPYDR</h1>
+            <h1>SPYDIR</h1>
             <p>Read-only Active Directory explorer</p>
           </div>
         </header>
@@ -64,7 +64,7 @@ export function Activate() {
           <section>
             <h2>Enter your licence key</h2>
             <p className="activate-lede">
-              SPYDR is free. The key is how we know anyone is using it, and it is checked once now and about once a
+              SPYDIR is free. The key is how we know anyone is using it, and it is checked once now and about once a
               month after that.
             </p>
 
@@ -85,7 +85,7 @@ export function Activate() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') void submit()
                 }}
-                placeholder="SPYDR-XXXXX-XXXXX-XXXXX-XXXXX"
+                placeholder="SPYDIR-XXXXX-XXXXX-XXXXX-XXXXX"
                 spellCheck={false}
                 autoFocus
               />

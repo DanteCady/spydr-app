@@ -147,7 +147,7 @@ export function highlightLabel(type: HighlightType): string {
 /**
  * Whether there is a release the user has not been shown yet.
  *
- * An install that has never recorded one is not treated as unread: someone opening SPYDR for the
+ * An install that has never recorded one is not treated as unread: someone opening SPYDIR for the
  * first time should not be met with a notification about a version they have nothing to compare
  * against. The first run records where they came in, and only later releases count.
  */

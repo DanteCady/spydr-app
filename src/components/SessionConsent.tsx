@@ -2,7 +2,7 @@ import { HardDrive } from 'lucide-react'
 import { useApp } from '../state'
 
 /**
- * Asked once, the first time a live directory is open. SPYDR would otherwise write a full copy of
+ * Asked once, the first time a live directory is open. SPYDIR would otherwise write a full copy of
  * someone's Active Directory to disk without ever saying so — encrypted, but unannounced.
  */
 export function SessionConsent() {
@@ -15,7 +15,7 @@ export function SessionConsent() {
       <div className="consent-text">
         <strong>Keep this directory on this computer?</strong>
         <span className="muted">
-          Session restore and the change timeline both need SPYDR to keep a record of this directory on disk —
+          Session restore and the change timeline both need SPYDIR to keep a record of this directory on disk —
           compressed, and encrypted with the OS keychain where one exists. Nothing is sent anywhere. Passwords are
           never written.
         </span>

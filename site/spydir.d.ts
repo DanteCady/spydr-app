@@ -7,7 +7,7 @@ import type { AboutInfo } from '@shared/settings'
  */
 declare global {
   interface Window {
-    spydr?: {
+    spydir?: {
       about: () => Promise<AboutInfo>
       chrome?: () => { custom: boolean; platform: string; titleBarHeight: number }
     }

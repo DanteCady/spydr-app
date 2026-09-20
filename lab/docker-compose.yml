@@ -1,8 +1,8 @@
-# Local Samba AD DC to point SPYDR at. `npm run lab:up`, then `npm run lab:seed`.
+# Local Samba AD DC to point SPYDIR at. `npm run lab:up`, then `npm run lab:seed`.
 services:
   dc:
     build: .
-    container_name: spydr-lab-dc
+    container_name: spydir-lab-dc
     hostname: dc01
     domainname: harborview.local
     environment:

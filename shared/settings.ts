@@ -94,7 +94,7 @@ export interface AppearanceSettings {
 export interface UpdateSettings {
   /**
    * A GitHub releases API URL (or anything returning the same shape). Empty means update checks are
-   * off — SPYDR contacts nothing on its own.
+   * off — SPYDIR contacts nothing on its own.
    */
   feedUrl: string
   checkOnStart: boolean

@@ -6,7 +6,7 @@ import { useState } from 'react'
  * Ask for a key to be sent again.
  *
  * The reply is the same whether or not the address is registered, and deliberately so: any other
- * behaviour turns this box into a way of asking which email addresses use SPYDR. That means the
+ * behaviour turns this box into a way of asking which email addresses use SPYDIR. That means the
  * success message has to be phrased as a conditional rather than a confirmation.
  */
 export function RecoverKey() {

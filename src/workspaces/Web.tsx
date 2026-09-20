@@ -636,7 +636,7 @@ export function Web() {
     cy.on('viewport', onViewport)
     cyRef.current = cy
     setCyInstance(cy)
-    ;(window as { __spydrCy?: cytoscape.Core }).__spydrCy = cy
+    ;(window as { __spydirCy?: cytoscape.Core }).__spydirCy = cy
     syncGrid(cy, wrap.current)
     return () => {
       cy.off('viewport', onViewport)
@@ -864,7 +864,7 @@ export function Web() {
     if (!cy) return
     const a = document.createElement('a')
     a.href = cy.png({ full: true, scale: 2, bg: cssVar('--canvas') })
-    a.download = `spydr-web-${snapshot.domain}-${new Date().toISOString().slice(0, 10)}.png`
+    a.download = `spydir-web-${snapshot.domain}-${new Date().toISOString().slice(0, 10)}.png`
     a.click()
   }
 

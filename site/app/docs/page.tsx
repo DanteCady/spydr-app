@@ -3,7 +3,7 @@ import { navigation } from '@/lib/docs'
 
 export const metadata = {
   title: 'Documentation',
-  description: 'The SPYDR guide: getting started, every workspace, the hygiene rules, and the boundary of the tool.'
+  description: 'The SPYDIR guide: getting started, every workspace, the hygiene rules, and the boundary of the tool.'
 }
 
 export default function DocsIndex() {
@@ -11,11 +11,11 @@ export default function DocsIndex() {
   return (
     <article className="doc">
       <p className="kb-crumb mono">Documentation</p>
-      <h1>The SPYDR guide</h1>
+      <h1>The SPYDIR guide</h1>
       <p className="doc-lede">
         The same guide that ships inside the application, published here so you can read it before downloading
         anything. Start with <Link href="/docs/start">Getting started</Link>, or{' '}
-        <Link href="/docs/playbook">Making the most of SPYDR</Link> if you already know what it does.
+        <Link href="/docs/playbook">Making the most of SPYDIR</Link> if you already know what it does.
       </p>
       {groups.map(({ section, items }) => (
         <section className="doc-index" key={section}>

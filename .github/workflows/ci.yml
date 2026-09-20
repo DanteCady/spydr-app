@@ -21,7 +21,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      # The read-only guarantee is the reason SPYDR is safe against a production DC. It is checked
+      # The read-only guarantee is the reason SPYDIR is safe against a production DC. It is checked
       # before anything else, because it is the one property no test would notice the loss of.
       - run: npm run verify:readonly
       - run: npm test
@@ -49,7 +49,7 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: false
       - uses: actions/upload-artifact@v4
         with:
-          name: spydr-${{ matrix.os }}
+          name: spydir-${{ matrix.os }}
           path: |
             release/*.dmg
             release/*.exe

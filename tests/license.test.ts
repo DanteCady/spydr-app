@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { keyHint, keyLooksValid, normalizeKey, statusOf, tidyKeyInput, GRACE_DAYS } from '../shared/license'
 import type { SignedLicence } from '../shared/license'
 
-const KEY = 'SPYDR-4PEH4-M9TFA-A37EB-ZZ3DB'
+const KEY = 'SPYDIR-4PEH4-M9TFA-A37EB-ZZ3DB'
 
 describe('normalizeKey', () => {
   it('accepts a key however it arrives from an email or a PDF', () => {
@@ -10,11 +10,11 @@ describe('normalizeKey', () => {
     expect(normalizeKey(`  ${KEY}  `)).toBe(KEY)
     expect(normalizeKey(KEY.toLowerCase())).toBe(KEY)
     // A line break mid-key, which is what a wrapped email does.
-    expect(normalizeKey('SPYDR-4PEH4-M9TFA-\nA37EB-ZZ3DB')).toBe(KEY)
+    expect(normalizeKey('SPYDIR-4PEH4-M9TFA-\nA37EB-ZZ3DB')).toBe(KEY)
     // Non-breaking spaces, which is what copying from a web page does.
-    expect(normalizeKey('SPYDR-4PEH4-M9TFA- A37EB-ZZ3DB')).toBe(KEY)
+    expect(normalizeKey('SPYDIR-4PEH4-M9TFA- A37EB-ZZ3DB')).toBe(KEY)
     // No dashes at all, and no prefix.
-    expect(normalizeKey('SPYDR4PEH4M9TFAA37EBZZ3DB')).toBe(KEY)
+    expect(normalizeKey('SPYDIR4PEH4M9TFAA37EBZZ3DB')).toBe(KEY)
     expect(normalizeKey('4PEH4M9TFAA37EBZZ3DB')).toBe(KEY)
   })
 
@@ -32,27 +32,27 @@ describe('normalizeKey', () => {
 describe('keyLooksValid', () => {
   it('passes a key that only needed tidying', () => {
     expect(keyLooksValid(` ${KEY.toLowerCase()} `)).toBe(true)
-    expect(keyLooksValid('SPYDR-4PEH4-M9TFA-\nA37EB-ZZ3DB')).toBe(true)
+    expect(keyLooksValid('SPYDIR-4PEH4-M9TFA-\nA37EB-ZZ3DB')).toBe(true)
   })
 
   it('rejects the wrong length and the excluded letters', () => {
-    expect(keyLooksValid('SPYDR-4PEH4-M9TFA-A37EB')).toBe(false)
-    expect(keyLooksValid('SPYDR-4PEH4-M9TFA-A37EB-ZZ3D')).toBe(false)
+    expect(keyLooksValid('SPYDIR-4PEH4-M9TFA-A37EB')).toBe(false)
+    expect(keyLooksValid('SPYDIR-4PEH4-M9TFA-A37EB-ZZ3D')).toBe(false)
     // Crockford base32 has no I, L, O or U, so these cannot be real keys.
-    expect(keyLooksValid('SPYDR-IIIII-LLLLL-OOOOO-UUUUU')).toBe(false)
+    expect(keyLooksValid('SPYDIR-IIIII-LLLLL-OOOOO-UUUUU')).toBe(false)
   })
 })
 
 describe('tidyKeyInput', () => {
   it('strips whitespace as it is typed without reformatting mid-edit', () => {
-    expect(tidyKeyInput(' spydr-4peh4 ')).toBe('SPYDR-4PEH4')
-    expect(tidyKeyInput('SPYDR-4PEH4-M9TFA-​A37EB')).toBe('SPYDR-4PEH4-M9TFA-A37EB')
+    expect(tidyKeyInput(' spydir-4peh4 ')).toBe('SPYDIR-4PEH4')
+    expect(tidyKeyInput('SPYDIR-4PEH4-M9TFA-​A37EB')).toBe('SPYDIR-4PEH4-M9TFA-A37EB')
   })
 })
 
 describe('keyHint', () => {
   it('shows only the last group', () => {
-    expect(keyHint(KEY)).toBe('SPYDR-•••••-•••••-•••••-ZZ3DB')
+    expect(keyHint(KEY)).toBe('SPYDIR-•••••-•••••-•••••-ZZ3DB')
     expect(keyHint(KEY)).not.toContain('4PEH4')
   })
 })

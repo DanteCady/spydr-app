@@ -11,12 +11,12 @@ export const CONTACT: Article[] = [
     body: (
       <>
         <p>
-          SPYDR is free, and support is a real person reading email rather than a ticket queue. There are three
+          SPYDIR is free, and support is a real person reading email rather than a ticket queue. There are three
           addresses, because they get read by different people in different moods.
         </p>
         <dl className="kb-terms">
           <Term name={SUPPORT_EMAIL}>
-            Something is broken, something is confusing, or SPYDR read your directory in a way you did not expect.
+            Something is broken, something is confusing, or SPYDIR read your directory in a way you did not expect.
           </Term>
           <Term name={FEEDBACK_EMAIL}>
             An idea, a request, or an opinion about how something works. Slower to answer, and read just as closely.
@@ -31,11 +31,11 @@ export const CONTACT: Article[] = [
         <h3>What to include</h3>
         <p>
           The difference between a one-reply answer and a week of back and forth is usually whether the first message
-          says what happened, what you expected instead, and what SPYDR was doing at the time.
+          says what happened, what you expected instead, and what SPYDIR was doing at the time.
         </p>
         <dl className="kb-terms">
           <Term name="The version">
-            In the guide under <strong>About SPYDR</strong>, or in <strong>Settings &rsaquo; About</strong>. The
+            In the guide under <strong>About SPYDIR</strong>, or in <strong>Settings &rsaquo; About</strong>. The
             button above fills it in for you.
           </Term>
           <Term name="What you were doing">
@@ -62,7 +62,7 @@ export const CONTACT: Article[] = [
 
         <h3>Reporting a security problem</h3>
         <p>
-          Mail <span className="mono-hint">{SECURITY_EMAIL}</span>. SPYDR is run by people holding domain
+          Mail <span className="mono-hint">{SECURITY_EMAIL}</span>. SPYDIR is run by people holding domain
           administrator credentials against production domain controllers, so anything touching that is answered
           before whatever else is in the queue — expect a reply within a few days, and a name in the release notes
           if you would like one.
@@ -82,7 +82,7 @@ export const CONTACT: Article[] = [
           not it found anything.
         </p>
 
-        <h3>Asking for something SPYDR does not do</h3>
+        <h3>Asking for something SPYDIR does not do</h3>
         <p>
           Worth sending, to <span className="mono-hint">{FEEDBACK_EMAIL}</span>. The useful version is the problem
           rather than the feature: &ldquo;I need to prove to an
@@ -91,7 +91,7 @@ export const CONTACT: Article[] = [
         </p>
         <MailButton to="feedback" />
         <p className="muted">
-          Bear in mind SPYDR is read-only by design. Requests that amount to &ldquo;and then fix it for me&rdquo; are
+          Bear in mind SPYDIR is read-only by design. Requests that amount to &ldquo;and then fix it for me&rdquo; are
           not an oversight we are going to correct — that boundary is the reason it is safe to point at a production
           domain controller.
         </p>

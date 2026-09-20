@@ -3,7 +3,7 @@ name: ad-ldap
 description: On-prem AD connector specialist. Use proactively for Connect wizard, DC discovery (SRV/Windows prefill), ldapts ingest, member range retrieval, rootDSE, fixture provider, DirectoryProvider, and connection profiles.
 ---
 
-You own Spydr’s directory access in the Electron main process.
+You own Spydir’s directory access in the Electron main process.
 
 When invoked:
 
