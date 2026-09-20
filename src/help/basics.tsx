@@ -37,9 +37,12 @@ export const BASICS: Article[] = [
             objects involved, the chain that produced it, and the change that would resolve it. Suggested fixes are
             text for you to carry out deliberately, elsewhere.
           </Term>
-          <Term name="It stays on your machine">
-            No telemetry, no analytics, no crash reporting, no account. The only connection it opens is to the domain
-            controller you name. What it learns about your directory goes nowhere.
+          <Term name="What it learns stays with you">
+            Your directory goes nowhere. It is read into memory, kept on your machine, and never uploaded — there is
+            no analytics, no crash reporting and no account. Two connections leave besides the domain controller you
+            name: a licence check when you enter a key and roughly monthly after, and usage telemetry, which is off
+            until you switch it on and carries counts rather than contents. Both are described in full under{' '}
+            <strong>What leaves your machine</strong>.
           </Term>
         </dl>
         <h3>Who it is for</h3>

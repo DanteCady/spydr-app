@@ -31,7 +31,14 @@ export function normalizeKey(raw: string): string {
   return groups ? `SPYDIR-${groups.join('-')}` : 'SPYDIR-'
 }
 
-/** Keys are stored hashed, so a copy of the database is not a pile of working licences. */
+/**
+ * The hash a key is looked up by.
+ *
+ * Note that this is not the only copy: licences.ts also stores the key encrypted under
+ * LICENSE_SECRET, so a lost one can be sent again. The hash is what activation matches against;
+ * the ciphertext is what recovery reads. A stolen database is therefore only as safe as that
+ * secret, which is why env.ts refuses to start production without a strong one.
+ */
 export function hashKey(key: string): string {
   return createHash('sha256').update(normalizeKey(key)).digest('hex')
 }

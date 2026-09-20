@@ -362,8 +362,10 @@ export function Settings() {
           <>
             <h2>Privacy & session</h2>
             <p className="set-intro">
-              SPYDIR reads the directory and nothing else. Nothing is sent anywhere, no telemetry is collected, and
-              passwords are never written to disk.
+              Your directory stays on this machine. Nothing read from it is ever sent anywhere, and the bind password
+              is held in memory for the session and never written to disk. Two things do leave: the licence check,
+              which carries your key and a hashed installation id, and usage telemetry — off unless you turn it on
+              below, and you can read the exact payload before it goes.
             </p>
             <Row label="Keep directories on this computer" hint="Needed for Restore last session. Compressed, and encrypted with the OS keychain where one exists.">
               <select
