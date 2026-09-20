@@ -1,7 +1,9 @@
 import { CircleHelp, Search } from 'lucide-react'
 import type { WorkspaceId } from '@shared/types'
 import { NavGlyph } from '../components/NavGlyph'
+import { WHATS_NEW_ID } from '../help/articles'
 import { useMenuCommand } from '../lib/useMenuCommand'
+import { useUnreadRelease } from '../lib/useUnreadRelease'
 import { WidowMark } from '../components/WidowMark'
 import { ObjectInspector } from '../inspector/ObjectInspector'
 import { SessionConsent } from '../components/SessionConsent'
@@ -36,6 +38,7 @@ export function AppShell() {
     setSessionConsent,
     openHelp
   } = useApp()
+  const { unread } = useUnreadRelease()
 
   // Menu commands that belong to the shell; the canvas handles its own.
   useMenuCommand((command) => {
@@ -124,11 +127,16 @@ export function AppShell() {
           <button
             type="button"
             className={workspace === 'help' ? 'icon-btn active' : 'icon-btn'}
-            aria-label="Open the SPYDR guide"
-            title="Guide — how SPYDR reads your directory, and what the findings mean"
-            onClick={() => openHelp()}
+            aria-label={unread ? 'Open the SPYDR guide — there are new release notes' : 'Open the SPYDR guide'}
+            title={
+              unread
+                ? 'Guide — and there is a release you have not read about yet'
+                : 'Guide — how SPYDR reads your directory, and what the findings mean'
+            }
+            onClick={() => openHelp(unread ? WHATS_NEW_ID : undefined)}
           >
             <CircleHelp size={14} aria-hidden />
+            {unread ? <span className="dot-unread" aria-hidden /> : null}
           </button>
         </header>
         <SessionConsent />

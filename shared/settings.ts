@@ -98,6 +98,14 @@ export interface UpdateSettings {
    */
   feedUrl: string
   checkOnStart: boolean
+  /**
+   * The newest release whose notes have been shown here. Kept in settings rather than in browser
+   * storage so it survives a cache clear and travels with the rest of the app's state.
+   *
+   * Empty means this install has never been shown any, which is treated as "nothing unread" — a
+   * first run should not open on a notification about a version it never missed.
+   */
+  lastSeenRelease: string
 }
 
 export interface AppSettings {
@@ -152,7 +160,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   updates: {
     feedUrl: '',
-    checkOnStart: false
+    checkOnStart: false,
+    lastSeenRelease: ''
   }
 }
 
@@ -275,7 +284,12 @@ export function normalizeSettings(raw: unknown): AppSettings {
     updates: {
       // Only https, so a settings file cannot point the app at a local file or a plaintext host.
       feedUrl: typeof u.feedUrl === 'string' && /^https:\/\//i.test(u.feedUrl.trim()) ? u.feedUrl.trim() : '',
-      checkOnStart: bool(u.checkOnStart, d.updates.checkOnStart)
+      checkOnStart: bool(u.checkOnStart, d.updates.checkOnStart),
+      // A version string and nothing else: this is only ever compared, never displayed or resolved.
+      lastSeenRelease:
+        typeof u.lastSeenRelease === 'string' && /^\d{1,4}(\.\d{1,4}){0,3}$/.test(u.lastSeenRelease.trim())
+          ? u.lastSeenRelease.trim()
+          : ''
     }
   }
 }

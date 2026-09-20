@@ -118,6 +118,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Another window may have changed them.
   useEffect(() => window.spydr?.onSettings(setSettings), [])
 
+  /**
+   * On a first run, record the version being installed as already read.
+   *
+   * Without this, "seen nothing" and "seen everything" are the same empty string, and the choice
+   * is between a new install opening on a notification about a version it never missed, or an
+   * upgrade never being told anything changed. Recording where someone came in distinguishes them.
+   */
+  useEffect(() => {
+    if (settings.updates.lastSeenRelease) return
+    void window.spydr?.about().then((info) => {
+      if (info?.version) updateSettings({ updates: { lastSeenRelease: info.version } })
+    })
+  }, [settings.updates.lastSeenRelease, updateSettings])
+
   useEffect(() => {
     document.documentElement.dataset.theme = theme
   }, [theme])

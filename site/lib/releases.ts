@@ -6,6 +6,8 @@
  * below stand in, and they are the sizes of the 0.1.0 build rather than invented ones.
  */
 
+import { CURRENT_VERSION } from './releaseNotes'
+
 export interface Asset {
   os: 'macOS' | 'Windows' | 'Linux'
   file: string
@@ -26,7 +28,11 @@ export interface Release {
 /** e.g. "dantecady/spydr". Unset means the site builds from the fallback. */
 const REPO = process.env.GITHUB_REPO ?? ''
 
-export const VERSION = '0.1.0'
+/**
+ * Whatever the newest release notes describe. It was a constant here, which meant the download
+ * cards and the published notes could disagree about what the current version even was.
+ */
+export const VERSION = CURRENT_VERSION
 
 const FALLBACK: Release = {
   version: VERSION,
