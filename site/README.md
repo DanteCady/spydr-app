@@ -88,7 +88,6 @@ LICENSE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n…"
 LICENSE_PEPPER=<32+ random bytes>      # hashes machine ids
 LICENSE_SECRET=<32+ random bytes>      # encrypts stored keys; must differ from the pepper
 TRUST_PROXY_HOPS=1                     # proxies in front of Node; without it rate limits collapse
-SUBSCRIBE_WEBHOOK=…                    # optional, mailing list
 
 # Mail. Required — signup refuses to run without it, because the flow sends a code.
 SMTP_HOST=email-smtp.eu-west-1.amazonaws.com
@@ -125,20 +124,18 @@ Node 22 or newer, because the store uses `node:sqlite` — no native modules, no
 Run `npm ci && npm run build && npm start` behind nginx with TLS, keep `LICENSE_DB` on a path that
 survives deploys, and back that file up: it is the list of everyone using SPYDIR.
 
-## The update list
+## The hero form
 
-The hero carries an email field. Where the address goes is up to you — set one of these and the
-form starts working:
+The email field in the hero is the signup flow, not a mailing list. `components/Subscribe.tsx`
+posts to `/api/signup` for a code, then `/api/verify` to exchange it for the key — the same two
+steps described above. It refuses to start at all when no mail provider is configured, rather than
+telling a visitor to check an inbox nothing was sent to.
 
-```sh
-SUBSCRIBE_WEBHOOK=https://…      # any endpoint accepting POST { email, source }
-BUTTONDOWN_API_KEY=…             # posts straight to Buttondown
-```
+There is no client-side tracking on the page.
 
-With neither set the form tells the visitor that the list is not wired up yet and that nothing was
-sent or stored, rather than thanking them for an address it quietly dropped. Validation and a
-honeypot field run server-side in `app/actions/subscribe.ts`; there is no client-side tracking on
-the page at all.
+An earlier version of this file documented `SUBSCRIBE_WEBHOOK` and `BUTTONDOWN_API_KEY` against a
+server action in `app/actions/subscribe.ts`. That file is gone and no code reads either variable
+any more. Setting them does nothing.
 
 ## Screenshots
 

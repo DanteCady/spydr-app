@@ -6,6 +6,7 @@ import { ingestDirectory, testConnection } from './directory/ldapProvider'
 import { buildMenu, usesCustomTitleBar } from './menu'
 import { getSettings, resetSettings, settingsPath, updateSettings } from './settings'
 import { checkForUpdate, downloadUpdate, installUpdate, updateState, type UpdateCheck } from './updates'
+import { isHostish, validConnection } from '../shared/connection'
 import { activate, canVerify, deactivate, licenceState, refreshLicence } from './license'
 import { siteBase } from './endpoints'
 import { appVersion } from './version'
@@ -160,42 +161,6 @@ function createWindow(): void {
   } else {
     void win.loadFile(join(__dirname, '../renderer/index.html'))
   }
-}
-
-/**
- * A DNS name, loosely: labels of letters, digits and hyphens, separated by dots.
- *
- * discoverDcs concatenates this into an SRV lookup, so without a bound on it the renderer has a
- * general-purpose DNS channel — every query goes out to a resolver, and the name itself is the
- * message. Directory data is attacker-written in a compromised domain, so this is worth closing
- * even though the renderer is ours.
- */
-function isHostish(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0 && value.length <= 253 && /^[A-Za-z0-9._-]+$/.test(value)
-}
-
-/**
- * The renderer chooses where to bind, because that is where the user types it. It does not get to
- * choose anything the shape of which we cannot check first.
- */
-function validConnection(input: unknown): input is ConnectionInput {
-  if (!input || typeof input !== 'object') return false
-  const c = input as Record<string, unknown>
-  return (
-    isHostish(c.host) &&
-    typeof c.port === 'number' &&
-    Number.isInteger(c.port) &&
-    c.port >= 1 &&
-    c.port <= 65535 &&
-    (c.protocol === 'ldap' || c.protocol === 'ldaps' || c.protocol === 'starttls') &&
-    typeof c.domain === 'string' &&
-    c.domain.length <= 253 &&
-    typeof c.bindUsername === 'string' &&
-    c.bindUsername.length <= 256 &&
-    typeof c.bindPassword === 'string' &&
-    typeof c.baseDn === 'string' &&
-    c.baseDn.length <= 1024
-  )
 }
 
 const REJECTED = 'That connection is not valid. Check the host, port and protocol.'

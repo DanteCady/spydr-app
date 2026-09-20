@@ -35,12 +35,12 @@ const api = {
     return () => { ipcRenderer.removeListener('spydir:settings', listener) }
   },
   about: (): Promise<AboutInfo> => ipcRenderer.invoke('spydir:about'),
-  /** Activation. The key never reaches the renderer again once it is stored. */
   /** Exactly what a usage report would contain, built by the same code that sends one. */
   telemetryPreview: (): Promise<TelemetryPayload> => ipcRenderer.invoke('spydir:telemetry:preview'),
   telemetrySend: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('spydir:telemetry:send'),
   noteWorkspace: (workspace: string): void => ipcRenderer.send('spydir:telemetry:workspace', workspace),
   licence: (): Promise<LicenceState> => ipcRenderer.invoke('spydir:licence:state'),
+  /** Activation. The key never reaches the renderer again once it is stored; only a masked hint. */
   activate: (key: string): Promise<LicenceState> => ipcRenderer.invoke('spydir:licence:activate', key),
   deactivate: (): Promise<LicenceState> => ipcRenderer.invoke('spydir:licence:deactivate'),
   /** The change timeline. List results carry no detail; get() decrypts one entry. */
@@ -62,11 +62,11 @@ const api = {
     ipcRenderer.on('spydir:updates:state', listener)
     return () => ipcRenderer.removeListener('spydir:updates:state', listener)
   },
-  /** Subscribe to menu commands; returns an unsubscribe. */
   /** Chrome the renderer must draw itself, and the editing actions the OS performs for us. */
   chrome: (): { custom: boolean; platform: string; titleBarHeight: number } =>
     ipcRenderer.sendSync('spydir:chrome'),
   execRole: (role: string): Promise<void> => ipcRenderer.invoke('spydir:role', role),
+  /** Subscribe to menu commands; returns an unsubscribe. */
   onMenuCommand: (handler: (command: string) => void): (() => void) => {
     const listener = (_evt: unknown, command: string): void => handler(command)
     ipcRenderer.on('spydir:menu', listener)
