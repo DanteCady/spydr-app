@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react'
-import { useMemo, useState, type ReactNode } from 'react'
-import { ARTICLES, SECTIONS } from '../help/articles'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { ARTICLES, SECTIONS, WHATS_NEW_ID } from '../help/articles'
+import { useUnreadRelease } from '../lib/useUnreadRelease'
 import { useApp } from '../state'
 
 /** The visible text of an article, for the filter to match against. */
@@ -28,6 +29,13 @@ export function Help() {
   const matches = q ? ARTICLES.filter((a) => haystacks.get(a.id)?.includes(q)) : ARTICLES
   const article = ARTICLES.find((a) => a.id === current) ?? ARTICLES[0]
   const showing = matches.some((a) => a.id === article.id) ? article : matches[0]
+
+  // Read when read, not when the guide is opened — the dot should survive someone who came here
+  // for something else entirely.
+  const { markSeen } = useUnreadRelease()
+  useEffect(() => {
+    if (showing?.id === WHATS_NEW_ID) markSeen()
+  }, [showing?.id, markSeen])
 
   return (
     <div className="kb">

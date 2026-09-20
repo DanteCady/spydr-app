@@ -16,6 +16,7 @@ export function SiteHeader() {
         <Link href="/#inside">Inside</Link>
         <Link href="/#limits">Limits</Link>
         <Link href="/docs">Docs</Link>
+        <Link href="/releases">Releases</Link>
       </nav>
       <Link className="btn small" href="/#downloads">
         Get SPYDR <span className="ver">{VERSION}</span>

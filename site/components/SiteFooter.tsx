@@ -12,6 +12,7 @@ export function SiteFooter() {
       </div>
       <nav className="foot-links">
         <Link href="/docs">Documentation</Link>
+        <Link href="/releases">Releases</Link>
         <Link href="/#downloads">Download</Link>
       </nav>
       <p className="mono">Read-only directory tooling. Nothing leaves your machine.</p>
