@@ -1,7 +1,7 @@
-# SPYDR — product site
+# SPYDIR — product site
 
 A Next.js app. The landing page is hand-written; the documentation is not — it is the desktop
-app's own guide, imported from `src/help/` and rendered here, so the help inside SPYDR and the docs
+app's own guide, imported from `src/help/` and rendered here, so the help inside SPYDIR and the docs
 on this site are the same words and cannot drift apart.
 
 ```sh
@@ -24,13 +24,13 @@ Adding an article to the app adds a page here. Nothing needs to be written twice
 ## Release links
 
 `lib/releases.ts` builds the download cards. Set `GITHUB_REPO` (for example
-`GITHUB_REPO=owner/spydr`) and the build asks GitHub for the latest release, using the real
+`GITHUB_REPO=owner/spydir`) and the build asks GitHub for the latest release, using the real
 filenames, byte sizes and download URLs. Without it the page falls back to the 0.1.0 artefacts and
 says so under the cards, rather than pretending to link to something.
 
 ## Licence keys and the API
 
-SPYDR is free but activated. Signing up on the landing page issues a key; the desktop app checks it
+SPYDIR is free but activated. Signing up on the landing page issues a key; the desktop app checks it
 on first run and roughly monthly after that.
 
 | Route | Does |
@@ -83,7 +83,7 @@ rotating one would break whoever is already using it.
 
 ```sh
 NEXT_PUBLIC_SITE_URL=https://spydir.io
-LICENSE_DB=/var/lib/spydr/spydr.db     # SQLite, absolute, outside the deploy tree
+LICENSE_DB=/var/lib/spydir/spydir.db     # SQLite, absolute, outside the deploy tree
 LICENSE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n…"
 LICENSE_PEPPER=<32+ random bytes>      # hashes machine ids
 LICENSE_SECRET=<32+ random bytes>      # encrypts stored keys; must differ from the pepper
@@ -95,7 +95,7 @@ SMTP_HOST=email-smtp.eu-west-1.amazonaws.com
 SMTP_PORT=587                          # 465 = implicit TLS; anything else requires STARTTLS
 SMTP_USER=…
 SMTP_PASS=…
-MAIL_FROM="SPYDR <keys@spydir.io>"
+MAIL_FROM="SPYDIR <keys@spydir.io>"
 # Instead of SMTP, either of these also works:
 # MAIL_WEBHOOK=…  posts { to, subject, text, html } anywhere
 # RESEND_API_KEY=…
@@ -123,7 +123,7 @@ use. A lost key is re-sent from `/key`.
 
 Node 22 or newer, because the store uses `node:sqlite` — no native modules, nothing to compile.
 Run `npm ci && npm run build && npm start` behind nginx with TLS, keep `LICENSE_DB` on a path that
-survives deploys, and back that file up: it is the list of everyone using SPYDR.
+survives deploys, and back that file up: it is the list of everyone using SPYDIR.
 
 ## The update list
 
@@ -152,9 +152,9 @@ Production is **spydir.io**. It is set in one place — `NEXT_PUBLIC_SITE_URL`, 
 production URL — and read by the metadata, the sitemap and robots.txt. Preview deployments should
 set it to their own URL so they do not advertise production in canonical tags.
 
-Worth knowing: the name has neighbours. `spydr.com` is a digital agency, `spydr.io` is a security
-blog and `spydrsolutions.com` is a live business. None of them is this product, which is part of
-why the site leans on being specific about what SPYDR is.
+Worth knowing: the name has neighbours. `spydir.com` is a digital agency, `spydir.io` is a security
+blog and `spydirsolutions.com` is a live business. None of them is this product, which is part of
+why the site leans on being specific about what SPYDIR is.
 
 ## Deploying
 

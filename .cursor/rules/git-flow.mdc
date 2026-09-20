@@ -1,5 +1,5 @@
 ---
-description: Git-flow for Spydr — develop before main, feature branches merge to develop
+description: Git-flow for Spydir — develop before main, feature branches merge to develop
 alwaysApply: true
 ---
 

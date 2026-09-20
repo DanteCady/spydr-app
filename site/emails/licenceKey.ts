@@ -9,10 +9,10 @@ import { esc, layout, p, panel, type Email } from './layout'
  */
 export function licenceKeyEmail(key: string): Email {
   const body = [
-    p('Here is your SPYDR licence key.'),
+    p('Here is your SPYDIR licence key.'),
     panel(key),
     p(
-      'Enter it when SPYDR asks on first run, or later under <strong>Settings &rsaquo; Licence</strong>. It is checked once now and about once a month after that — and if that check falls due while you are offline, SPYDR keeps working and says so.'
+      'Enter it when SPYDIR asks on first run, or later under <strong>Settings &rsaquo; Licence</strong>. It is checked once now and about once a month after that — and if that check falls due while you are offline, SPYDIR keeps working and says so.'
     ),
     p(
       '<span style="color:#5c6675;">One key per address. Keep this email; if you lose the key we can send it here again, but only ever to this address.</span>'
@@ -20,22 +20,22 @@ export function licenceKeyEmail(key: string): Email {
   ].join('\n')
 
   const text = [
-    'Your SPYDR licence key',
+    'Your SPYDIR licence key',
     '',
     `    ${key}`,
     '',
-    'Enter it when SPYDR asks on first run, or later under Settings > Licence.',
+    'Enter it when SPYDIR asks on first run, or later under Settings > Licence.',
     'It is checked once now and about once a month after that. If that check falls',
-    'due while you are offline, SPYDR keeps working and says so.',
+    'due while you are offline, SPYDIR keeps working and says so.',
     '',
     'One key per address. Keep this email; if you lose the key we can send it here',
     'again, but only ever to this address.',
     '',
-    '— SPYDR · spydir.io'
+    '— SPYDIR · spydir.io'
   ].join('\n')
 
   return {
-    subject: 'Your SPYDR licence key',
+    subject: 'Your SPYDIR licence key',
     html: layout({
       preview: 'Your licence key, and where to enter it',
       body,

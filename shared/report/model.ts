@@ -121,7 +121,7 @@ function summaryParagraph(snapshot: DirectorySnapshot, counts: Record<FindingSev
     ? `The most severe are ${plural(counts[worst], `${SEVERITY_LABEL[worst].toLowerCase()} finding`)}, listed first below.`
     : 'No rule fired against this directory.'
   return (
-    `SPYDR read ${objects.toLocaleString()} objects and ${stats.edges.toLocaleString()} membership edges under ` +
+    `SPYDIR read ${objects.toLocaleString()} objects and ${stats.edges.toLocaleString()} membership edges under ` +
     `${snapshot.baseDn}, then ran ${plural(RULES.length, 'hygiene rule')} over the resulting graph. ` +
     `${plural(stats.findings, 'finding')} came back. ${tail}`
   )
@@ -130,7 +130,7 @@ function summaryParagraph(snapshot: DirectorySnapshot, counts: Record<FindingSev
 /** A filename the user will recognise in their Downloads folder. */
 export function reportFileName(snapshot: DirectorySnapshot, now = new Date()): string {
   const domain = (snapshot.domain || 'directory').replace(/[^a-z0-9.-]+/gi, '-').replace(/^-+|-+$/g, '')
-  return `SPYDR-${domain}-hygiene-${now.toISOString().slice(0, 10)}.pdf`
+  return `SPYDIR-${domain}-hygiene-${now.toISOString().slice(0, 10)}.pdf`
 }
 
 export function buildReport(snapshot: DirectorySnapshot, options: ReportOptions = {}): Report {
@@ -149,7 +149,7 @@ export function buildReport(snapshot: DirectorySnapshot, options: ReportOptions 
 
   const overview: ReportSection = {
     label: 'Overview',
-    heading: 'What SPYDR found',
+    heading: 'What SPYDIR found',
     blocks: [
       { kind: 'para', text: summaryParagraph(snapshot, counts) },
       {
@@ -193,7 +193,7 @@ export function buildReport(snapshot: DirectorySnapshot, options: ReportOptions 
           kind: 'para',
           text:
             'These are the findings that change who can do what. Each one names the objects involved and the ' +
-            'change SPYDR would suggest — SPYDR is read-only, so nothing here has been applied.'
+            'change SPYDIR would suggest — SPYDIR is read-only, so nothing here has been applied.'
         },
         {
           kind: 'findings',
@@ -207,7 +207,7 @@ export function buildReport(snapshot: DirectorySnapshot, options: ReportOptions 
           kind: 'para',
           text:
             'No critical or high severity findings. Nothing in this directory grants privileged access through a ' +
-            'path that SPYDR considers hard to see. The remaining sections cover lower severity cleanup.'
+            'path that SPYDIR considers hard to see. The remaining sections cover lower severity cleanup.'
         }
       ]
 
@@ -251,7 +251,7 @@ export function buildReport(snapshot: DirectorySnapshot, options: ReportOptions 
         kind: 'para',
         text:
           'Every number in this report comes from a single read of the directory, taken at the time below. ' +
-          'SPYDR binds, pages through the naming context, resolves ranged group membership, and evaluates the ' +
+          'SPYDIR binds, pages through the naming context, resolves ranged group membership, and evaluates the ' +
           'rules locally. It issues no add, modify, or delete.'
       },
       {
@@ -296,7 +296,7 @@ export function buildReport(snapshot: DirectorySnapshot, options: ReportOptions 
       ingestedAt: snapshot.ingestedAt,
       generatedAt: generatedAt.toISOString()
     },
-    eyebrow: snapshot.source === 'fixture' ? 'SPYDR SAMPLE REPORT' : 'SPYDR DIRECTORY HYGIENE REPORT',
+    eyebrow: snapshot.source === 'fixture' ? 'SPYDIR SAMPLE REPORT' : 'SPYDIR DIRECTORY HYGIENE REPORT',
     title: snapshot.domain,
     lede:
       `A read-only review of group membership, nesting, and account hygiene across ${objects.toLocaleString()} ` +

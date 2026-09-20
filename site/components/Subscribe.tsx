@@ -149,7 +149,7 @@ export function Subscribe() {
       <p className={`subscribe-note${error ? ' bad' : ''}`} aria-live="polite">
         {error ??
           (step === 'email'
-            ? 'SPYDR is free and asks for a key on first run. We send a code to confirm the address, then the key itself — nothing else, ever.'
+            ? 'SPYDIR is free and asks for a key on first run. We send a code to confirm the address, then the key itself — nothing else, ever.'
             : `We sent a six-digit code to ${email}. It expires in ten minutes.`)}
       </p>
 

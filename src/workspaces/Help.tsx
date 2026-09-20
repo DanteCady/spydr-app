@@ -81,7 +81,7 @@ export function Help() {
           </>
         ) : null}
         {/* What is open, when something is. The read-only promise used to be repeated here on
-            every article; it is a principle in About SPYDR, and saying it thirty times over does
+            every article; it is a principle in About SPYDIR, and saying it thirty times over does
             not make it truer — it just trains people to stop reading the bottom of the page. */}
         {snapshot ? (
           <footer className="kb-foot">

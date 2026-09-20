@@ -1,7 +1,7 @@
 /**
  * The licence, as the rest of the application sees it.
  *
- * SPYDR is free, and activated: a key issued at signup is checked on first run and roughly monthly
+ * SPYDIR is free, and activated: a key issued at signup is checked on first run and roughly monthly
  * after that. The check exists so there is a count of who is using this and somewhere for paid
  * capability to attach later — not to police the directory reader, which is why an expired check
  * degrades to a warning rather than a locked door.
@@ -61,11 +61,14 @@ export const GRACE_DAYS = 21
  * dropped and the groups are rebuilt, so all of those become the same string — which is also the
  * string the server hashes, so the two sides cannot disagree about what a key is.
  */
+/** The prefix every key carries. Its length is derived, never written twice. */
+export const KEY_PREFIX = 'SPYDIR'
+
 export function normalizeKey(raw: string): string {
   const characters = raw.toUpperCase().replace(/[^0-9A-Z]/g, '')
-  const body = characters.startsWith('SPYDR') ? characters.slice(5) : characters
+  const body = characters.startsWith(KEY_PREFIX) ? characters.slice(KEY_PREFIX.length) : characters
   const groups = body.slice(0, 20).match(/.{1,5}/g)
-  return groups ? `SPYDR-${groups.join('-')}` : 'SPYDR-'
+  return groups ? `SPYDIR-${groups.join('-')}` : 'SPYDIR-'
 }
 
 /** Whitespace out, case up — safe to run on every keystroke without fighting the cursor. */
@@ -76,12 +79,12 @@ export function tidyKeyInput(raw: string): string {
 export function keyHint(key: string): string {
   const groups = normalizeKey(key).split('-')
   const last = groups.at(-1) ?? ''
-  return `SPYDR-•••••-•••••-•••••-${last}`
+  return `SPYDIR-•••••-•••••-•••••-${last}`
 }
 
 /** Shape check only — the server decides whether a key is real. */
 export function keyLooksValid(key: string): boolean {
-  return /^SPYDR-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/.test(
+  return /^SPYDIR-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/.test(
     normalizeKey(key)
   )
 }

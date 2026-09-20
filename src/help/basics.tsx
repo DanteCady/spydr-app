@@ -4,13 +4,13 @@ export const BASICS: Article[] = [
   {
     id: 'about',
     section: 'Start here',
-    title: 'About SPYDR',
+    title: 'About SPYDIR',
     blurb: 'What it is, who it is for, and what it refuses to do.',
     keywords: 'about version build licence purpose philosophy read-only',
     body: (
       <>
         <p>
-          SPYDR is a read-only explorer for on-premises Active Directory. It reads a domain once, holds it in memory,
+          SPYDIR is a read-only explorer for on-premises Active Directory. It reads a domain once, holds it in memory,
           and answers the questions the built-in tools leave open: who is really in this group, how did they get there,
           and what in this directory has quietly stopped making sense.
         </p>
@@ -61,30 +61,30 @@ export const BASICS: Article[] = [
     body: (
       <>
         <p>
-          SPYDR reads a directory once, into memory, and everything after that happens locally. Closing the app or
+          SPYDIR reads a directory once, into memory, and everything after that happens locally. Closing the app or
           disconnecting throws the copy away.
         </p>
         <h3>Two ways in</h3>
         <p>
-          <strong>Open sample directory</strong> loads a small fictional domain with the problems SPYDR looks for
+          <strong>Open sample directory</strong> loads a small fictional domain with the problems SPYDIR looks for
           already in it: a nesting cycle, two paths into Domain Admins, stale and disabled accounts still holding
           memberships. Nothing is read from your network. It is the fastest way to learn what the views mean before
           pointing them at something real.
         </p>
         <p>
           <strong>Connect to a domain</strong> binds to a real domain controller. Bind as an ordinary domain user —
-          reading the directory needs no privilege, and SPYDR asks for none. Binding as Domain Admin out of habit gives
+          reading the directory needs no privilege, and SPYDIR asks for none. Binding as Domain Admin out of habit gives
           a read-only tool credentials it has no use for.
         </p>
         <h3>What happens on a first run</h3>
         <p>
-          On Windows, SPYDR reads the domain and computer name from the environment and prefills them. Everywhere else
+          On Windows, SPYDIR reads the domain and computer name from the environment and prefills them. Everywhere else
           you type the domain, and DNS SRV lookup finds a controller. <strong>Test</strong> binds, reads the rootDSE
           and disconnects — it proves the credentials and the transport without reading anything. <strong>Read
           directory</strong> does the full ingest.
         </p>
         <p>
-          The first time a live directory is open, SPYDR asks once whether it may keep a copy on this computer for
+          The first time a live directory is open, SPYDIR asks once whether it may keep a copy on this computer for
           session restore. Declining costs you nothing but the restore.
         </p>
       </>
@@ -123,7 +123,7 @@ export const BASICS: Article[] = [
             accounts out.
           </Term>
           <Term name="Base DN (blank = rootDSE)">
-            Where to start reading. Left blank, SPYDR asks the DC for its <code>defaultNamingContext</code> and reads
+            Where to start reading. Left blank, SPYDIR asks the DC for its <code>defaultNamingContext</code> and reads
             the whole domain, which is almost always what you want. Set it to an OU to read only that subtree — faster
             on a very large directory, but be aware of what you lose: a user inside the subtree who is a member of a
             group outside it will show that membership, while the group itself will be missing, and rules that walk
@@ -137,7 +137,7 @@ export const BASICS: Article[] = [
         </dl>
         <h3>What the ingest does, in order</h3>
         <p>
-          Worth knowing, because it explains both the timing and what SPYDR can and cannot see.
+          Worth knowing, because it explains both the timing and what SPYDIR can and cannot see.
         </p>
         <ol className="kb-steps">
           <li>
@@ -146,7 +146,7 @@ export const BASICS: Article[] = [
           </li>
           <li>
             Five paged subtree searches run in parallel: users, groups, organizational units, containers, computers.
-            Each pages at 500 entries by default, and only the attributes SPYDR uses are requested.
+            Each pages at 500 entries by default, and only the attributes SPYDIR uses are requested.
           </li>
           <li>
             Objects are deduplicated by distinguished name and turned into nodes, keyed by <code>objectGUID</code> so
@@ -181,14 +181,14 @@ export const BASICS: Article[] = [
     body: (
       <>
         <p>
-          SPYDR is free. It still asks for a licence key, for one honest reason: without it there is
+          SPYDIR is free. It still asks for a licence key, for one honest reason: without it there is
           no way to know whether anyone is using this, and a tool nobody can count is a tool nobody
           keeps building.
         </p>
         <h3>What the check involves</h3>
         <p>
           The key is checked when you enter it and roughly once a month after that. The request
-          carries the key, an identifier for this installation, the SPYDR version and the operating
+          carries the key, an identifier for this installation, the SPYDIR version and the operating
           system — nothing about your directory, ever. Not a domain name, not an object, not a
           count.
         </p>
@@ -200,7 +200,7 @@ export const BASICS: Article[] = [
         <h3>When the check cannot happen</h3>
         <p>
           Administration machines are often on networks that do not reach the internet. If the
-          monthly check falls due while SPYDR cannot reach the licence server, it keeps working and
+          monthly check falls due while SPYDIR cannot reach the licence server, it keeps working and
           says so in Settings. Nothing locks. The only thing a lapsed check does is show a notice —
           this is a read-only tool, and locking someone out of it during an incident would be
           indefensible.
@@ -211,7 +211,7 @@ export const BASICS: Article[] = [
         </p>
         <h3>The sample needs no key</h3>
         <p>
-          The sample directory opens without activating anything, so you can see exactly what SPYDR
+          The sample directory opens without activating anything, so you can see exactly what SPYDIR
           does before handing over an email address.
         </p>
         <h3>Removing it</h3>
@@ -221,7 +221,7 @@ export const BASICS: Article[] = [
         </p>
         <h3>What the tier is for</h3>
         <p>
-          Every key today is <strong>free</strong>, and free carries every feature SPYDR has. The
+          Every key today is <strong>free</strong>, and free carries every feature SPYDIR has. The
           tier exists so that paid capability — scheduled reports, team features, anything that
           needs a server — has somewhere to attach later without re-plumbing the application.
         </p>
@@ -238,7 +238,7 @@ export const BASICS: Article[] = [
       <>
         <p>
           A read of a large directory is not instant, and being thrown back to a blank connect screen because you
-          quit the app is a poor trade. SPYDR can keep the snapshot so the next run reopens where you left off.
+          quit the app is a poor trade. SPYDIR can keep the snapshot so the next run reopens where you left off.
         </p>
         <h3>What is kept</h3>
         <p>
@@ -250,11 +250,11 @@ export const BASICS: Article[] = [
         <p>
           The bind password. It lives in memory in the main process for the session and is dropped on disconnect and on
           quit. This is why <strong>Re-crawl</strong> is disabled after a restore: the snapshot came back, the
-          credentials did not, and SPYDR will not store them to make the button work.
+          credentials did not, and SPYDIR will not store them to make the button work.
         </p>
         <h3>Your choice, and changing it</h3>
         <p>
-          SPYDR asks once, the first time a live directory is open. Declining removes anything already written. Both
+          SPYDIR asks once, the first time a live directory is open. Declining removes anything already written. Both
           the answer and a <strong>Forget now</strong> button live in Settings under Privacy, along with a{' '}
           <strong>forget on quit</strong> option for shared machines — restore within a run, nothing left behind after
           it.
@@ -272,7 +272,7 @@ export const BASICS: Article[] = [
     body: (
       <>
         <p>
-          A snapshot is a photograph. Make a change in ADUC and SPYDR will keep showing you the directory as it was
+          A snapshot is a photograph. Make a change in ADUC and SPYDIR will keep showing you the directory as it was
           when you read it — the header says how long ago that was, for exactly this reason.
         </p>
         <p>

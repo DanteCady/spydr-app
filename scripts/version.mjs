@@ -2,7 +2,7 @@
 /**
  * Bump the version and open a place to write the notes for it.
  *
- * SPYDR's version is stated once, in package.json, and everything else reads it from there — the
+ * SPYDIR's version is stated once, in package.json, and everything else reads it from there — the
  * About screen, the licence check, the telemetry payload, the site's download cards. The one
  * thing that cannot be derived is what changed, so this creates the file for it and leaves it for
  * a person to fill in. A release with no notes fails `npm test`, which is deliberate: notes

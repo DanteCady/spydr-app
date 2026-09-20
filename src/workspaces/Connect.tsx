@@ -26,7 +26,7 @@ export function Connect() {
   const [ok, setOk] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
 
-  const desktop = Boolean(window.spydr?.ingest)
+  const desktop = Boolean(window.spydir?.ingest)
 
   // A restored profile is a better prefill than the Windows environment, so it wins.
   useEffect(() => {
@@ -42,8 +42,8 @@ export function Connect() {
   }, [savedSession])
 
   useEffect(() => {
-    if (!window.spydr?.windowsPrefill) return
-    void window.spydr.windowsPrefill().then((p) => {
+    if (!window.spydir?.windowsPrefill) return
+    void window.spydir.windowsPrefill().then((p) => {
       if (p.domain) setDomain((d) => d || p.domain || '')
       if (p.host) setHost((h) => h || p.host || '')
     })
@@ -65,14 +65,14 @@ export function Connect() {
   )
 
   async function discover(): Promise<void> {
-    if (!window.spydr?.discoverDcs) {
-      setError('Run SPYDR as the desktop app to discover DCs.')
+    if (!window.spydir?.discoverDcs) {
+      setError('Run SPYDIR as the desktop app to discover DCs.')
       return
     }
     setBusy('discover')
     setError(null)
     try {
-      const dcs = await window.spydr.discoverDcs(domain)
+      const dcs = await window.spydir.discoverDcs(domain)
       if (dcs.length === 0) {
         setError('No LDAP SRV records. Paste the DC hostname or IP (split-DNS is often broken on VPN).')
         return
@@ -88,15 +88,15 @@ export function Connect() {
   }
 
   async function test(): Promise<void> {
-    if (!window.spydr?.testConnection) {
-      setError('Run SPYDR as the desktop app to bind to Active Directory.')
+    if (!window.spydir?.testConnection) {
+      setError('Run SPYDIR as the desktop app to bind to Active Directory.')
       return
     }
     setBusy('test')
     setError(null)
     setOk(null)
     try {
-      const result = await window.spydr.testConnection(input)
+      const result = await window.spydir.testConnection(input)
       if (!baseDn) setBaseDn(result.defaultNamingContext)
       setOk(`Bound as ${result.boundAs} on ${result.dnsHostName}. Base DN ${result.defaultNamingContext}.`)
     } catch (err) {
@@ -127,7 +127,7 @@ export function Connect() {
             <WidowMark size={34} />
           </span>
           <div>
-            <h1>SPYDR</h1>
+            <h1>SPYDIR</h1>
             <p>Read-only Active Directory explorer</p>
           </div>
         </header>
@@ -146,7 +146,7 @@ export function Connect() {
               <FolderOpen size={16} aria-hidden />
               <span>
                 <strong>Open sample directory</strong>
-                <em>See how SPYDR works</em>
+                <em>See how SPYDIR works</em>
               </span>
             </button>
             {savedSession ? (
@@ -169,7 +169,7 @@ export function Connect() {
               <CircleHelp size={16} aria-hidden />
               <span>
                 <strong>Guide</strong>
-                <em>What the fields mean, what the findings mean, what SPYDR never does</em>
+                <em>What the fields mean, what the findings mean, what SPYDIR never does</em>
               </span>
             </button>
           </section>
@@ -269,7 +269,7 @@ export function Connect() {
           </section>
         ) : null}
 
-        <p className="welcome-foot">Bind with a normal domain user — not Domain Admin. SPYDR never writes to the directory.</p>
+        <p className="welcome-foot">Bind with a normal domain user — not Domain Admin. SPYDIR never writes to the directory.</p>
       </div>
     </div>
   )

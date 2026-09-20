@@ -2,7 +2,7 @@ import { app, net } from 'electron'
 import { isNewer } from '../shared/version'
 
 /**
- * An update check, done by asking one URL the user configured. SPYDR contacts nothing unless a feed
+ * An update check, done by asking one URL the user configured. SPYDIR contacts nothing unless a feed
  * is set, and it never downloads or installs anything — it reports what is out there and links to
  * it. Shipping an auto-installer would need signed builds and a publish pipeline first.
  */

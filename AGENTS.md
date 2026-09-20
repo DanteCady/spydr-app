@@ -1,6 +1,6 @@
-# SPYDR
+# SPYDIR
 
-Read-only Active Directory explorer for messy on-prem directories. Electron + React. Product name is **SPYDR**; repo folder is `spyder`.
+Read-only Active Directory explorer for messy on-prem directories. Electron + React. Product name is **SPYDIR**; repo folder is `spyder`.
 
 ## Run
 
@@ -33,7 +33,7 @@ Use project subagents instead of improvising parallel patterns:
 | --- | --- |
 | Feature ideas, roadmap, scope, creep checks | `product-scope` (read-only; does not implement) |
 | Connect, ldapts, ingest, fixture, DC discovery | `ad-ldap` |
-| Directory / Web / Pathfinder / Hygiene / inspector | `spydr-ui` |
+| Directory / Web / Pathfinder / Hygiene / inspector | `spydir-ui` |
 | graphology, cycles, paths, finding detectors | `graph-findings` |
 | Password handling, TLS toggle, snapshot leakage, write attempts | `ad-security` |
 

@@ -60,7 +60,7 @@ export const WORKSPACES: Article[] = [
             list, because "empty" is itself a finding.
           </Term>
           <Term name="Object">Distinguished name, object GUID, created and changed timestamps, each copyable.</Term>
-          <Term name="SPYDR">
+          <Term name="SPYDIR">
             What this application makes of the object: how many groups it reaches, every finding attached to it, and
             shortcuts into the Web canvas and Pathfinder.
           </Term>
@@ -79,7 +79,7 @@ export const WORKSPACES: Article[] = [
         <p>
           Nesting that is unreadable as a list is obvious as a picture. The canvas draws the neighbourhood of whatever
           is selected, rather than the whole directory — a graph of ten thousand objects is a hairball that tells you
-          nothing, so SPYDR shows you a focused view and lets you walk.
+          nothing, so SPYDIR shows you a focused view and lets you walk.
         </p>
         <h3>What you are looking at</h3>
         <p>
@@ -112,7 +112,7 @@ export const WORKSPACES: Article[] = [
             glance.
           </Control>
           <Control name="Trace">
-            Pick a second object and SPYDR highlights the chain between them, dims everything else, and animates the
+            Pick a second object and SPYDIR highlights the chain between them, dims everything else, and animates the
             edges along the direction of travel. This is the tool for showing someone else how an account reaches a
             group — and Pathfinder's "Trace on the canvas" drives exactly this.
           </Control>
@@ -155,7 +155,7 @@ export const WORKSPACES: Article[] = [
         </p>
         <h3>How does an account reach a group?</h3>
         <p>
-          Pick an account and a target group. SPYDR walks every membership chain between them and leads with the answer
+          Pick an account and a target group. SPYDIR walks every membership chain between them and leads with the answer
           in words — direct member, reaches it through nesting, or cannot reach it at all.
         </p>
         <p>
@@ -164,7 +164,7 @@ export const WORKSPACES: Article[] = [
         </p>
         <h3>The cut analysis</h3>
         <p>
-          When more than one route exists, SPYDR names the links they all share. This is the part that matters
+          When more than one route exists, SPYDIR names the links they all share. This is the part that matters
           operationally: if an account reaches Domain Admins two ways, removing it from one group revokes nothing,
           because the other chain still arrives. A shared link is a single change that breaks every route at once.
         </p>
@@ -174,7 +174,7 @@ export const WORKSPACES: Article[] = [
         </p>
         <h3>Who is really in a group?</h3>
         <p>
-          The access-review question. Pick a group and SPYDR lists every account inside it, direct or nested, deepest
+          The access-review question. Pick a group and SPYDIR lists every account inside it, direct or nested, deepest
           first — because the surprises are at the bottom. Each row shows how far away the account sits and the route
           it takes.
         </p>
@@ -272,12 +272,12 @@ export const WORKSPACES: Article[] = [
         </p>
         <h3>What it is not</h3>
         <p>
-          It is not an audit log, and it should not be used as one. SPYDR sees the difference between two reads, which
+          It is not an audit log, and it should not be used as one. SPYDIR sees the difference between two reads, which
           means two changes that cancel out between them are invisible, and it can never tell you who made a change or
           exactly when. Your domain controller's security event log is the authority on both. What the timeline gives
           you is the thing the event log is bad at: a readable account of how the shape of the directory moved.
         </p>
-        <h3>Two ways it could mislead, and what SPYDR does about them</h3>
+        <h3>Two ways it could mislead, and what SPYDIR does about them</h3>
         <dl className="kb-terms">
           <Term name="A different controller">
             Read one DC on Monday and another on Tuesday and replication lag will look like change. Every entry records
@@ -355,7 +355,7 @@ export const WORKSPACES: Article[] = [
         </p>
         <h3>Privacy &amp; session</h3>
         <p>
-          Whether SPYDR may keep a record of this directory on this computer — which governs both session restore and
+          Whether SPYDIR may keep a record of this directory on this computer — which governs both session restore and
           the change timeline — whether to forget the session on quit, how many days of timeline history to keep, and
           buttons to forget the saved session or clear the history now. Declining removes anything already written.
         </p>
@@ -366,7 +366,7 @@ export const WORKSPACES: Article[] = [
         </p>
         <h3>About &amp; updates</h3>
         <p>
-          Version and build information, where settings and data live, and update checking. SPYDR contacts nothing
+          Version and build information, where settings and data live, and update checking. SPYDIR contacts nothing
           unless you give it a feed URL, and it never installs anything on its own — it tells you what exists and links
           to it.
         </p>
@@ -377,12 +377,12 @@ export const WORKSPACES: Article[] = [
     id: 'reports',
     section: 'Workspaces',
     title: 'Reports',
-    blurb: 'A PDF for people who will never open SPYDR.',
+    blurb: 'A PDF for people who will never open SPYDIR.',
     keywords: 'pdf export report print paper a4 letter findings audit handover',
     body: (
       <>
         <p>
-          <strong>File ▸ Generate Hygiene Report</strong> (<kbd>⌘P</kbd>), or the button in Hygiene. SPYDR asks where to
+          <strong>File ▸ Generate Hygiene Report</strong> (<kbd>⌘P</kbd>), or the button in Hygiene. SPYDIR asks where to
           save, writes the PDF, and opens it.
         </p>
         <h3>What is in it</h3>
@@ -392,12 +392,12 @@ export const WORKSPACES: Article[] = [
             when, which controller, which protocol, bound as whom, and the scope.
           </li>
           <li>
-            <strong>What SPYDR found</strong>: the score, the finding count, criticals and highs, objects read, and a
+            <strong>What SPYDIR found</strong>: the score, the finding count, criticals and highs, objects read, and a
             severity breakdown.
           </li>
           <li>
             <strong>What to fix first</strong>: every critical and high finding, each naming the objects involved and
-            the change SPYDR would suggest.
+            the change SPYDIR would suggest.
           </li>
           <li>
             <strong>One section per rule</strong> that fired, each introduced by what the rule looks for.
@@ -414,7 +414,7 @@ export const WORKSPACES: Article[] = [
           screen.
         </p>
         <p>
-          Nothing in it has been applied. SPYDR is read-only; the report describes a directory and proposes changes, it
+          Nothing in it has been applied. SPYDIR is read-only; the report describes a directory and proposes changes, it
           does not record work done.
         </p>
         <h3>Practicalities</h3>

@@ -7,11 +7,11 @@ import { MENU, type MenuEntry } from '../shared/menu'
  * the keyboard accelerators — but stays hidden behind the bar the renderer draws.
  */
 export const usesCustomTitleBar = (): boolean =>
-  process.platform !== 'darwin' || process.env.SPYDR_CUSTOM_TITLEBAR === '1'
+  process.platform !== 'darwin' || process.env.SPYDIR_CUSTOM_TITLEBAR === '1'
 
 function send(command: string) {
   return (): void => {
-    BrowserWindow.getFocusedWindow()?.webContents.send('spydr:menu', command)
+    BrowserWindow.getFocusedWindow()?.webContents.send('spydir:menu', command)
   }
 }
 

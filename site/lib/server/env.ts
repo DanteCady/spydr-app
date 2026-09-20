@@ -3,7 +3,7 @@
  *
  * Every one of these had a fallback that let the server start and keep answering 200s while doing
  * something quietly wrong: signing with a throwaway key nobody can verify, peppering with the
- * literal string "spydr", or encrypting licence keys with whatever the pepper happened to be. None
+ * literal string "spydir", or encrypting licence keys with whatever the pepper happened to be. None
  * of those failures are visible from the outside, which is what makes them worth refusing over.
  *
  * Development keeps the fallbacks, because a local checkout should run with no setup at all.
@@ -25,7 +25,7 @@ const REQUIRED: Requirement[] = [
   {
     name: 'LICENSE_PRIVATE_KEY',
     because:
-      'without it every activation is signed by a key generated at boot, so no installed copy of SPYDR can verify it and a restart invalidates every licence already issued',
+      'without it every activation is signed by a key generated at boot, so no installed copy of SPYDIR can verify it and a restart invalidates every licence already issued',
     check: (v) => (v.includes('BEGIN PRIVATE KEY') ? null : 'must be a PKCS#8 PEM')
   },
   {
@@ -77,7 +77,7 @@ export function requireProductionEnv(): void {
   }
 
   if (problems.length > 0) {
-    throw new Error(`SPYDR licence server is misconfigured:\n  - ${problems.join('\n  - ')}`)
+    throw new Error(`SPYDIR licence server is misconfigured:\n  - ${problems.join('\n  - ')}`)
   }
   checked = true
 }

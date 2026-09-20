@@ -4,13 +4,13 @@ export const PLAYBOOK: Article[] = [
   {
     id: 'playbook',
     section: 'Start here',
-    title: 'Making the most of SPYDR',
+    title: 'Making the most of SPYDIR',
     blurb: 'The workflows it was built around, in the order they pay off.',
     keywords: 'workflow playbook howto best practice access review offboarding cleanup routine tips',
     body: (
       <>
         <p>
-          SPYDR rewards a habit more than a session. What follows is the sequence that gets the most out of it, from a
+          SPYDIR rewards a habit more than a session. What follows is the sequence that gets the most out of it, from a
           first read to a directory you can answer questions about on demand.
         </p>
 
@@ -27,7 +27,7 @@ export const PLAYBOOK: Article[] = [
           </li>
           <li>
             <strong>Name your Tier-0 groups</strong> in Settings ▸ Hygiene rules, before you read anything into the
-            score. Out of the box SPYDR only knows Microsoft's four privileged groups. Your real crown jewels are
+            score. Out of the box SPYDIR only knows Microsoft's four privileged groups. Your real crown jewels are
             probably called something like <code>Tier0-ServerAdmins</code>, and until you say so, every path into them
             is invisible to the rules.
           </li>
@@ -39,7 +39,7 @@ export const PLAYBOOK: Article[] = [
 
         <h3>Answering "why does this person have admin?"</h3>
         <p>
-          The question SPYDR exists for. Pathfinder ▸ <em>How does an account reach a group?</em>, the person on the
+          The question SPYDIR exists for. Pathfinder ▸ <em>How does an account reach a group?</em>, the person on the
           left, the group on the right. You get every chain, and the links they share.
         </p>
         <p>
@@ -133,20 +133,20 @@ export const PLAYBOOK: Article[] = [
   {
     id: 'limits',
     section: 'Concepts',
-    title: 'What SPYDR does not see',
+    title: 'What SPYDIR does not see',
     blurb: 'The boundary of the tool, stated plainly.',
     keywords: 'limits limitations acl permissions gpo delegation adminsdholder entra azure trusts sidhistory bloodhound',
     body: (
       <>
         <p>
-          SPYDR reads group membership and account state. That covers a great deal of what goes wrong in a directory,
+          SPYDIR reads group membership and account state. That covers a great deal of what goes wrong in a directory,
           and it is not everything. Knowing the edge matters, because a clean score is not a clean bill of health.
         </p>
 
         <h3>Permissions and ACLs</h3>
         <p>
-          SPYDR does not read the security descriptor on any object. An account with <code>GenericAll</code> over an
-          OU, or write access to a group's membership, can grant itself whatever it likes — and SPYDR will show it as
+          SPYDIR does not read the security descriptor on any object. An account with <code>GenericAll</code> over an
+          OU, or write access to a group's membership, can grant itself whatever it likes — and SPYDIR will show it as
           an ordinary user, because by membership it is one. Directory ACL analysis is a different discipline; tools
           built for it, like BloodHound, exist for that reason.
         </p>
@@ -154,7 +154,7 @@ export const PLAYBOOK: Article[] = [
         <h3>Delegation and its relatives</h3>
         <p>
           Constrained and unconstrained delegation, resource-based delegation, and accounts trusted for delegation are
-          all attributes SPYDR does not currently examine. They are a real privilege-escalation path and they are
+          all attributes SPYDIR does not currently examine. They are a real privilege-escalation path and they are
           invisible here.
         </p>
 
@@ -166,7 +166,7 @@ export const PLAYBOOK: Article[] = [
 
         <h3>Resource access</h3>
         <p>
-          Which shares, mailboxes, applications or databases a group actually opens is outside the directory. SPYDR can
+          Which shares, mailboxes, applications or databases a group actually opens is outside the directory. SPYDIR can
           tell you that forty people are effectively in a group; it cannot tell you what that group unlocks.
         </p>
 
@@ -180,20 +180,20 @@ export const PLAYBOOK: Article[] = [
         <h3>Protected accounts</h3>
         <p>
           AdminSDHolder quietly rewrites the ACL of anyone in a protected group, and keeps doing so after they leave
-          it. SPYDR does not track <code>adminCount</code> or that behaviour, so an account that used to be privileged
+          it. SPYDIR does not track <code>adminCount</code> or that behaviour, so an account that used to be privileged
           may still carry its fingerprints.
         </p>
 
         <h3>Time</h3>
         <p>
-          A snapshot, not a history. SPYDR can compare the read you have open with a fresh one, and it does not know
+          A snapshot, not a history. SPYDIR can compare the read you have open with a fresh one, and it does not know
           what your directory looked like last year, who made a change, or when. That is what your audit log is for.
         </p>
 
         <h3>What that leaves</h3>
         <p>
           Within its boundary — who is in what, how they got there, what has gone stale, and where nesting has become
-          unreadable — SPYDR is thorough, and that boundary covers the questions most directories fail on first. Treat
+          unreadable — SPYDIR is thorough, and that boundary covers the questions most directories fail on first. Treat
           a good score as "membership is tidy", not as "this domain is secure".
         </p>
       </>

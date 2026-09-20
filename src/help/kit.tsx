@@ -56,7 +56,7 @@ export function Keys({ accelerator }: { accelerator: string }) {
 export function BuildInfo() {
   const [about, setAbout] = useState<AboutInfo | null>(null)
   useEffect(() => {
-    void window.spydr?.about().then(setAbout)
+    void window.spydir?.about().then(setAbout)
   }, [])
   if (!about) return <p className="muted">Build information is only available in the desktop app.</p>
   return (
@@ -106,7 +106,7 @@ export function BuildInfo() {
 export function MailButton({ to = 'support' }: { to?: 'support' | 'feedback' | 'security' }) {
   const [about, setAbout] = useState<AboutInfo | null>(null)
   useEffect(() => {
-    void window.spydr?.about().then(setAbout)
+    void window.spydir?.about().then(setAbout)
   }, [])
 
   const build = {

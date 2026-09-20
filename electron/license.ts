@@ -20,7 +20,7 @@ import {
  *
  * The server signs its answer, so a month-old cached activation can still be trusted without
  * asking again — and cannot be forged by pointing the host at something else. If the check falls
- * due while a machine is offline, SPYDR keeps working and says so rather than locking an admin out
+ * due while a machine is offline, SPYDIR keeps working and says so rather than locking an admin out
  * of a read-only tool during an incident.
  */
 
@@ -103,7 +103,7 @@ function toState(stored: Stored, message?: string): LicenceState {
       status: 'lapsed',
       message: canVerify()
         ? 'The stored licence does not match the signature it came with. Enter your key again.'
-        : 'This build cannot check licence signatures, so the stored licence was not trusted. Please reinstall SPYDR.'
+        : 'This build cannot check licence signatures, so the stored licence was not trusted. Please reinstall SPYDIR.'
     }
   }
   return {
@@ -158,7 +158,7 @@ async function callActivate(
 export async function activate(rawKey: string): Promise<LicenceState> {
   const key = normalizeKey(rawKey)
   if (!keyLooksValid(key)) {
-    return { ...UNLICENSED, message: 'That key is not in the right shape. It looks like SPYDR-XXXXX-XXXXX-XXXXX-XXXXX.' }
+    return { ...UNLICENSED, message: 'That key is not in the right shape. It looks like SPYDIR-XXXXX-XXXXX-XXXXX-XXXXX.' }
   }
   const result = await callActivate(key)
   if (!result.ok) return { ...licenceState(), message: result.error }
@@ -170,7 +170,7 @@ export async function activate(rawKey: string): Promise<LicenceState> {
     // the worst answer for someone on a locked-down machine typing a key that is actually fine.
     return {
       ...UNLICENSED,
-      message: 'Your key is good, but the licence could not be saved to this machine. Check that SPYDR can write to its application data folder.'
+      message: 'Your key is good, but the licence could not be saved to this machine. Check that SPYDIR can write to its application data folder.'
     }
   }
   cache = toState(result.stored)

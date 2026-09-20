@@ -40,7 +40,7 @@ export const CONCEPTS: Article[] = [
           that it accumulates — each admin adds a level to solve their problem, nobody removes one, and after a decade
           the chain is five deep and predates everyone in the room.
         </p>
-        <h3>What SPYDR does about it</h3>
+        <h3>What SPYDIR does about it</h3>
         <p>
           It reads every <code>member</code> link in the directory, builds the whole graph, and walks it. That is what
           Pathfinder enumerates, what the canvas draws, and what most rules examine. Effective membership becomes
@@ -49,14 +49,14 @@ export const CONCEPTS: Article[] = [
         <h3>The bit that is easy to miss</h3>
         <p>
           A user's <strong>primary group</strong> — usually Domain Users — is not stored as a membership at all. It is
-          a RID on the account, and appears in neither the group's member list nor the user's memberOf. SPYDR resolves
+          a RID on the account, and appears in neither the group's member list nor the user's memberOf. SPYDIR resolves
           it and draws it as a dashed edge, so what you see matches the token a user actually receives.
         </p>
         <h3>Where nesting stops</h3>
         <p>
           Group scope limits what can nest inside what — a global group can hold members from its own domain only, a
           domain-local group can hold members from anywhere but grants access only in its own domain, and a universal
-          group crosses the forest at the cost of replication. SPYDR shows the scope of every group in the inspector,
+          group crosses the forest at the cost of replication. SPYDIR shows the scope of every group in the inspector,
           because a nesting that looks wrong is sometimes a scope boundary someone worked around.
         </p>
       </>
@@ -139,7 +139,7 @@ export const CONCEPTS: Article[] = [
     keywords: 'icons glyphs badges privileged disabled stale colours legend types',
     body: (
       <>
-        <p>Every icon in SPYDR is chosen from what the object actually is, not just its class.</p>
+        <p>Every icon in SPYDIR is chosen from what the object actually is, not just its class.</p>
         <h3>Objects</h3>
         <dl className="kb-terms">
           <Term name="Users">
@@ -192,19 +192,19 @@ export const CONCEPTS: Article[] = [
         <h3>Paging</h3>
         <p>
           Domain controllers cap how many entries one search returns — <code>MaxPageSize</code>, 1000 by default.
-          SPYDR pages at 500 and stitches the pages together. If your DC enforces something smaller, lower the page
+          SPYDIR pages at 500 and stitches the pages together. If your DC enforces something smaller, lower the page
           size in Settings under Connection.
         </p>
         <h3>Large groups</h3>
         <p>
           A group with more than about 1500 members does not return them all at once; AD hands them back in ranges.
-          SPYDR requests each range until the group is complete, so a group of 20,000 is read correctly — it just takes
+          SPYDIR requests each range until the group is complete, so a group of 20,000 is read correctly — it just takes
           more round trips. This is also why a domain with a few enormous groups takes longer than its object count
           suggests.
         </p>
         <h3>Last logon is approximate, by design</h3>
         <p>
-          SPYDR reads <code>lastLogonTimestamp</code>, which replicates between controllers — but only when it changes
+          SPYDIR reads <code>lastLogonTimestamp</code>, which replicates between controllers — but only when it changes
           by more than a replication window, 14 days by default. An account that logged on yesterday can legitimately
           show a timestamp two weeks old. The precise attribute, <code>lastLogon</code>, is not replicated at all and
           would have to be read from every DC in the domain and reconciled to mean anything.
@@ -231,18 +231,18 @@ export const CONCEPTS: Article[] = [
     id: 'privacy',
     section: 'Operating',
     title: 'Privacy and safety',
-    blurb: 'What SPYDR reads, what it keeps, and what it never does.',
+    blurb: 'What SPYDIR reads, what it keeps, and what it never does.',
     keywords: 'security read-only password safestorage telemetry session consent encryption permissions',
     body: (
       <>
         <h3>Read-only, structurally</h3>
         <p>
-          SPYDR issues searches. It contains no add, modify, or delete operation against LDAP, so no bug and no misclick
+          SPYDIR issues searches. It contains no add, modify, or delete operation against LDAP, so no bug and no misclick
           can change your directory. Suggested fixes are text for you to carry out elsewhere, deliberately.
         </p>
         <h3>What it needs from you</h3>
         <p>
-          An ordinary domain user. Reading the directory requires no special privilege, and SPYDR asks for none. If you
+          An ordinary domain user. Reading the directory requires no special privilege, and SPYDIR asks for none. If you
           are being asked to hand a tool Domain Admin to read group membership, something is wrong with the tool.
         </p>
         <h3>Passwords</h3>
@@ -254,7 +254,7 @@ export const CONCEPTS: Article[] = [
         <h3>What lands on disk</h3>
         <p>
           Only what you agree to. Session restore needs a copy of the snapshot on this machine — compressed, and
-          encrypted with the OS keychain where one exists. SPYDR asks once, and declining removes anything already
+          encrypted with the OS keychain where one exists. SPYDIR asks once, and declining removes anything already
           written. Reports go where you choose to save them.
         </p>
         <h3>What does leave the machine, and when</h3>
@@ -295,7 +295,7 @@ export const CONCEPTS: Article[] = [
             was never distributed. Install the CA certificate, or tick trust self-signed for that connection.
           </Term>
           <Term name="Connection refused, or a timeout">
-            Nothing is listening where SPYDR looked. Check the port matches the protocol — 636 for LDAPS, 389 for LDAP
+            Nothing is listening where SPYDIR looked. Check the port matches the protocol — 636 for LDAPS, 389 for LDAP
             and StartTLS — that the host really is a domain controller, and that a firewall is not in the way. Raise
             the connect timeout in Settings for a slow link.
           </Term>
@@ -307,7 +307,7 @@ export const CONCEPTS: Article[] = [
             Usually an enormous group being read in ranges, or a DC under load. Lower the page size, turn off
             computers, or narrow the base DN. A slow link benefits more from fewer round trips than from smaller pages.
           </Term>
-          <Term name="Run SPYDR as the desktop app">
+          <Term name="Run SPYDIR as the desktop app">
             The interface is running without its privileged half — in a browser, or from a broken build. LDAP binding
             lives in the desktop application only.
           </Term>

@@ -1,4 +1,4 @@
-# Releasing SPYDR
+# Releasing SPYDIR
 
 ## Building installers locally
 
@@ -36,7 +36,7 @@ To ship, set these as CI secrets:
 | Windows | `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD` | code-signing certificate (EV recommended) |
 
 Then set `notarize: true` under `mac:` in `electron-builder.yml`. macOS entitlements live in
-`build/entitlements.mac.plist`; SPYDR only needs the network *client* entitlement, since it makes
+`build/entitlements.mac.plist`; SPYDIR only needs the network *client* entitlement, since it makes
 outbound LDAP connections and never listens.
 
 ## Version and branch flow
@@ -83,7 +83,7 @@ Categories are the workspaces plus a general bucket: `Directory`, `Hygiene`, `Pa
 `Timeline`, `Reports`, `Settings`, `Platform`. Bullets are `New`, `Improved` or `Fixed` only. An
 unknown category or a malformed date fails the build rather than publishing something odd.
 
-Write them for the person using SPYDR, not from the commit log. "Re-crawl reads the directory
+Write them for the person using SPYDIR, not from the commit log. "Re-crawl reads the directory
 again with the credentials already in memory" is a release note; "refactor ingest pipeline" is not.
 
 `npm test` fails if `package.json` and the newest notes disagree, if a file is missing its notes,

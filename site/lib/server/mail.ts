@@ -41,7 +41,7 @@ function smtp(): Transporter | null {
 }
 
 export function mailFrom(): string {
-  return process.env.MAIL_FROM ?? 'SPYDR <keys@spydir.io>'
+  return process.env.MAIL_FROM ?? 'SPYDIR <keys@spydir.io>'
 }
 
 /** Whether anything is configured to send. Used to refuse a flow rather than half-run it. */

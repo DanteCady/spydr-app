@@ -2,7 +2,7 @@ import { RecoverKey } from '@/components/RecoverKey'
 
 export const metadata = {
   title: 'Find your licence key',
-  description: 'Have your SPYDR licence key sent again to the address that owns it.'
+  description: 'Have your SPYDIR licence key sent again to the address that owns it.'
 }
 
 /**
@@ -31,7 +31,7 @@ export default function KeyPage() {
       <h2>Do I need a key at all?</h2>
       <p>
         To read your own directory, yes. To look around the sample directory, no — that opens without one, from the
-        button on SPYDR&rsquo;s first screen.
+        button on SPYDIR&rsquo;s first screen.
       </p>
     </article>
   )

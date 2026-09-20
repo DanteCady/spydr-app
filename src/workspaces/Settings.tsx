@@ -97,8 +97,8 @@ export function Settings() {
   const [sendNote, setSendNote] = useState<string | null>(null)
 
   useEffect(() => {
-    void window.spydr?.about().then(setAbout)
-    void window.spydr?.timelineStats().then(setHistoryStats)
+    void window.spydir?.about().then(setAbout)
+    void window.spydir?.timelineStats().then(setHistoryStats)
   }, [])
 
   const { hygiene, connection, report, privacy, appearance, updates } = settings
@@ -118,7 +118,7 @@ export function Settings() {
   const checkUpdates = async () => {
     setChecking(true)
     try {
-      setUpdate((await window.spydr?.checkForUpdate()) ?? null)
+      setUpdate((await window.spydir?.checkForUpdate()) ?? null)
     } finally {
       setChecking(false)
     }
@@ -145,7 +145,7 @@ export function Settings() {
             <h2>Hygiene rules</h2>
             <p className="set-intro">
               Thresholds the rules are measured against. Changing one re-scores the directory that is already open —
-              SPYDR does not need to read the domain controller again.
+              SPYDIR does not need to read the domain controller again.
             </p>
             <Row label="Stale after" hint="Days without a logon before an account counts as stale.">
               <NumberField
@@ -335,7 +335,7 @@ export function Settings() {
           <>
             <h2>Privacy & session</h2>
             <p className="set-intro">
-              SPYDR reads the directory and nothing else. Nothing is sent anywhere, no telemetry is collected, and
+              SPYDIR reads the directory and nothing else. Nothing is sent anywhere, no telemetry is collected, and
               passwords are never written to disk.
             </p>
             <Row label="Keep directories on this computer" hint="Needed for Restore last session. Compressed, and encrypted with the OS keychain where one exists.">
@@ -355,7 +355,7 @@ export function Settings() {
             <Row label="On quit">
               <Toggle
                 checked={privacy.forgetOnQuit}
-                label="Forget the saved session when SPYDR closes"
+                label="Forget the saved session when SPYDIR closes"
                 onChange={(v) => updateSettings({ privacy: { forgetOnQuit: v } })}
               />
             </Row>
@@ -385,7 +385,7 @@ export function Settings() {
                       setPayload(null)
                       return
                     }
-                    void window.spydr?.telemetryPreview().then(setPayload)
+                    void window.spydir?.telemetryPreview().then(setPayload)
                   }}
                 >
                   {payload ? 'Hide payload' : 'Show payload'}
@@ -395,7 +395,7 @@ export function Settings() {
                     type="button"
                     onClick={() => {
                       setSendNote('Sending…')
-                      void window.spydr?.telemetrySend().then((r) => setSendNote(r.message))
+                      void window.spydir?.telemetrySend().then((r) => setSendNote(r.message))
                     }}
                   >
                     Send one now
@@ -421,7 +421,7 @@ export function Settings() {
                   className="danger"
                   disabled={!historyStats?.entries}
                   onClick={() => {
-                    void window.spydr?.timelineClear().then(() => window.spydr?.timelineStats().then(setHistoryStats))
+                    void window.spydir?.timelineClear().then(() => window.spydir?.timelineStats().then(setHistoryStats))
                   }}
                 >
                   Clear history
@@ -438,16 +438,16 @@ export function Settings() {
                   onClick={() => {
                     // A running app whose background process predates the feature has no handler to
                     // call; saying so beats a button that silently does nothing.
-                    if (!window.spydr?.timelineSample) {
-                      setSampleNote('Unavailable in this running build — restart SPYDR.')
+                    if (!window.spydir?.timelineSample) {
+                      setSampleNote('Unavailable in this running build — restart SPYDIR.')
                       return
                     }
                     setSampleNote('Generating…')
-                    window.spydr
+                    window.spydir
                       .timelineSample()
                       .then((r) => {
                         setSampleNote(`${r.created} entries created${r.replaced ? `, ${r.replaced} replaced` : ''}`)
-                        void window.spydr?.timelineStats().then(setHistoryStats)
+                        void window.spydir?.timelineStats().then(setHistoryStats)
                       })
                       .catch((err: unknown) => {
                         setSampleNote(err instanceof Error ? err.message : 'Could not generate the sample timeline.')
@@ -524,9 +524,9 @@ export function Settings() {
           <>
             <h2>Licence</h2>
             <p className="set-intro">
-              SPYDR is free. The key exists so there is a count of who is using it, and somewhere for paid capability
+              SPYDIR is free. The key exists so there is a count of who is using it, and somewhere for paid capability
               to attach later. It is checked when you enter it and about once a month after that — and if that check
-              falls due while you are offline, SPYDR keeps working and says so rather than locking you out mid-incident.
+              falls due while you are offline, SPYDIR keeps working and says so rather than locking you out mid-incident.
             </p>
             <Row label="Status">
               <span className="muted">{describeLicence(licence)}</span>
@@ -536,7 +536,7 @@ export function Settings() {
                 <Row label="Key">
                   <span className="muted mono-hint">{licence.keyHint}</span>
                 </Row>
-                <Row label="Tier" hint="Free carries every feature SPYDR has today.">
+                <Row label="Tier" hint="Free carries every feature SPYDIR has today.">
                   <span className="muted">{licence.tier}</span>
                 </Row>
                 <Row label="Checked" hint={licence.notAfter ? `Next check due ${new Date(licence.notAfter).toLocaleDateString()}` : undefined}>
@@ -564,7 +564,7 @@ export function Settings() {
                   <input
                     className="wide"
                     value={keyDraft}
-                    placeholder="SPYDR-XXXXX-XXXXX-XXXXX-XXXXX"
+                    placeholder="SPYDIR-XXXXX-XXXXX-XXXXX-XXXXX"
                     spellCheck={false}
                     onChange={(e) => setKeyDraft(tidyKeyInput(e.target.value))}
                     onBlur={() => setKeyDraft((current) => (current ? normalizeKey(current) : current))}
@@ -588,7 +588,7 @@ export function Settings() {
 
         {section === 'about' ? (
           <>
-            <h2>About SPYDR</h2>
+            <h2>About SPYDIR</h2>
             <p className="set-intro">A read-only Active Directory explorer. It never writes to the directory.</p>
             <dl className="kv">
               <dt>Version</dt>
@@ -611,7 +611,7 @@ export function Settings() {
 
             <h3>Updates</h3>
             <p className="set-intro">
-              SPYDR checks for updates only when you give it a feed to ask, and it never installs anything on its own —
+              SPYDIR checks for updates only when you give it a feed to ask, and it never installs anything on its own —
               it tells you what is out there and links to it. A GitHub releases API URL works as-is.
             </p>
             <Row label="Update feed" hint="https only. Leave empty to disable update checks entirely.">
@@ -625,7 +625,7 @@ export function Settings() {
             <Row label="On start">
               <Toggle
                 checked={updates.checkOnStart}
-                label="Check when SPYDR opens"
+                label="Check when SPYDIR opens"
                 onChange={(v) => updateSettings({ updates: { checkOnStart: v } })}
               />
             </Row>

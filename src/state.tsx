@@ -11,7 +11,7 @@ import type { SessionMeta } from './vite-env'
 
 export type Theme = 'dark' | 'light' | 'vivid' | 'minimal' | 'minimal-dark'
 
-/** Whether the user has agreed to SPYDR keeping a copy of a live directory on this computer. */
+/** Whether the user has agreed to SPYDIR keeping a copy of a live directory on this computer. */
 export type SessionConsent = 'yes' | 'no' | 'unset'
 
 export const THEMES: Theme[] = ['dark', 'light', 'vivid', 'minimal', 'minimal-dark']
@@ -99,7 +99,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [reportStatus, setReportStatus] = useState<string | null>(null)
   // Read synchronously, so the first paint is already in the right theme. Outside the desktop app
   // there is no store to read, and the defaults stand.
-  const [settings, setSettings] = useState<AppSettings>(() => window.spydr?.settingsSync() ?? DEFAULT_SETTINGS)
+  const [settings, setSettings] = useState<AppSettings>(() => window.spydir?.settingsSync() ?? DEFAULT_SETTINGS)
 
   const theme = settings.appearance.theme
   const sessionConsent: SessionConsent = settings.privacy.sessionConsent
@@ -107,16 +107,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const updateSettings = useCallback((patch: SettingsPatch) => {
     // Applied locally first so a control never lags a keystroke behind; main is the final word.
     setSettings((current) => applyPatch(current, patch))
-    void window.spydr?.setSettings(patch).then((saved) => saved && setSettings(saved))
+    void window.spydir?.setSettings(patch).then((saved) => saved && setSettings(saved))
   }, [])
 
   const resetSettings = useCallback(() => {
     setSettings(DEFAULT_SETTINGS)
-    void window.spydr?.resetSettings().then((saved) => saved && setSettings(saved))
+    void window.spydir?.resetSettings().then((saved) => saved && setSettings(saved))
   }, [])
 
   // Another window may have changed them.
-  useEffect(() => window.spydr?.onSettings(setSettings), [])
+  useEffect(() => window.spydir?.onSettings(setSettings), [])
 
   /**
    * On a first run, record the version being installed as already read.
@@ -127,7 +127,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
    */
   useEffect(() => {
     if (settings.updates.lastSeenRelease) return
-    void window.spydr?.about().then((info) => {
+    void window.spydir?.about().then((info) => {
       if (info?.version) updateSettings({ updates: { lastSeenRelease: info.version } })
     })
   }, [settings.updates.lastSeenRelease, updateSettings])
@@ -138,12 +138,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Which workspaces get used, by name. Collected always, sent only if telemetry is on.
   useEffect(() => {
-    window.spydr?.noteWorkspace?.(workspace)
+    window.spydir?.noteWorkspace?.(workspace)
   }, [workspace])
 
   useEffect(() => {
-    void window.spydr?.sessionPeek().then(setSavedSession)
-    void window.spydr?.licence().then(setLicence)
+    void window.spydir?.sessionPeek().then(setSavedSession)
+    void window.spydir?.licence().then(setLicence)
   }, [])
 
   /**
@@ -155,9 +155,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const started = Date.now()
     let next: LicenceState | undefined
     try {
-      next = await window.spydr?.activate(key)
+      next = await window.spydir?.activate(key)
       // No bridge at all means this is a browser tab, not the app. Say so rather than sitting there.
-      if (!next) next = { ...UNLICENSED, message: 'Activation is only available in the SPYDR app.' }
+      if (!next) next = { ...UNLICENSED, message: 'Activation is only available in the SPYDIR app.' }
     } catch {
       // A rejection from main would otherwise never reach the screen: it skips setLicence, so the
       // form comes back unchanged and the person is left with no idea why nothing happened.
@@ -175,7 +175,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
    * inside settings.
    */
   const deactivate = useCallback(async () => {
-    const next = await window.spydr?.deactivate()
+    const next = await window.spydir?.deactivate()
     if (next) setLicence(next)
     setWorkspace('directory')
   }, [])
@@ -209,12 +209,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const ingestLdap = useCallback(
     async (input: ConnectionInput) => {
-      if (!window.spydr?.ingest) {
-        throw new Error('Run SPYDR as the desktop app to bind to Active Directory.')
+      if (!window.spydir?.ingest) {
+        throw new Error('Run SPYDIR as the desktop app to bind to Active Directory.')
       }
-      const s = await window.spydr.ingest(input)
+      const s = await window.spydir.ingest(input)
       applySnapshot(s)
-      setCanRefresh(window.spydr.canRefresh?.() ?? false)
+      setCanRefresh(window.spydir.canRefresh?.() ?? false)
       setRefreshStatus(null)
     },
     [applySnapshot]
@@ -225,11 +225,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
    * change landed, and being thrown back to the domain root would defeat that.
    */
   const refreshDirectory = useCallback(async () => {
-    if (!window.spydr?.refresh || !snapshot) return
+    if (!window.spydir?.refresh || !snapshot) return
     setRefreshing(true)
     setRefreshStatus(null)
     try {
-      const next = await window.spydr.refresh()
+      const next = await window.spydir.refresh()
       setRefreshStatus(describeDiff(diffSnapshots(snapshot, next)))
       applySnapshot(next, { workspace, selectedId, containerDn })
     } catch (err) {
@@ -243,18 +243,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // still be restored. Forgetting it is a separate, explicit action.
   const disconnect = useCallback(() => {
     // The password in main goes with the connection.
-    void window.spydr?.forgetBind?.()
+    void window.spydir?.forgetBind?.()
     setCanRefresh(false)
     setRefreshStatus(null)
     setSnapshot(null)
     setSelectedId(null)
     setSearch('')
     setActiveFinding(null)
-    void window.spydr?.sessionPeek().then(setSavedSession)
+    void window.spydir?.sessionPeek().then(setSavedSession)
   }, [])
 
   const restoreSession = useCallback(async () => {
-    const saved = await window.spydr?.sessionRestore()
+    const saved = await window.spydir?.sessionRestore()
     if (!saved) {
       setSavedSession(null)
       return
@@ -263,7 +263,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [applySnapshot])
 
   const forgetSession = useCallback(async () => {
-    await window.spydr?.sessionClear()
+    await window.spydir?.sessionClear()
     setSavedSession(null)
   }, [])
 
@@ -275,14 +275,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const generateReport = useCallback(async () => {
     if (!snapshot) return
-    if (!window.spydr?.report) {
-      setReportStatus('Run SPYDR as the desktop app to generate a report.')
+    if (!window.spydir?.report) {
+      setReportStatus('Run SPYDIR as the desktop app to generate a report.')
       return
     }
     setReportBusy(true)
     setReportStatus(null)
     try {
-      const result = await window.spydr.report(snapshot)
+      const result = await window.spydir.report(snapshot)
       setReportStatus(result ? `Saved ${result.pages} pages to ${result.path}` : null)
     } catch (err) {
       setReportStatus(err instanceof Error ? err.message : 'Could not write the report.')
@@ -387,12 +387,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // real read and the profile needed to reconnect — and the sample is the one thing on screen that
   // is always one call away from being rebuilt. Looking at it must not cost someone their work.
   useEffect(() => {
-    if (!snapshot || !window.spydr?.sessionSave) return
+    if (!snapshot || !window.spydir?.sessionSave) return
     if (!mayPersist(snapshot.source, sessionConsent)) return
     const id = window.setTimeout(() => {
-      void window.spydr
+      void window.spydir
         ?.sessionSave({ snapshot, view: { workspace, selectedId, containerDn } })
-        .then(() => window.spydr?.sessionPeek().then(setSavedSession))
+        .then(() => window.spydir?.sessionPeek().then(setSavedSession))
     }, 600)
     return () => window.clearTimeout(id)
   }, [snapshot, workspace, selectedId, containerDn, sessionConsent])

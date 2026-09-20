@@ -9,7 +9,7 @@ import type { LicenceState } from '@shared/license'
 import type { TelemetryPayload } from '@shared/telemetry'
 import type { UpdateCheck } from '../electron/updates'
 
-export interface SpydrApi {
+export interface SpydirApi {
   windowsPrefill: () => Promise<WindowsPrefill>
   discoverDcs: (domain: string) => Promise<DcRecord[]>
   testConnection: (input: ConnectionInput) => Promise<TestConnectionResult>
@@ -49,7 +49,7 @@ export type { ReportResult, SessionMeta, SessionProfile, SessionView, UpdateChec
 
 declare global {
   interface Window {
-    spydr?: SpydrApi
+    spydir?: SpydirApi
   }
 }
 

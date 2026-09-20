@@ -14,18 +14,21 @@ export function newKey(): string {
   const bytes = randomBytes(20)
   let out = ''
   for (const b of bytes) out += ALPHABET[b % ALPHABET.length]
-  return `SPYDR-${out.slice(0, 5)}-${out.slice(5, 10)}-${out.slice(10, 15)}-${out.slice(15, 20)}`
+  return `SPYDIR-${out.slice(0, 5)}-${out.slice(5, 10)}-${out.slice(10, 15)}-${out.slice(15, 20)}`
 }
 
 /**
  * The canonical form, matching the desktop app's normaliser exactly — a key pasted with line
  * breaks, odd spaces or missing dashes has to hash to the same value as the one we issued.
  */
+/** Must match KEY_PREFIX in shared/license.ts — the two sides hash the same canonical string. */
+export const KEY_PREFIX = 'SPYDIR'
+
 export function normalizeKey(raw: string): string {
   const characters = raw.toUpperCase().replace(/[^0-9A-Z]/g, '')
-  const body = characters.startsWith('SPYDR') ? characters.slice(5) : characters
+  const body = characters.startsWith(KEY_PREFIX) ? characters.slice(KEY_PREFIX.length) : characters
   const groups = body.slice(0, 20).match(/.{1,5}/g)
-  return groups ? `SPYDR-${groups.join('-')}` : 'SPYDR-'
+  return groups ? `SPYDIR-${groups.join('-')}` : 'SPYDIR-'
 }
 
 /** Keys are stored hashed, so a copy of the database is not a pile of working licences. */
@@ -34,7 +37,7 @@ export function hashKey(key: string): string {
 }
 
 export function keyLooksValid(key: string): boolean {
-  return /^SPYDR-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/.test(
+  return /^SPYDIR-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/.test(
     normalizeKey(key)
   )
 }

@@ -13,7 +13,7 @@ function blocks(report: ReturnType<typeof buildReport>) {
 describe('buildReport', () => {
   it('opens with the overview and closes with the appendix', () => {
     const report = buildReport(snapshot)
-    expect(report.sections[0].heading).toBe('What SPYDR found')
+    expect(report.sections[0].heading).toBe('What SPYDIR found')
     expect(report.sections[1].heading).toBe('What to fix first')
     expect(report.sections.at(-1)?.heading).toBe('Scope and method')
   })
@@ -73,6 +73,6 @@ describe('buildReport', () => {
 describe('reportFileName', () => {
   it('is dated and safe for a filesystem', () => {
     const name = reportFileName({ ...snapshot, domain: 'harbor view/logistics' }, new Date('2026-09-18T12:00:00Z'))
-    expect(name).toBe('SPYDR-harbor-view-logistics-hygiene-2026-09-18.pdf')
+    expect(name).toBe('SPYDIR-harbor-view-logistics-hygiene-2026-09-18.pdf')
   })
 })

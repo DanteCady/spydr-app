@@ -65,7 +65,7 @@ export async function writeReportPdf(
     priority: settings.prioritySection
   })
   const html = renderReportHtml(report, fontCss(), settings.paper)
-  const tmp = join(app.getPath('temp'), `spydr-report-${randomUUID()}.html`)
+  const tmp = join(app.getPath('temp'), `spydir-report-${randomUUID()}.html`)
   await writeFile(tmp, html, 'utf8')
 
   const win = new BrowserWindow({

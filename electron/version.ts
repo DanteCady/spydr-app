@@ -13,7 +13,7 @@ export function appVersion(): string {
   for (const dir of [app.getAppPath(), process.cwd(), join(__dirname, '../..')]) {
     try {
       const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as { name?: string; version?: string }
-      if (pkg.name === 'spydr' && pkg.version) return pkg.version
+      if (pkg.name === 'spydir' && pkg.version) return pkg.version
     } catch {
       /* try the next candidate */
     }

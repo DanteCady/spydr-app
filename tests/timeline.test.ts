@@ -58,7 +58,7 @@ describe('buildEntry', () => {
     expect(entry.detail?.membershipsRemoved).toHaveLength(1)
   })
 
-  it('defaults to observed, leaving room for changes SPYDR itself applies', () => {
+  it('defaults to observed, leaving room for changes SPYDIR itself applies', () => {
     expect(buildEntry({ snapshot: base, diff: null, scope, id: 'e3' }).source).toBe('observed')
     expect(buildEntry({ snapshot: base, diff: null, scope, id: 'e4', source: 'applied' }).source).toBe('applied')
   })

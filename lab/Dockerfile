@@ -1,4 +1,4 @@
-# Samba Active Directory domain controller for local Spydr testing. arm64 and amd64.
+# Samba Active Directory domain controller for local Spydir testing. arm64 and amd64.
 FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \

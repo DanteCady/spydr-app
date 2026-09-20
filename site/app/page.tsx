@@ -33,7 +33,7 @@ export default function Home() {
             is lying to you.
           </h1>
           <p className="lede">
-            Not deliberately. It only shows one level of a structure that is many levels deep. SPYDR reads the whole
+            Not deliberately. It only shows one level of a structure that is many levels deep. SPYDIR reads the whole
             membership graph and tells you who is <em>actually</em> inside a group, how they got there, and which single
             change would take them out.
           </p>
@@ -77,7 +77,7 @@ export default function Home() {
               </ul>
             </div>
             <div className="compare-col accent">
-              <p className="mono label">SPYDR · who is really inside</p>
+              <p className="mono label">SPYDIR · who is really inside</p>
               <ul className="rows">
                 <li>
                   Eve Walsh <span className="tag">direct</span>
@@ -98,7 +98,7 @@ export default function Home() {
       </section>
 
       <section id="inside" className="band">
-        <Marker n="02" label="Inside SPYDR" />
+        <Marker n="02" label="Inside SPYDIR" />
 
         <article className="feature">
           <div className="feature-text">
@@ -141,7 +141,7 @@ export default function Home() {
           <div className="feature-text">
             <h3>What changed since you last looked</h3>
             <p>
-              Read the directory again and SPYDR records the difference: objects added and removed, memberships gained
+              Read the directory again and SPYDIR records the difference: objects added and removed, memberships gained
               and lost with both ends named, findings opened and closed, and where the score went. Reads that change
               nothing leave no trace.
             </p>
@@ -194,7 +194,7 @@ export default function Home() {
           </div>
           <div>
             <dt>Binds as</dt>
-            <dd>an ordinary domain user. Reading needs no privilege and SPYDR asks for none</dd>
+            <dd>an ordinary domain user. Reading needs no privilege and SPYDIR asks for none</dd>
           </div>
           <div>
             <dt>Transport</dt>
@@ -233,7 +233,7 @@ export default function Home() {
           <div>
             <h2>The boundary, stated plainly.</h2>
             <p>
-              SPYDR reads group membership and account state. That covers most of what goes wrong in a directory, and it
+              SPYDIR reads group membership and account state. That covers most of what goes wrong in a directory, and it
               is not everything. A clean score means membership is tidy — not that a domain is secure.
             </p>
             <p>If a page will not tell you what a tool cannot do, be careful with the rest of what it tells you.</p>
@@ -250,11 +250,11 @@ export default function Home() {
             </li>
             <li>
               <span className="mono">Delegation</span> Constrained, unconstrained and resource-based delegation are real
-              escalation paths and are invisible to SPYDR.
+              escalation paths and are invisible to SPYDIR.
             </li>
             <li>
               <span className="mono">Group Policy</span> What a GPO grants, and where it is linked, is outside what
-              SPYDR reads.
+              SPYDIR reads.
             </li>
             <li>
               <span className="mono">Resources</span> It can tell you forty people are inside a group. It cannot tell

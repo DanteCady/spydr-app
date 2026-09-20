@@ -15,7 +15,7 @@ export const SITE_URL = `https://${SITE_DOMAIN}`
 
 /** Something is wrong, or something is unclear. */
 export const SUPPORT_EMAIL = `support@${SITE_DOMAIN}`
-/** An idea, a request, or an opinion about how SPYDR works. */
+/** An idea, a request, or an opinion about how SPYDIR works. */
 export const FEEDBACK_EMAIL = `feedback@${SITE_DOMAIN}`
 /** A vulnerability. Read first, and answered before anything else. */
 export const SECURITY_EMAIL = `security@${SITE_DOMAIN}`
@@ -49,17 +49,17 @@ export function mailTo(address: string, options: MailOptions = {}): string {
     ...(facts.length > 0 ? ['—', ...facts] : [])
   ].join('\n')
 
-  const subject = options.subject ?? 'SPYDR'
+  const subject = options.subject ?? 'SPYDIR'
   return `mailto:${address}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
 
 export function supportMailto(options: Omit<MailOptions, 'prompts'> = {}): string {
-  return mailTo(SUPPORT_EMAIL, { subject: 'SPYDR support', ...options })
+  return mailTo(SUPPORT_EMAIL, { subject: 'SPYDIR support', ...options })
 }
 
 export function feedbackMailto(options: Omit<MailOptions, 'prompts'> = {}): string {
   return mailTo(FEEDBACK_EMAIL, {
-    subject: 'SPYDR feedback',
+    subject: 'SPYDIR feedback',
     // Asking for the problem rather than the feature, in the shape of the message itself.
     prompts: ['What you were trying to do:', 'What would have made it easier:'],
     ...options
@@ -68,7 +68,7 @@ export function feedbackMailto(options: Omit<MailOptions, 'prompts'> = {}): stri
 
 export function securityMailto(options: Omit<MailOptions, 'prompts'> = {}): string {
   return mailTo(SECURITY_EMAIL, {
-    subject: 'SPYDR security report',
+    subject: 'SPYDIR security report',
     prompts: ['What you found:', 'How to reproduce it:', 'What it would let someone do:'],
     ...options
   })

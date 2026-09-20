@@ -27,7 +27,7 @@ function Item({ entry, platform, onRun }: { entry: MenuEntry; platform: string; 
       type="button"
       className="menu-item"
       onClick={() => {
-        if (entry.role) void window.spydr?.execRole?.(entry.role)
+        if (entry.role) void window.spydir?.execRole?.(entry.role)
         else if (entry.command) emitMenuCommand(entry.command)
         onRun()
       }}
@@ -95,7 +95,7 @@ export function TitleBar({ platform }: { platform: string }) {
           </div>
         ))}
       </nav>
-      <span className="titlebar-title">SPYDR</span>
+      <span className="titlebar-title">SPYDIR</span>
     </div>
   )
 }

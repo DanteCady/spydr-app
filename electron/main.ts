@@ -38,7 +38,7 @@ import {
 import type { MenuRole } from '../shared/menu'
 import type { ConnectionInput, DirectorySnapshot } from '../shared/types'
 
-app.setName('SPYDR')
+app.setName('SPYDIR')
 
 const TITLE_BAR_HEIGHT = 36
 
@@ -86,9 +86,9 @@ function appIcon(): Electron.NativeImage | undefined {
 }
 
 /**
- * The only schemes SPYDR will hand to the operating system.
+ * The only schemes SPYDIR will hand to the operating system.
  *
- * openExternal gives a URL to whatever the OS has registered for it, and SPYDR is typically run by
+ * openExternal gives a URL to whatever the OS has registered for it, and SPYDIR is typically run by
  * someone holding domain administrator credentials. On Windows a `file://` or `smb://` link to an
  * attacker's host makes the machine authenticate outbound and leak that account's NetNTLM hash
  * without a prompt; `ms-msdt:` and `search-ms:` are the same shape of problem. Nothing in this app
@@ -118,7 +118,7 @@ function createWindow(): void {
     minWidth: 1100,
     minHeight: 720,
     backgroundColor: '#101216',
-    title: 'SPYDR',
+    title: 'SPYDIR',
     show: false,
     // Where the renderer draws the bar, the OS still paints the window buttons over it.
     ...(custom
@@ -201,12 +201,12 @@ function validConnection(input: unknown): input is ConnectionInput {
 const REJECTED = 'That connection is not valid. Check the host, port and protocol.'
 
 function registerIpc(): void {
-  ipcMain.handle('spydr:prefill', () => windowsPrefill())
-  ipcMain.handle('spydr:discover', async (_evt, domain: string) => {
+  ipcMain.handle('spydir:prefill', () => windowsPrefill())
+  ipcMain.handle('spydir:discover', async (_evt, domain: string) => {
     if (!isHostish(domain)) return []
     return discoverDcs(domain)
   })
-  ipcMain.handle('spydr:test', async (_evt, input: ConnectionInput) => {
+  ipcMain.handle('spydir:test', async (_evt, input: ConnectionInput) => {
     if (!validConnection(input)) throw new Error(REJECTED)
     return testConnection(input)
   })
@@ -222,7 +222,7 @@ function registerIpc(): void {
     }
   }
 
-  ipcMain.handle('spydr:ingest', async (_evt, input: ConnectionInput) => {
+  ipcMain.handle('spydir:ingest', async (_evt, input: ConnectionInput) => {
     if (!validConnection(input)) throw new Error(REJECTED)
     const snapshot = await ingestDirectory(input, tuning())
     // toProfile strips the password. Deriving the profile here, rather than accepting one over
@@ -235,31 +235,31 @@ function registerIpc(): void {
   })
   // Read the same directory again with the credentials already in memory. The renderer asks; it
   // never holds the password to ask with.
-  ipcMain.handle('spydr:refresh', async () => {
+  ipcMain.handle('spydir:refresh', async () => {
     if (!liveBind) throw new Error('No live connection to refresh. Connect to the directory again.')
     const snapshot = await ingestDirectory(liveBind, tuning())
     noteRead(snapshot)
     return snapshot
   })
-  ipcMain.on('spydr:can-refresh', (evt) => {
+  ipcMain.on('spydir:can-refresh', (evt) => {
     evt.returnValue = liveBind !== null
   })
-  ipcMain.handle('spydr:forget-bind', () => {
+  ipcMain.handle('spydir:forget-bind', () => {
     liveBind = null
     lastProfile = null
     lastRead = null
   })
-  ipcMain.handle('spydr:session:peek', () => loadSessionMeta())
-  ipcMain.handle('spydr:session:restore', () => loadSession())
+  ipcMain.handle('spydir:session:peek', () => loadSessionMeta())
+  ipcMain.handle('spydir:session:restore', () => loadSession())
   // There is one session slot. The sample must never take it: it would overwrite a real read and
   // the profile needed to reconnect, and it can always be rebuilt from the fixture anyway. The
   // renderer already declines to ask, and this is the half that holds if it ever stops.
-  ipcMain.handle('spydr:session:save', (_evt, payload: { snapshot: DirectorySnapshot; view: SessionView }) => {
+  ipcMain.handle('spydir:session:save', (_evt, payload: { snapshot: DirectorySnapshot; view: SessionView }) => {
     if (payload?.snapshot?.source !== 'ldap') return
     return saveSession(payload.snapshot, lastProfile, payload.view)
   })
-  ipcMain.handle('spydr:session:clear', () => clearSession())
-  ipcMain.handle('spydr:report', async (evt, snapshot: DirectorySnapshot): Promise<ReportResult | null> => {
+  ipcMain.handle('spydir:session:clear', () => clearSession())
+  ipcMain.handle('spydir:report', async (evt, snapshot: DirectorySnapshot): Promise<ReportResult | null> => {
     const win = BrowserWindow.fromWebContents(evt.sender)
     const options = {
       title: 'Save hygiene report',
@@ -275,26 +275,26 @@ function registerIpc(): void {
     if (getSettings().report.openAfterSave) void shell.openPath(result.path)
     return result
   })
-  ipcMain.on('spydr:settings:sync', (evt) => {
+  ipcMain.on('spydir:settings:sync', (evt) => {
     // Synchronous so the first paint already has the right theme; writes are async.
     evt.returnValue = getSettings()
   })
-  ipcMain.handle('spydr:settings:set', (_evt, patch: SettingsPatch) => updateSettings(patch))
-  ipcMain.handle('spydr:settings:reset', () => resetSettings())
-  ipcMain.handle('spydr:updates:check', (): Promise<UpdateCheck> => checkForUpdate(getSettings().updates.feedUrl, appVersion()))
-  ipcMain.handle('spydr:timeline:list', (_evt, domain?: string) => listEntries(domain))
-  ipcMain.handle('spydr:timeline:get', (_evt, id: string) => getEntry(id))
-  ipcMain.handle('spydr:timeline:object', (_evt, objectGuid: string) => objectHistory(objectGuid))
-  ipcMain.handle('spydr:timeline:clear', () => clearTimeline())
-  ipcMain.handle('spydr:timeline:sample', () => generateSampleTimeline())
-  ipcMain.handle('spydr:timeline:stats', () => ({ entries: countEntries(), path: timelinePath() }))
-  ipcMain.handle('spydr:telemetry:preview', () => currentPayload())
-  ipcMain.handle('spydr:telemetry:send', () => sendNow())
-  ipcMain.on('spydr:telemetry:workspace', (_evt, workspace: string) => noteWorkspace(workspace as never))
-  ipcMain.handle('spydr:licence:state', () => licenceState())
-  ipcMain.handle('spydr:licence:activate', (_evt, key: string) => activate(key))
-  ipcMain.handle('spydr:licence:deactivate', () => deactivate())
-  ipcMain.handle('spydr:about', () => ({
+  ipcMain.handle('spydir:settings:set', (_evt, patch: SettingsPatch) => updateSettings(patch))
+  ipcMain.handle('spydir:settings:reset', () => resetSettings())
+  ipcMain.handle('spydir:updates:check', (): Promise<UpdateCheck> => checkForUpdate(getSettings().updates.feedUrl, appVersion()))
+  ipcMain.handle('spydir:timeline:list', (_evt, domain?: string) => listEntries(domain))
+  ipcMain.handle('spydir:timeline:get', (_evt, id: string) => getEntry(id))
+  ipcMain.handle('spydir:timeline:object', (_evt, objectGuid: string) => objectHistory(objectGuid))
+  ipcMain.handle('spydir:timeline:clear', () => clearTimeline())
+  ipcMain.handle('spydir:timeline:sample', () => generateSampleTimeline())
+  ipcMain.handle('spydir:timeline:stats', () => ({ entries: countEntries(), path: timelinePath() }))
+  ipcMain.handle('spydir:telemetry:preview', () => currentPayload())
+  ipcMain.handle('spydir:telemetry:send', () => sendNow())
+  ipcMain.on('spydir:telemetry:workspace', (_evt, workspace: string) => noteWorkspace(workspace as never))
+  ipcMain.handle('spydir:licence:state', () => licenceState())
+  ipcMain.handle('spydir:licence:activate', (_evt, key: string) => activate(key))
+  ipcMain.handle('spydir:licence:deactivate', () => deactivate())
+  ipcMain.handle('spydir:about', () => ({
     version: appVersion(),
     electron: process.versions.electron,
     chrome: process.versions.chrome,
@@ -306,14 +306,14 @@ function registerIpc(): void {
     licenceVerifiable: canVerify(),
     site: siteBase()
   }))
-  ipcMain.on('spydr:chrome', (evt) => {
+  ipcMain.on('spydir:chrome', (evt) => {
     evt.returnValue = {
       custom: usesCustomTitleBar(),
       platform: process.platform,
       titleBarHeight: TITLE_BAR_HEIGHT
     }
   })
-  ipcMain.handle('spydr:role', (evt, role: string) => {
+  ipcMain.handle('spydir:role', (evt, role: string) => {
     // Allowlisted by name. Looking the role up on webContents would let the renderer call any
     // method on it — including ones that open devtools or navigate the window.
     const wc = BrowserWindow.fromWebContents(evt.sender)?.webContents
@@ -333,7 +333,7 @@ function registerIpc(): void {
 /**
  * What the renderer is allowed to do, enforced by Chromium rather than by our own care.
  *
- * SPYDR renders directory data, and in a compromised domain every name, description and DN in it
+ * SPYDIR renders directory data, and in a compromised domain every name, description and DN in it
  * is written by the attacker. React escapes all of it today and there is no innerHTML anywhere —
  * but this is the control that decides what a future slip is worth. `connect-src 'none'` is the
  * important one: the renderer makes no network calls at all (everything goes over IPC), so an
@@ -359,7 +359,7 @@ void app.whenReady().then(() => {
   applyCsp()
   const icon = appIcon()
   if (icon) app.dock?.setIcon(icon)
-  // SPYDR saves exactly one thing, the report, and it does that through a save dialog rather than
+  // SPYDIR saves exactly one thing, the report, and it does that through a save dialog rather than
   // a download. So a download reaching here was started by the page, not by the user — cancel it
   // instead of silently dropping a file into Downloads next to the reports they do trust.
   session.defaultSession.on('will-download', (evt) => evt.preventDefault())

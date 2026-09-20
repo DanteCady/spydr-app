@@ -9,60 +9,60 @@ import type { TelemetryPayload } from '../shared/telemetry'
 import type { UpdateCheck } from './updates'
 
 const api = {
-  windowsPrefill: (): Promise<WindowsPrefill> => ipcRenderer.invoke('spydr:prefill'),
-  discoverDcs: (domain: string): Promise<DcRecord[]> => ipcRenderer.invoke('spydr:discover', domain),
-  testConnection: (input: ConnectionInput): Promise<TestConnectionResult> => ipcRenderer.invoke('spydr:test', input),
-  ingest: (input: ConnectionInput): Promise<DirectorySnapshot> => ipcRenderer.invoke('spydr:ingest', input),
+  windowsPrefill: (): Promise<WindowsPrefill> => ipcRenderer.invoke('spydir:prefill'),
+  discoverDcs: (domain: string): Promise<DcRecord[]> => ipcRenderer.invoke('spydir:discover', domain),
+  testConnection: (input: ConnectionInput): Promise<TestConnectionResult> => ipcRenderer.invoke('spydir:test', input),
+  ingest: (input: ConnectionInput): Promise<DirectorySnapshot> => ipcRenderer.invoke('spydir:ingest', input),
   /** Re-read the directory with the credentials main is already holding. */
-  refresh: (): Promise<DirectorySnapshot> => ipcRenderer.invoke('spydr:refresh'),
-  canRefresh: (): boolean => ipcRenderer.sendSync('spydr:can-refresh'),
-  forgetBind: (): Promise<void> => ipcRenderer.invoke('spydr:forget-bind'),
-  sessionPeek: (): Promise<SessionMeta | null> => ipcRenderer.invoke('spydr:session:peek'),
+  refresh: (): Promise<DirectorySnapshot> => ipcRenderer.invoke('spydir:refresh'),
+  canRefresh: (): boolean => ipcRenderer.sendSync('spydir:can-refresh'),
+  forgetBind: (): Promise<void> => ipcRenderer.invoke('spydir:forget-bind'),
+  sessionPeek: (): Promise<SessionMeta | null> => ipcRenderer.invoke('spydir:session:peek'),
   sessionRestore: (): Promise<{ snapshot: DirectorySnapshot; view: SessionView } | null> =>
-    ipcRenderer.invoke('spydr:session:restore'),
+    ipcRenderer.invoke('spydir:session:restore'),
   sessionSave: (payload: { snapshot: DirectorySnapshot; view: SessionView }): Promise<void> =>
-    ipcRenderer.invoke('spydr:session:save', payload),
-  sessionClear: (): Promise<void> => ipcRenderer.invoke('spydr:session:clear'),
+    ipcRenderer.invoke('spydir:session:save', payload),
+  sessionClear: (): Promise<void> => ipcRenderer.invoke('spydir:session:clear'),
   /** Writes a PDF of the current findings; resolves null when the user cancels the save dialog. */
-  report: (snapshot: DirectorySnapshot): Promise<ReportResult | null> => ipcRenderer.invoke('spydr:report', snapshot),
+  report: (snapshot: DirectorySnapshot): Promise<ReportResult | null> => ipcRenderer.invoke('spydir:report', snapshot),
   /** Settings. The first read is synchronous so the first paint already has the right theme. */
-  settingsSync: (): AppSettings => ipcRenderer.sendSync('spydr:settings:sync'),
-  setSettings: (patch: SettingsPatch): Promise<AppSettings> => ipcRenderer.invoke('spydr:settings:set', patch),
-  resetSettings: (): Promise<AppSettings> => ipcRenderer.invoke('spydr:settings:reset'),
+  settingsSync: (): AppSettings => ipcRenderer.sendSync('spydir:settings:sync'),
+  setSettings: (patch: SettingsPatch): Promise<AppSettings> => ipcRenderer.invoke('spydir:settings:set', patch),
+  resetSettings: (): Promise<AppSettings> => ipcRenderer.invoke('spydir:settings:reset'),
   onSettings: (handler: (settings: AppSettings) => void): (() => void) => {
     const listener = (_evt: unknown, settings: AppSettings): void => handler(settings)
-    ipcRenderer.on('spydr:settings', listener)
-    return () => { ipcRenderer.removeListener('spydr:settings', listener) }
+    ipcRenderer.on('spydir:settings', listener)
+    return () => { ipcRenderer.removeListener('spydir:settings', listener) }
   },
-  about: (): Promise<AboutInfo> => ipcRenderer.invoke('spydr:about'),
+  about: (): Promise<AboutInfo> => ipcRenderer.invoke('spydir:about'),
   /** Activation. The key never reaches the renderer again once it is stored. */
   /** Exactly what a usage report would contain, built by the same code that sends one. */
-  telemetryPreview: (): Promise<TelemetryPayload> => ipcRenderer.invoke('spydr:telemetry:preview'),
-  telemetrySend: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('spydr:telemetry:send'),
-  noteWorkspace: (workspace: string): void => ipcRenderer.send('spydr:telemetry:workspace', workspace),
-  licence: (): Promise<LicenceState> => ipcRenderer.invoke('spydr:licence:state'),
-  activate: (key: string): Promise<LicenceState> => ipcRenderer.invoke('spydr:licence:activate', key),
-  deactivate: (): Promise<LicenceState> => ipcRenderer.invoke('spydr:licence:deactivate'),
+  telemetryPreview: (): Promise<TelemetryPayload> => ipcRenderer.invoke('spydir:telemetry:preview'),
+  telemetrySend: (): Promise<{ ok: boolean; message: string }> => ipcRenderer.invoke('spydir:telemetry:send'),
+  noteWorkspace: (workspace: string): void => ipcRenderer.send('spydir:telemetry:workspace', workspace),
+  licence: (): Promise<LicenceState> => ipcRenderer.invoke('spydir:licence:state'),
+  activate: (key: string): Promise<LicenceState> => ipcRenderer.invoke('spydir:licence:activate', key),
+  deactivate: (): Promise<LicenceState> => ipcRenderer.invoke('spydir:licence:deactivate'),
   /** The change timeline. List results carry no detail; get() decrypts one entry. */
-  timelineList: (domain?: string): Promise<TimelineEntry[]> => ipcRenderer.invoke('spydr:timeline:list', domain),
-  timelineGet: (id: string): Promise<TimelineEntry | null> => ipcRenderer.invoke('spydr:timeline:get', id),
+  timelineList: (domain?: string): Promise<TimelineEntry[]> => ipcRenderer.invoke('spydir:timeline:list', domain),
+  timelineGet: (id: string): Promise<TimelineEntry | null> => ipcRenderer.invoke('spydir:timeline:get', id),
   timelineObject: (objectGuid: string): Promise<{ entry: TimelineEntry; kinds: string[] }[]> =>
-    ipcRenderer.invoke('spydr:timeline:object', objectGuid),
-  timelineClear: (): Promise<void> => ipcRenderer.invoke('spydr:timeline:clear'),
+    ipcRenderer.invoke('spydir:timeline:object', objectGuid),
+  timelineClear: (): Promise<void> => ipcRenderer.invoke('spydir:timeline:clear'),
   /** Invented history for the sample domain, so the Timeline has something to demonstrate. */
-  timelineSample: (): Promise<{ created: number; replaced: number }> => ipcRenderer.invoke('spydr:timeline:sample'),
-  timelineStats: (): Promise<{ entries: number; path: string }> => ipcRenderer.invoke('spydr:timeline:stats'),
-  checkForUpdate: (): Promise<UpdateCheck> => ipcRenderer.invoke('spydr:updates:check'),
+  timelineSample: (): Promise<{ created: number; replaced: number }> => ipcRenderer.invoke('spydir:timeline:sample'),
+  timelineStats: (): Promise<{ entries: number; path: string }> => ipcRenderer.invoke('spydir:timeline:stats'),
+  checkForUpdate: (): Promise<UpdateCheck> => ipcRenderer.invoke('spydir:updates:check'),
   /** Subscribe to menu commands; returns an unsubscribe. */
   /** Chrome the renderer must draw itself, and the editing actions the OS performs for us. */
   chrome: (): { custom: boolean; platform: string; titleBarHeight: number } =>
-    ipcRenderer.sendSync('spydr:chrome'),
-  execRole: (role: string): Promise<void> => ipcRenderer.invoke('spydr:role', role),
+    ipcRenderer.sendSync('spydir:chrome'),
+  execRole: (role: string): Promise<void> => ipcRenderer.invoke('spydir:role', role),
   onMenuCommand: (handler: (command: string) => void): (() => void) => {
     const listener = (_evt: unknown, command: string): void => handler(command)
-    ipcRenderer.on('spydr:menu', listener)
-    return () => { ipcRenderer.removeListener('spydr:menu', listener) }
+    ipcRenderer.on('spydir:menu', listener)
+    return () => { ipcRenderer.removeListener('spydir:menu', listener) }
   }
 }
 
-contextBridge.exposeInMainWorld('spydr', api)
+contextBridge.exposeInMainWorld('spydir', api)

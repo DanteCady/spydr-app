@@ -17,7 +17,7 @@ export function useMenuCommand(handler: (command: string) => void): void {
   useEffect(() => {
     const listener = (command: string): void => ref.current(command)
     listeners.add(listener)
-    const off = window.spydr?.onMenuCommand?.(listener)
+    const off = window.spydir?.onMenuCommand?.(listener)
     return () => {
       listeners.delete(listener)
       off?.()

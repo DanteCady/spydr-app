@@ -1,13 +1,13 @@
 ---
-description: Spydr renderer UI — ADUC-familiar, dense admin chrome
+description: Spydir renderer UI — ADUC-familiar, dense admin chrome
 globs: src/**/*.tsx
 alwaysApply: false
 ---
 
-# Spydr UI
+# Spydir UI
 
 - Workspaces: Connect (disconnected), then Directory, Web, Pathfinder, Hygiene.
-- Directory mirrors ADUC: OU tree, object list, properties tabs (General, Account, Member Of, Members, Object) plus a Spydr tab.
+- Directory mirrors ADUC: OU tree, object list, properties tabs (General, Account, Member Of, Members, Object) plus a Spydir tab.
 - Inspector is a persistent pane, not a stack of modals.
 - Dense admin tool: dark zinc surfaces, one accent, severity color only on badges. No purple gradients, hero cards, or emoji decoration.
 - Geometric icons for user/group/OU/computer. Do not copy Microsoft ADUC artwork.

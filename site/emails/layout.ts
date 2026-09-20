@@ -1,5 +1,5 @@
 /**
- * The shell every SPYDR email is rendered into.
+ * The shell every SPYDIR email is rendered into.
  *
  * Email is not the web. There is no external CSS, no custom fonts worth relying on, and no layout
  * engine two clients agree about — so this is tables, inline styles, and colours light enough to
@@ -31,7 +31,7 @@ export function esc(value: string): string {
 export function layout(options: { preview: string; body: string; footer?: string }): string {
   const footer =
     options.footer ??
-    'You are receiving this because someone asked for a SPYDR licence key with this address. If that was not you, ignore this email — nothing has been created.'
+    'You are receiving this because someone asked for a SPYDIR licence key with this address. If that was not you, ignore this email — nothing has been created.'
 
   return `<!doctype html>
 <html lang="en">
@@ -39,7 +39,7 @@ export function layout(options: { preview: string; body: string; footer?: string
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>SPYDR</title>
+<title>SPYDIR</title>
 </head>
 <body style="margin:0;padding:0;background:#f5f6f8;">
 <!-- The line clients show beside the subject. Hidden, then padded so nothing else is pulled in. -->
@@ -52,7 +52,7 @@ export function layout(options: { preview: string; body: string; footer?: string
         <tr>
           <td style="padding:28px 32px 0 32px;">
             <span style="font:600 15px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
-                         letter-spacing:0.14em;color:${BRAND};">SPYDR</span>
+                         letter-spacing:0.14em;color:${BRAND};">SPYDIR</span>
           </td>
         </tr>
         <tr>
@@ -72,7 +72,7 @@ export function layout(options: { preview: string; body: string; footer?: string
         </tr>
       </table>
       <p style="margin:16px 0 0 0;font:400 11px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:${MUTED};">
-        SPYDR — read-only Active Directory explorer · spydir.io
+        SPYDIR — read-only Active Directory explorer · spydir.io
       </p>
     </td>
   </tr>
