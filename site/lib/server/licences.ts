@@ -39,8 +39,11 @@ export function issueKey(email: string): IssueResult {
       return { status: 'issued', key }
     } catch (err) {
       const message = err instanceof Error ? err.message : ''
-      // The email index tripping means a request arrived twice at once; treat it as "exists".
-      if (message.includes('licence_email_live')) return { status: 'exists' }
+      // SQLite names the *column* in a unique-constraint error, never the index — so matching on
+      // 'licence_email_live' never fired, and a concurrent second signup fell through to the retry
+      // loop, regenerated a key three times (which cannot help an email conflict) and returned an
+      // error to someone whose key had in fact just been created and shown to the other request.
+      if (message.includes('licence.email')) return { status: 'exists' }
       if (!message.includes('UNIQUE')) return { status: 'error' }
     }
   }
